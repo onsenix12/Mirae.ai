@@ -75,8 +75,8 @@ export default function OnboardingPage() {
       .filter((token) => token.length >= 2);
 
   const readPdfText = async (file: File) => {
-    const pdfjsLib = await import('pdfjs-dist/build/pdf');
-    const pdfjsWorker = await import('pdfjs-dist/build/pdf.worker.min.mjs');
+    const pdfjsLib = await import('pdfjs-dist/build/pdf.mjs');
+    const pdfjsWorker = await import('pdfjs-dist/build/pdf.worker.mjs');
     pdfjsLib.GlobalWorkerOptions.workerSrc =
       (pdfjsWorker as { default?: string }).default ?? (pdfjsWorker as string);
     const data = new Uint8Array(await file.arrayBuffer());
