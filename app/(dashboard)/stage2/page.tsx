@@ -38,6 +38,12 @@ interface RoleSwipe {
   swipeDirection: 'left' | 'right' | 'up';
 }
 
+type SelectionSlot = {
+  anchor: string[];
+  signal: string[];
+  savedAt: string;
+} | null;
+
 const categories: CourseCategory[] = ['general', 'career', 'interdisciplinary'];
 const categoryLabels: Record<CourseCategory, { en: string; ko: string }> = {
   general: { en: 'General', ko: '??' },
@@ -187,8 +193,9 @@ export default function Stage2Page() {
   const [likedRoles, setLikedRoles] = useState<string[]>([]);
   const [docKeywords, setDocKeywords] = useState<string[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(true);
+  const [savedSlots, setSavedSlots] = useState<SelectionSlot[]>([null, null, null]);
   const router = useRouter();
-  const { completeStage } = useUserStore();
+  const { completeStage, userId } = useUserStore();
   const { language, t } = useI18n();
   const selectedKeys = useMemo(() => new Set([...anchor, ...signal]), [anchor, signal]);
   const normalizedSearch = useMemo(() => searchTerm.trim().toLowerCase(), [searchTerm]);
@@ -238,6 +245,21 @@ export default function Stage2Page() {
     });
     return lookup;
   }, []);
+
+  const slotsStorageKey = useMemo(
+    () => `courseSelections_${userId ?? 'guest'}`,
+    [userId]
+  );
+
+  useEffect(() => {
+    const stored = storage.get<SelectionSlot[]>(slotsStorageKey, [null, null, null]) ?? [
+      null,
+      null,
+      null,
+    ];
+    const normalized = Array.from({ length: 3 }, (_, index) => stored[index] ?? null);
+    setSavedSlots(normalized);
+  }, [slotsStorageKey]);
 
   useEffect(() => {
     const profile = storage.get<{
@@ -482,6 +504,41 @@ export default function Stage2Page() {
     completeStage(2);
     router.push('/dashboard');
   };
+
+  const saveSlot = (index: number) => {
+    setSavedSlots((prev) => {
+      const next = [...prev];
+      next[index] = {
+        anchor,
+        signal,
+        savedAt: new Date().toISOString(),
+      };
+      storage.set(slotsStorageKey, next);
+      return next;
+    });
+  };
+
+  const loadSlot = (index: number) => {
+    const slot = savedSlots[index];
+    if (!slot) return;
+    setAnchor(slot.anchor);
+    setSignal(slot.signal);
+  };
+
+  const clearSlot = (index: number) => {
+    setSavedSlots((prev) => {
+      const next = [...prev];
+      next[index] = null;
+      storage.set(slotsStorageKey, next);
+      return next;
+    });
+  };
+
+  const saveSlotLabel = language === 'ko' ? '저장' : 'Save';
+  const loadSlotLabel = language === 'ko' ? '불러오기' : 'Load';
+  const clearSlotLabel = language === 'ko' ? '비우기' : 'Clear';
+  const slotEmptyLabel = language === 'ko' ? '비어 있음' : 'Empty';
+  const slotTitle = language === 'ko' ? '저장 슬롯' : 'Save slots';
 
   return (
     <div
@@ -820,6 +877,58 @@ export default function Stage2Page() {
                 </p>
               </div>
             </div>
+          </div>
+        </div>
+
+        <div className="bg-white/80 rounded-2xl p-6 shadow-sm backdrop-blur border border-white/60 mt-6">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-lg font-semibold text-slate-800">{slotTitle}</h2>
+            <span className="text-xs text-slate-500">{anchor.length + signal.length} selected</span>
+          </div>
+          <div className="grid gap-3 md:grid-cols-3">
+            {savedSlots.map((slot, index) => (
+              <div
+                key={`slot-${index}`}
+                className="rounded-2xl border border-white/70 bg-white/70 p-4 shadow-sm"
+              >
+                <div className="flex items-center justify-between mb-2">
+                  <p className="text-sm font-semibold text-slate-700">Slot {index + 1}</p>
+                  <p className="text-[11px] text-slate-500">
+                    {slot ? new Date(slot.savedAt).toLocaleDateString() : slotEmptyLabel}
+                  </p>
+                </div>
+                <p className="text-xs text-slate-500">
+                  {slot
+                    ? `${slot.anchor.length} required · ${slot.signal.length} electives`
+                    : slotEmptyLabel}
+                </p>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  <button
+                    type="button"
+                    onClick={() => saveSlot(index)}
+                    className="text-xs font-semibold px-3 py-1 rounded-full bg-slate-900 text-white hover:bg-slate-800 transition-all duration-300 ease-out"
+                  >
+                    {saveSlotLabel}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => loadSlot(index)}
+                    disabled={!slot}
+                    className="text-xs font-semibold px-3 py-1 rounded-full border border-white/70 text-slate-700 disabled:opacity-50 transition-all duration-300 ease-out"
+                  >
+                    {loadSlotLabel}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => clearSlot(index)}
+                    disabled={!slot}
+                    className="text-xs font-semibold px-3 py-1 rounded-full border border-white/70 text-slate-500 disabled:opacity-50 transition-all duration-300 ease-out"
+                  >
+                    {clearSlotLabel}
+                  </button>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
 
