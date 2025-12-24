@@ -250,6 +250,10 @@ export default function Stage2Page() {
     () => `courseSelections_${userId ?? 'guest'}`,
     [userId]
   );
+  const currentSelectionKey = useMemo(
+    () => `stage2Selection_${userId ?? 'guest'}`,
+    [userId]
+  );
 
   useEffect(() => {
     const stored = storage.get<SelectionSlot[]>(slotsStorageKey, [null, null, null]) ?? [
@@ -501,8 +505,13 @@ export default function Stage2Page() {
 
   const handleSave = () => {
     // Save to database
+    storage.set(currentSelectionKey, {
+      anchor,
+      signal,
+      savedAt: new Date().toISOString(),
+    });
     completeStage(2);
-    router.push('/dashboard');
+    router.push('/stage2/summary');
   };
 
   const saveSlot = (index: number) => {
