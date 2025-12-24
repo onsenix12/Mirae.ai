@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { signUp } from '@/lib/auth';
 import { useRouter } from 'next/navigation';
+import { useI18n } from '@/lib/i18n';
 
 export default function SignupPage() {
   const [email, setEmail] = useState('');
@@ -11,6 +12,7 @@ export default function SignupPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
+  const { t } = useI18n();
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -20,7 +22,7 @@ export default function SignupPage() {
     const result = signUp(email, password, name);
 
     if ('error' in result) {
-      setError(result.error);
+      setError(t(result.error));
       setLoading(false);
     } else {
       router.push('/dashboard');
@@ -39,16 +41,16 @@ export default function SignupPage() {
           />
         </div>
         <p className="text-slate-600 text-center mb-8">
-          새로운 여정을 시작하세요
+          {t('signupHeroTitle')}
         </p>
 
         {/* Info about disabled signup */}
         <div className="mb-6 p-4 bg-gradient-to-br from-[#F4A9C8]/20 to-[#FFD1A8]/20 rounded-2xl text-sm border border-[#F4A9C8]/30">
-          <p className="font-semibold mb-2 text-slate-700">Sign up is disabled</p>
-          <p className="text-slate-600">Please use existing test accounts:</p>
-          <p className="text-slate-600 mt-2">Email: student1@test.com</p>
-          <p className="text-slate-600">Email: student2@test.com</p>
-          <p className="text-slate-600 mt-1">Password: password123</p>
+          <p className="font-semibold mb-2 text-slate-700">{t('signupDisabledTitle')}</p>
+          <p className="text-slate-600">{t('signupDisabledBody')}</p>
+          <p className="text-slate-600 mt-2">{t('loginEmailLabel')}: student1@test.com</p>
+          <p className="text-slate-600">{t('loginEmailLabel')}: student2@test.com</p>
+          <p className="text-slate-600 mt-1">{t('loginPasswordValue')}</p>
         </div>
 
         {error && (
@@ -59,7 +61,9 @@ export default function SignupPage() {
 
         <form onSubmit={handleSignup} className="space-y-4">
           <div>
-            <label className="block text-sm font-medium mb-2 text-slate-700">이름</label>
+            <label className="block text-sm font-medium mb-2 text-slate-700">
+              {t('signupNameLabel')}
+            </label>
             <input
               type="text"
               value={name}
@@ -71,7 +75,9 @@ export default function SignupPage() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium mb-2 text-slate-700">이메일</label>
+            <label className="block text-sm font-medium mb-2 text-slate-700">
+              {t('loginEmailLabel')}
+            </label>
             <input
               type="email"
               value={email}
@@ -83,7 +89,9 @@ export default function SignupPage() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium mb-2 text-slate-700">비밀번호</label>
+            <label className="block text-sm font-medium mb-2 text-slate-700">
+              {t('loginPasswordLabel')}
+            </label>
             <input
               type="password"
               value={password}
@@ -100,14 +108,14 @@ export default function SignupPage() {
             disabled={loading}
             className="w-full bg-gradient-to-r from-[#F4A9C8] to-[#FFD1A8] text-white py-3 rounded-xl font-semibold hover:shadow-lg transition-all disabled:opacity-50"
           >
-            {loading ? '가입 중...' : '회원가입'}
+            {loading ? t('signupLoading') : t('signupButton')}
           </button>
         </form>
 
         <p className="text-center text-sm text-slate-600 mt-4">
-          이미 계정이 있나요?{' '}
+          {t('signupExistingAccount')}{' '}
           <a href="/login" className="text-[#F4A9C8] hover:text-[#FFD1A8] font-medium transition-colors">
-            로그인
+            {t('signupLogin')}
           </a>
         </p>
       </div>

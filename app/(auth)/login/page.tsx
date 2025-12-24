@@ -24,19 +24,24 @@ export default function LoginPage() {
       setError(t('loginInvalid'));
       setLoading(false);
     } else {
-      router.push('/dashboard');
+      const onboardingKey = `user_${result.user.id}_onboardingDone`;
+      const shouldOnboard = typeof window !== 'undefined' && localStorage.getItem(onboardingKey) !== 'true';
+      router.push(shouldOnboard ? '/onboarding' : '/dashboard');
       router.refresh();
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#9BCBFF] via-[#C7B9FF] to-[#F4A9C8]">
+    <div
+      className="min-h-screen flex items-center justify-center bg-cover bg-center bg-no-repeat"
+      style={{ backgroundImage: "url('/asset/Background.png')" }}
+    >
       <div className="bg-white/90 backdrop-blur-sm p-8 rounded-3xl shadow-2xl w-full max-w-md border border-white/60">
         <div className="flex justify-center mb-4">
           <img
-            src="/asset/Mirae_word.webp"
+            src="/asset/Mirae_Icon1.png"
             alt="Mirae"
-            className="h-12 object-contain"
+            className="h-20 object-contain"
           />
         </div>
         <p className="text-slate-600 text-center mb-8">
@@ -64,7 +69,7 @@ export default function LoginPage() {
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full px-4 py-3 bg-white/70 border-2 border-white/60 rounded-xl focus:border-[#9BCBFF] focus:outline-none transition-all"
+              className="w-full px-4 py-3 bg-white border-2 border-slate-200 rounded-xl shadow-sm focus:border-[#9BCBFF] focus:ring-2 focus:ring-[#9BCBFF]/30 focus:outline-none transition-all"
               required
               disabled={loading}
             />
@@ -76,7 +81,7 @@ export default function LoginPage() {
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full px-4 py-3 bg-white/70 border-2 border-white/60 rounded-xl focus:border-[#9BCBFF] focus:outline-none transition-all"
+              className="w-full px-4 py-3 bg-white border-2 border-slate-200 rounded-xl shadow-sm focus:border-[#9BCBFF] focus:ring-2 focus:ring-[#9BCBFF]/30 focus:outline-none transition-all"
               required
               disabled={loading}
             />
