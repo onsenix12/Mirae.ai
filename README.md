@@ -53,7 +53,7 @@ app/
 └── page.tsx             ✅ Home page (redirects to dashboard)
 
 lib/
-├── auth.ts              ✅ Hardcoded authentication (2 test users)
+├── supabase.ts          ✅ Supabase client setup
 ├── openai.ts            ✅ OpenAI service functions
 └── stores/
     └── userStore.ts     ✅ Zustand user state store
@@ -61,11 +61,7 @@ lib/
 components/              # To be expanded with UI components
 ```
 
-**Status**: Core application structure is in place.
-
-**Test Accounts**:
-- Email: student1@test.com, Password: password123 (김민수)
-- Email: student2@test.com, Password: password123 (이지은)
+**Status**: Core application structure is in place. See `SETUP.md` for installation instructions.
 
 ---
 
@@ -104,8 +100,8 @@ Synthesizes all stages into actionable course recommendations and next steps.
 - Zustand
 
 **Backend:**
-- Hardcoded Authentication (2 test users)
-- LocalStorage for data persistence
+- Supabase (PostgreSQL)
+- Supabase Auth
 - Next.js API Routes
 
 **AI Services:**
@@ -173,18 +169,30 @@ See `REVISED_APP_BLUEPRINT.md` for the complete product architecture, including:
 
 ## Getting Started
 
-1. Install dependencies: `npm install`
-2. Run development server: `npm run dev`
-3. Open http://localhost:3000
-4. Login with test accounts:
-   - student1@test.com / password123
-   - student2@test.com / password123
+**📖 For a complete guide covering setup, installation, troubleshooting, and best practices, see [`COMPLETE_GUIDE.md`](./COMPLETE_GUIDE.md)**
+
+Quick start:
+1. Review `REVISED_24HR_PLAN.md` for development timeline
+2. Review `REVISED_APP_BLUEPRINT.md` for architecture details
+3. Follow the project structure outlined in the plan
+4. Set up environment as specified (Next.js, Supabase, OpenAI)
+
+---
+
+## Documentation Files
+
+- **`COMPLETE_GUIDE.md`** - 📖 **Start here!** Consolidated guide with setup, installation, troubleshooting, and best practices
+- `REVISED_24HR_PLAN.md` - 24-hour MVP development plan
+- `REVISED_APP_BLUEPRINT.md` - Complete product architecture blueprint
+- `docs/PRD.md` - Product Requirements Document
+- `docs/PROBLEM.md` - Problem statement and context
+- `docs/SOLUTION.md` - Solution architecture and design
 
 ---
 
 ## Repository Guidelines
 
-See `AGENTS.md` for repository guidelines, coding standards, and contribution guidelines.
+See `COMPLETE_GUIDE.md` for repository guidelines, coding standards, and contribution guidelines.
 
 ---
 

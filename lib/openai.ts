@@ -1,13 +1,27 @@
 import OpenAI from 'openai';
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
+const apiKey = process.env.OPENAI_API_KEY;
+
+if (!apiKey) {
+  console.warn(
+    '⚠️ OPENAI_API_KEY environment variable is missing. OpenAI features will not work.'
+  );
+}
+
+const openai = apiKey
+  ? new OpenAI({
+      apiKey,
+    })
+  : null;
 
 export async function generateFollowUp(
   questionContext: string,
   userAnswer: string
 ): Promise<string> {
+  if (!openai) {
+    throw new Error('OpenAI API key is not configured');
+  }
+
   const response = await openai.chat.completions.create({
     model: 'gpt-4-turbo-preview',
     messages: [
@@ -35,6 +49,10 @@ DO NOT give advice or recommendations.`,
 export async function analyzeRoleSwipes(
   swipeData: Array<{ roleId: string; swipeDirection: string }>
 ): Promise<string> {
+  if (!openai) {
+    throw new Error('OpenAI API key is not configured');
+  }
+
   const swipeSummary = swipeData
     .map((s) => `${s.roleId}: ${s.swipeDirection}`)
     .join('\n');
@@ -59,4 +77,9 @@ export async function analyzeRoleSwipes(
 }
 
 export default openai;
+
+// Type guard to check if OpenAI is initialized
+export function isOpenAIConfigured(): boolean {
+  return openai !== null;
+}
 

@@ -3,19 +3,19 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useUserStore } from '@/lib/stores/userStore';
-import { useI18n } from '@/lib/i18n';
+import { storage } from '@/lib/utils/storage';
 
 // Placeholder questions - will be expanded
 const questions = [
   {
     id: 'q1',
-    questionKey: 'stage0Question',
+    question: '당신은 어떤 것들을 잘하나요?',
     type: 'multi-select',
     options: [
-      { id: 'analytical', labelKey: 'stage0OptionAnalytical', emoji: '🧠' },
-      { id: 'creative', labelKey: 'stage0OptionCreative', emoji: '🎨' },
-      { id: 'empathy', labelKey: 'stage0OptionEmpathy', emoji: '❤️' },
-      { id: 'organization', labelKey: 'stage0OptionOrganization', emoji: '📋' },
+      { id: 'analytical', label: '분석적 사고', emoji: '🧠' },
+      { id: 'creative', label: '창의적 표현', emoji: '🎨' },
+      { id: 'empathy', label: '공감 능력', emoji: '❤️' },
+      { id: 'organization', label: '체계적 정리', emoji: '📋' },
     ],
   },
 ];
@@ -25,7 +25,6 @@ export default function Stage0Page() {
   const [answers, setAnswers] = useState<Record<string, string[]>>({});
   const router = useRouter();
   const { userId, completeStage } = useUserStore();
-  const { t } = useI18n();
 
   const question = questions[currentQ];
   const progress = ((currentQ + 1) / questions.length) * 100;
@@ -44,11 +43,16 @@ export default function Stage0Page() {
     }
   };
 
-  const handleComplete = async () => {
+  const handleComplete = () => {
     const strengths = answers['q1'] || [];
 
-    // Store strengths in localStorage for now
-    localStorage.setItem(`user_${userId}_strengths`, JSON.stringify(strengths));
+    // Store in localStorage
+    const profileData = {
+      userId,
+      strengths,
+      completedAt: new Date().toISOString(),
+    };
+    storage.set('userProfile', profileData);
 
     completeStage(0);
     router.push('/dashboard');
@@ -62,7 +66,7 @@ export default function Stage0Page() {
         <div className="mb-8">
           <div className="flex justify-between items-center mb-2">
             <p className="text-sm text-gray-600">
-              {t('stage0ProgressLabel')} {currentQ + 1} / {questions.length}
+              질문 {currentQ + 1} / {questions.length}
             </p>
             <p className="text-sm text-gray-600">{Math.round(progress)}%</p>
           </div>
@@ -75,7 +79,7 @@ export default function Stage0Page() {
         </div>
 
         <div className="bg-white rounded-2xl shadow-xl p-8 mb-6">
-          <h2 className="text-2xl font-bold mb-6">{t(question.questionKey)}</h2>
+          <h2 className="text-2xl font-bold mb-6">{question.question}</h2>
 
           <div className="space-y-3">
             {question.options.map((option) => {
@@ -96,7 +100,7 @@ export default function Stage0Page() {
                 >
                   <div className="flex items-center gap-3">
                     {option.emoji && <span className="text-2xl">{option.emoji}</span>}
-                    <span className="font-medium">{t(option.labelKey)}</span>
+                    <span className="font-medium">{option.label}</span>
                   </div>
                 </button>
               );
@@ -110,7 +114,7 @@ export default function Stage0Page() {
             disabled={currentQ === 0}
             className="px-6 py-3 rounded-lg border-2 border-gray-300 disabled:opacity-50"
           >
-            {t('stage0Prev')}
+            ← 이전
           </button>
 
           <button
@@ -118,10 +122,11 @@ export default function Stage0Page() {
             disabled={!canProceed}
             className="px-6 py-3 rounded-lg bg-purple-600 text-white font-medium disabled:opacity-50 hover:bg-purple-700 transition"
           >
-            {t('stage0Complete')}
+            완료
           </button>
         </div>
       </div>
     </div>
   );
 }
+

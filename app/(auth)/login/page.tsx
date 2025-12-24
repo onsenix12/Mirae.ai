@@ -1,9 +1,8 @@
 'use client';
 
-import { useState } from 'react';
-import { signIn } from '@/lib/auth';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { useI18n } from '@/lib/i18n';
+import { storage } from '@/lib/utils/storage';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
@@ -11,45 +10,50 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
-  const { t } = useI18n();
 
-  const handleLogin = async (e: React.FormEvent) => {
+  useEffect(() => {
+    setMounted(true);
+    // Check if user is already logged in
+    const user = storage.get('user');
+    if (user) {
+      router.push('/dashboard');
+    }
+  }, [router]);
+
+  const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError(null);
 
-    const result = signIn(email, password);
-
-    if ('error' in result) {
-      setError(t('loginInvalid'));
+    // Simple validation - in a real app, you'd check against a backend
+    // For now, we'll just accept any email/password and store user info
+    if (!email || !password) {
+      setError('이메일과 비밀번호를 입력해주세요.');
       setLoading(false);
-    } else {
-      router.push('/dashboard');
-      router.refresh();
+      return;
     }
+
+    // Store user in localStorage
+    const userData = {
+      email,
+      name: email.split('@')[0], // Use email prefix as name
+      loggedInAt: new Date().toISOString(),
+    };
+
+    storage.set('user', userData);
+    storage.set('isAuthenticated', 'true');
+    
+    setLoading(false);
+    router.push('/dashboard');
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#9BCBFF] via-[#C7B9FF] to-[#F4A9C8]">
-      <div className="bg-white/90 backdrop-blur-sm p-8 rounded-3xl shadow-2xl w-full max-w-md border border-white/60">
-        <div className="flex justify-center mb-4">
-          <img
-            src="/asset/Mirae_word.webp"
-            alt="Mirae"
-            className="h-12 object-contain"
-          />
-        </div>
-        <p className="text-slate-600 text-center mb-8">
-          {t('loginHeroTitle')}
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-blue-100">
+      <div className="bg-white p-8 rounded-2xl shadow-xl w-full max-w-md">
+        <h1 className="text-3xl font-bold text-center mb-2">SCOPE+</h1>
+        <p className="text-gray-600 text-center mb-8">
+          진로 탐색 여정을 시작하세요
         </p>
-
-        {/* Test Accounts Info */}
-        <div className="mb-6 p-4 bg-gradient-to-br from-[#BEEDE3]/20 to-[#9BCBFF]/20 rounded-2xl text-sm border border-[#BEEDE3]/30">
-          <p className="font-semibold mb-2 text-slate-700">{t('loginTestAccounts')}:</p>
-          <p className="text-slate-600">Email: student1@test.com</p>
-          <p className="text-slate-600">Email: student2@test.com</p>
-          <p className="text-slate-600 mt-1">{t('loginPasswordValue')}</p>
-        </div>
 
         {error && (
           <div className="mb-4 p-3 bg-red-50 text-red-600 rounded-lg text-sm">
@@ -59,45 +63,56 @@ export default function LoginPage() {
 
         <form onSubmit={handleLogin} className="space-y-4">
           <div>
-            <label className="block text-sm font-medium mb-2 text-slate-700">{t('loginEmailLabel')}</label>
+            <label htmlFor="email" className="block text-sm font-medium mb-2">
+              이메일
+            </label>
             <input
+              id="email"
+              name="email"
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full px-4 py-3 bg-white/70 border-2 border-white/60 rounded-xl focus:border-[#9BCBFF] focus:outline-none transition-all"
+              className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:outline-none"
               required
               disabled={loading}
+              autoComplete="email"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium mb-2 text-slate-700">{t('loginPasswordLabel')}</label>
+            <label htmlFor="password" className="block text-sm font-medium mb-2">
+              비밀번호
+            </label>
             <input
+              id="password"
+              name="password"
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full px-4 py-3 bg-white/70 border-2 border-white/60 rounded-xl focus:border-[#9BCBFF] focus:outline-none transition-all"
+              className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:outline-none"
               required
               disabled={loading}
+              autoComplete="current-password"
             />
           </div>
 
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-gradient-to-r from-[#9BCBFF] to-[#C7B9FF] text-white py-3 rounded-xl font-semibold hover:shadow-lg transition-all disabled:opacity-50"
+            className="w-full bg-blue-600 text-white py-3 rounded-lg font-medium hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {loading ? t('loginLoading') : t('loginButton')}
+            {loading ? '로그인 중...' : '로그인'}
           </button>
         </form>
 
-        <p className="text-center text-sm text-slate-600 mt-4">
-          {t('loginNoAccount')}{' '}
-          <a href="/signup" className="text-[#9BCBFF] hover:text-[#C7B9FF] font-medium transition-colors">
-            {t('loginSignup')}
+        <p className="text-center text-sm text-gray-600 mt-4">
+          계정이 없나요?{' '}
+          <a href="/signup" className="text-blue-600 hover:underline">
+            회원가입
           </a>
         </p>
       </div>
     </div>
   );
 }
+
