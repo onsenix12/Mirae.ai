@@ -1,8 +1,8 @@
 'use client';
 
-import { useState } from 'react';
-import { supabase } from '@/lib/supabase';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { storage } from '@/lib/utils/storage';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
@@ -11,22 +11,40 @@ export default function LoginPage() {
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
 
-  const handleLogin = async (e: React.FormEvent) => {
+  useEffect(() => {
+    setMounted(true);
+    // Check if user is already logged in
+    const user = storage.get('user');
+    if (user) {
+      router.push('/dashboard');
+    }
+  }, [router]);
+
+  const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError(null);
 
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
-
-    if (error) {
-      setError(error.message);
+    // Simple validation - in a real app, you'd check against a backend
+    // For now, we'll just accept any email/password and store user info
+    if (!email || !password) {
+      setError('이메일과 비밀번호를 입력해주세요.');
       setLoading(false);
-    } else {
-      router.push('/dashboard');
+      return;
     }
+
+    // Store user in localStorage
+    const userData = {
+      email,
+      name: email.split('@')[0], // Use email prefix as name
+      loggedInAt: new Date().toISOString(),
+    };
+
+    storage.set('user', userData);
+    storage.set('isAuthenticated', 'true');
+    
+    setLoading(false);
+    router.push('/dashboard');
   };
 
   return (
@@ -45,33 +63,43 @@ export default function LoginPage() {
 
         <form onSubmit={handleLogin} className="space-y-4">
           <div>
-            <label className="block text-sm font-medium mb-2">이메일</label>
+            <label htmlFor="email" className="block text-sm font-medium mb-2">
+              이메일
+            </label>
             <input
+              id="email"
+              name="email"
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:outline-none"
               required
               disabled={loading}
+              autoComplete="email"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium mb-2">비밀번호</label>
+            <label htmlFor="password" className="block text-sm font-medium mb-2">
+              비밀번호
+            </label>
             <input
+              id="password"
+              name="password"
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:outline-none"
               required
               disabled={loading}
+              autoComplete="current-password"
             />
           </div>
 
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-blue-600 text-white py-3 rounded-lg font-medium hover:bg-blue-700 transition disabled:opacity-50"
+            className="w-full bg-blue-600 text-white py-3 rounded-lg font-medium hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {loading ? '로그인 중...' : '로그인'}
           </button>

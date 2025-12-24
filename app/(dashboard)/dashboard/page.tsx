@@ -1,10 +1,10 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { supabase } from '@/lib/supabase';
 import { useUserStore } from '@/lib/stores/userStore';
 import { useRouter } from 'next/navigation';
 import { CheckCircle, Lock, Circle } from 'lucide-react';
+import { storage } from '@/lib/utils/storage';
 
 const stages = [
   { id: 0, name: '자기이해', path: '/stage0', description: '당신에 대해 알아가기' },
@@ -21,17 +21,20 @@ export default function DashboardPage() {
   const [userName, setUserName] = useState('');
 
   useEffect(() => {
-    const loadUser = async () => {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-      if (user) {
-        setUserId(user.id);
-        setUserName((user.user_metadata?.name as string) || user.email?.split('@')[0] || '학생');
-      }
-    };
-    loadUser();
-  }, [setUserId]);
+    // Check if user is logged in
+    const isAuthenticated = storage.get<string>('isAuthenticated');
+    if (!isAuthenticated) {
+      router.push('/login');
+      return;
+    }
+
+    // Load user from localStorage
+    const user = storage.get<{ email: string; name?: string }>('user');
+    if (user) {
+      setUserId(user.email); // Use email as userId
+      setUserName(user.name || user.email?.split('@')[0] || '학생');
+    }
+  }, [router, setUserId]);
 
   const getStageStatus = (stageId: number) => {
     if (progress[`stage${stageId}Complete` as keyof typeof progress]) return 'complete';

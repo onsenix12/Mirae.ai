@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useUserStore } from '@/lib/stores/userStore';
-import { supabase } from '@/lib/supabase';
+import { storage } from '@/lib/utils/storage';
 
 // Placeholder roles - will be expanded to 50
 const roles = [
@@ -29,16 +29,19 @@ export default function Stage1Page() {
   const currentRole = roles[currentIndex];
   const progress = (currentIndex / roles.length) * 100;
 
-  const handleSwipe = async (direction: 'left' | 'right' | 'up') => {
+  const handleSwipe = (direction: 'left' | 'right' | 'up') => {
     const swipeData = {
-      user_id: userId,
-      role_id: currentRole.id,
-      swipe_direction: direction,
-      swipe_speed: 0,
-      card_tap_count: 0,
+      userId,
+      roleId: currentRole.id,
+      swipeDirection: direction,
+      swipeSpeed: 0,
+      cardTapCount: 0,
     };
 
-    await supabase.from('role_swipes').insert(swipeData);
+    // Store swipes in localStorage
+    const existingSwipes = storage.get<typeof swipeData[]>('roleSwipes', []) || [];
+    existingSwipes.push(swipeData);
+    storage.set('roleSwipes', existingSwipes);
 
     if (currentIndex < roles.length - 1) {
       setCurrentIndex(currentIndex + 1);

@@ -1,8 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import { supabase } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
+import { storage } from '@/lib/utils/storage';
 
 export default function SignupPage() {
   const [email, setEmail] = useState('');
@@ -12,27 +12,36 @@ export default function SignupPage() {
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
 
-  const handleSignup = async (e: React.FormEvent) => {
+  const handleSignup = (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError(null);
 
-    const { error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        data: {
-          name,
-        },
-      },
-    });
-
-    if (error) {
-      setError(error.message);
+    // Simple validation
+    if (!email || !password || !name) {
+      setError('모든 필드를 입력해주세요.');
       setLoading(false);
-    } else {
-      router.push('/dashboard');
+      return;
     }
+
+    if (password.length < 6) {
+      setError('비밀번호는 최소 6자 이상이어야 합니다.');
+      setLoading(false);
+      return;
+    }
+
+    // Store user in localStorage
+    const userData = {
+      email,
+      name,
+      loggedInAt: new Date().toISOString(),
+    };
+
+    storage.set('user', userData);
+    storage.set('isAuthenticated', 'true');
+    
+    setLoading(false);
+    router.push('/dashboard');
   };
 
   return (
@@ -51,32 +60,46 @@ export default function SignupPage() {
 
         <form onSubmit={handleSignup} className="space-y-4">
           <div>
-            <label className="block text-sm font-medium mb-2">이름</label>
+            <label htmlFor="name" className="block text-sm font-medium mb-2">
+              이름
+            </label>
             <input
+              id="name"
+              name="name"
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
               className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-purple-500 focus:outline-none"
               required
               disabled={loading}
+              autoComplete="name"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium mb-2">이메일</label>
+            <label htmlFor="signup-email" className="block text-sm font-medium mb-2">
+              이메일
+            </label>
             <input
+              id="signup-email"
+              name="email"
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-purple-500 focus:outline-none"
               required
               disabled={loading}
+              autoComplete="email"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium mb-2">비밀번호</label>
+            <label htmlFor="signup-password" className="block text-sm font-medium mb-2">
+              비밀번호
+            </label>
             <input
+              id="signup-password"
+              name="password"
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
@@ -84,6 +107,7 @@ export default function SignupPage() {
               required
               minLength={6}
               disabled={loading}
+              autoComplete="new-password"
             />
           </div>
 

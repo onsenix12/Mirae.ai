@@ -169,8 +169,9 @@ See `REVISED_APP_BLUEPRINT.md` for the complete product architecture, including:
 
 ## Getting Started
 
-This is a documentation repository. For implementation:
+**📖 For a complete guide covering setup, installation, troubleshooting, and best practices, see [`COMPLETE_GUIDE.md`](./COMPLETE_GUIDE.md)**
 
+Quick start:
 1. Review `REVISED_24HR_PLAN.md` for development timeline
 2. Review `REVISED_APP_BLUEPRINT.md` for architecture details
 3. Follow the project structure outlined in the plan
@@ -178,9 +179,20 @@ This is a documentation repository. For implementation:
 
 ---
 
+## Documentation Files
+
+- **`COMPLETE_GUIDE.md`** - 📖 **Start here!** Consolidated guide with setup, installation, troubleshooting, and best practices
+- `REVISED_24HR_PLAN.md` - 24-hour MVP development plan
+- `REVISED_APP_BLUEPRINT.md` - Complete product architecture blueprint
+- `docs/PRD.md` - Product Requirements Document
+- `docs/PROBLEM.md` - Problem statement and context
+- `docs/SOLUTION.md` - Solution architecture and design
+
+---
+
 ## Repository Guidelines
 
-See `AGENTS.md` for repository guidelines, coding standards, and contribution guidelines.
+See `COMPLETE_GUIDE.md` for repository guidelines, coding standards, and contribution guidelines.
 
 ---
 

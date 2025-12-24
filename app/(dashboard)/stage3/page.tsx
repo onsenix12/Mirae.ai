@@ -72,13 +72,19 @@ export default function Stage3Page() {
         </div>
 
         <div className="flex gap-2">
+          <label htmlFor="chat-input" className="sr-only">
+            채팅 입력
+          </label>
           <input
+            id="chat-input"
+            name="chat-input"
             type="text"
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyPress={(e) => e.key === 'Enter' && handleSend()}
             placeholder="당신의 생각을 자유롭게..."
             className="flex-1 px-4 py-3 border-2 border-gray-200 rounded-lg"
+            autoComplete="off"
           />
           <button
             onClick={handleSend}

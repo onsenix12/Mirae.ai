@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useUserStore } from '@/lib/stores/userStore';
-import { supabase } from '@/lib/supabase';
+import { storage } from '@/lib/utils/storage';
 
 // Placeholder questions - will be expanded
 const questions = [
@@ -43,14 +43,16 @@ export default function Stage0Page() {
     }
   };
 
-  const handleComplete = async () => {
+  const handleComplete = () => {
     const strengths = answers['q1'] || [];
 
-    await supabase.from('user_profiles').insert({
-      user_id: userId,
+    // Store in localStorage
+    const profileData = {
+      userId,
       strengths,
-      completed_at: new Date().toISOString(),
-    });
+      completedAt: new Date().toISOString(),
+    };
+    storage.set('userProfile', profileData);
 
     completeStage(0);
     router.push('/dashboard');
