@@ -1,11 +1,34 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { getUser, signOut } from '@/lib/auth';
 import { useUserStore } from '@/lib/stores/userStore';
 import { useRouter } from 'next/navigation';
 import { CheckCircle, Lock, Circle } from 'lucide-react';
 import { useI18n } from '@/lib/i18n';
+import { storage } from '@/lib/utils/storage';
+import rolesData from '@/lib/data/roles.json';
+
+type RoleLocale = { en: string; ko: string };
+type RoleListLocale = { en: string[]; ko: string[] };
+
+interface RoleData {
+  id: string;
+  title: RoleLocale;
+  tagline: RoleLocale;
+  domain: RoleLocale;
+  roleModels: RoleListLocale;
+  companies: RoleListLocale;
+  details: RoleLocale;
+  resources: RoleListLocale;
+}
+
+interface RoleSwipe {
+  roleId: string;
+  swipeDirection: 'left' | 'right' | 'up';
+}
+
+const roles = rolesData as RoleData[];
 
 const stages = [
   { id: 0, nameKey: 'stage0Name', descriptionKey: 'stage0Description', path: '/stage0' },
@@ -20,7 +43,8 @@ export default function DashboardPage() {
   const router = useRouter();
   const { progress, userId, setUserId, reset } = useUserStore();
   const [userName, setUserName] = useState('');
-  const { t } = useI18n();
+  const [likedRoleIds, setLikedRoleIds] = useState<string[]>([]);
+  const { t, language } = useI18n();
 
   useEffect(() => {
     const user = getUser();
@@ -43,6 +67,14 @@ export default function DashboardPage() {
       }
     }
   }, [router, setUserId, t, userId]);
+
+  useEffect(() => {
+    const swipes = storage.get<RoleSwipe[]>('roleSwipes', []) ?? [];
+    const liked = swipes
+      .filter((swipe) => swipe.swipeDirection === 'right')
+      .map((swipe) => swipe.roleId);
+    setLikedRoleIds(Array.from(new Set(liked)));
+  }, []);
 
   const handleSignOut = () => {
     signOut();
@@ -75,6 +107,10 @@ export default function DashboardPage() {
     (v) => typeof v === 'boolean' && v === true
   ).length;
   const totalProgress = (completedStages / 6) * 100;
+  const likedRoles = useMemo(
+    () => roles.filter((role) => likedRoleIds.includes(role.id)),
+    [likedRoleIds]
+  );
 
   return (
     <div
@@ -137,6 +173,55 @@ export default function DashboardPage() {
             </div>
           </div>
         </div>
+
+        {likedRoles.length > 0 && (
+          <div className="glass-card rounded-3xl p-6 relative overflow-hidden">
+            <div className="absolute inset-0 bg-gradient-to-br from-white/30 via-transparent to-white/10 pointer-events-none" />
+            <div className="relative space-y-4">
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <div>
+                  <p className="text-sm text-slate-600">{t('stage1SummaryTag')}</p>
+                  <h2 className="text-xl font-semibold text-slate-800">
+                    {t('stage1SummaryRolesLikedTitle')}
+                  </h2>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => router.push('/stage1/summary')}
+                  className="rounded-full border border-white/70 bg-white/80 px-4 py-2 text-xs font-semibold text-slate-700 shadow-sm transition-all duration-300 ease-out hover:bg-white"
+                >
+                  {t('stage1SummaryViewAll')}
+                </button>
+              </div>
+              <div className="flex snap-x snap-mandatory gap-4 overflow-x-auto pb-2">
+                {likedRoles.map((role) => {
+                  const roleTitle = language === 'ko' ? role.title.ko : role.title.en;
+                  const roleTagline = language === 'ko' ? role.tagline.ko : role.tagline.en;
+                  const roleDomain = language === 'ko' ? role.domain.ko : role.domain.en;
+                  return (
+                    <div
+                      key={role.id}
+                      className="w-[240px] flex-shrink-0 snap-start rounded-2xl border border-white/70 bg-white/80 p-4 shadow-sm backdrop-blur"
+                    >
+                      <div className="flex items-center justify-between">
+                        <span className="rounded-full border border-white/70 bg-white/80 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wide text-slate-600">
+                          {roleDomain}
+                        </span>
+                        <div className="flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-br from-sky-200 via-violet-200 to-rose-200 text-xs font-semibold text-slate-600 shadow-inner">
+                          {roleTitle.slice(0, 2)}
+                        </div>
+                      </div>
+                      <h3 className="mt-4 text-lg font-semibold text-slate-800">
+                        {roleTitle}
+                      </h3>
+                      <p className="mt-2 text-xs text-slate-600">{roleTagline}</p>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Stage Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

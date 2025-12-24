@@ -31,7 +31,7 @@ export default function Stage1SummaryPage() {
   const [likedRoleIds, setLikedRoleIds] = useState<string[]>([]);
   const [showConfirm, setShowConfirm] = useState(false);
   const router = useRouter();
-  const { language } = useI18n();
+  const { language, t } = useI18n();
   const carouselRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
@@ -54,18 +54,17 @@ export default function Stage1SummaryPage() {
     [likedRoleIds]
   );
 
-  const headingText = 'Roles that caught your eye';
-  const subheadingText = 'Here are the roles you swiped like. Save them for what comes next.';
-  const emptyText = 'No liked roles yet. Try swiping right on a few roles first.';
-  const dashboardLabel = 'Back to dashboard';
-  const nextStageLabel = 'Continue to Stage 2';
-  const hintLabel = 'Swipe or scroll to browse your liked roles.';
-  const redoLabel = 'Clear & redo Stage 1';
-  const confirmTitle = 'Clear liked roles?';
-  const confirmBody =
-    'This will remove your swipes and restart Stage 1. You can swipe again to rebuild the list.';
-  const confirmCancel = 'Cancel';
-  const confirmConfirm = 'Yes, clear';
+  const headingText = t('stage1SummaryHeading');
+  const subheadingText = t('stage1SummarySubheading');
+  const emptyText = t('stage1SummaryEmpty');
+  const dashboardLabel = t('stage1SummaryBackDashboard');
+  const nextStageLabel = t('stage1SummaryNextStage');
+  const hintLabel = t('stage1SummaryHint');
+  const redoLabel = t('stage1SummaryRedo');
+  const confirmTitle = t('stage1SummaryConfirmTitle');
+  const confirmBody = t('stage1SummaryConfirmBody');
+  const confirmCancel = t('stage1SummaryConfirmCancel');
+  const confirmConfirm = t('stage1SummaryConfirmConfirm');
 
   const scrollCarousel = (direction: 'prev' | 'next') => {
     if (!carouselRef.current) return;
@@ -94,7 +93,7 @@ export default function Stage1SummaryPage() {
       <div className="mx-auto w-full max-w-5xl space-y-8">
         <div className="text-slate-800">
           <div className="inline-flex items-center gap-2 rounded-full bg-white/70 px-4 py-2 text-xs font-semibold uppercase tracking-wide text-slate-600 shadow-sm">
-            Stage 1 summary
+            {t('stage1SummaryTag')}
           </div>
           <h1 className="mt-4 text-3xl font-semibold sm:text-4xl">{headingText}</h1>
           <p className="mt-3 max-w-2xl text-sm text-slate-600 sm:text-base">
@@ -118,14 +117,14 @@ export default function Stage1SummaryPage() {
                   onClick={() => scrollCarousel('prev')}
                   className="rounded-full border border-white/70 bg-white/80 px-3 py-1 text-xs font-semibold text-slate-600 transition-all duration-300 ease-out hover:bg-white"
                 >
-                  Prev
+                  {t('stage1SummaryPrev')}
                 </button>
                 <button
                   type="button"
                   onClick={() => scrollCarousel('next')}
                   className="rounded-full border border-white/70 bg-white/80 px-3 py-1 text-xs font-semibold text-slate-600 transition-all duration-300 ease-out hover:bg-white"
                 >
-                  Next
+                  {t('stage1SummaryNext')}
                 </button>
               </div>
             </div>
@@ -158,7 +157,7 @@ export default function Stage1SummaryPage() {
                     {roleModels && roleModels.length > 0 && (
                       <div className="mt-5">
                         <p className="text-[11px] uppercase tracking-wide text-slate-500">
-                          Role models
+                          {t('stage1SummaryRoleModels')}
                         </p>
                         <div className="mt-2 flex flex-wrap gap-2">
                           {roleModels.map((name) => (
@@ -176,7 +175,7 @@ export default function Stage1SummaryPage() {
                     {roleCompanies && roleCompanies.length > 0 && (
                       <div className="mt-4">
                         <p className="text-[11px] uppercase tracking-wide text-slate-500">
-                          Where you could work
+                          {t('stage1SummaryWhereWork')}
                         </p>
                         <div className="mt-2 flex flex-wrap gap-2">
                           {roleCompanies.map((name) => (
