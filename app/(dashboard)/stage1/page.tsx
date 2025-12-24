@@ -18,6 +18,8 @@ interface RoleData {
   domain: RoleLocale;
   roleModels: RoleListLocale;
   companies: RoleListLocale;
+  details: RoleLocale;
+  resources: RoleListLocale;
 }
 
 const roles = rolesData as RoleData[];
@@ -132,7 +134,8 @@ export default function Stage1Page() {
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
   const [isDragging, setIsDragging] = useState(false);
   const [isSettling, setIsSettling] = useState(false);
-  const [shimmerDirection, setShimmerDirection] = useState<'left' | 'right' | 'up' | null>(null);
+  const [isFlipped, setIsFlipped] = useState(false);
+  const [shimmerDirection, setShimmerDirection] = useState<'left' | 'right' | null>(null);
   const [shimmerKey, setShimmerKey] = useState(0);
   const router = useRouter();
   const { userId, completeStage } = useUserStore();
@@ -148,18 +151,23 @@ export default function Stage1Page() {
   const roleDomain = language === 'ko' ? currentRole.domain.ko : currentRole.domain.en;
   const roleModels = language === 'ko' ? currentRole.roleModels.ko : currentRole.roleModels.en;
   const roleCompanies = language === 'ko' ? currentRole.companies.ko : currentRole.companies.en;
+  const roleDetails = language === 'ko' ? currentRole.details.ko : currentRole.details.en;
+  const roleResources = language === 'ko' ? currentRole.resources.ko : currentRole.resources.en;
   const roleModelsLabel = language === 'ko' ? '롤모델' : 'Role models';
   const roleCompaniesLabel = language === 'ko' ? '함께할 수 있는 곳' : 'Where you could work';
+  const roleDetailsLabel = language === 'ko' ? '이 역할은 이런 일을 해요' : 'What they do';
+  const roleResourcesLabel = language === 'ko' ? '더 알아보기' : 'Explore resources';
   const roleIcon = roleIcons[currentRole.id] ?? (
     <text x="12" y="16" textAnchor="middle" fontSize="10" fontFamily="inherit">
       {roleTitle.slice(0, 2)}
     </text>
   );
   const passLabel = language === 'ko' ? '패스' : 'Pass';
-  const saveLabel = language === 'ko' ? '저장' : 'Save';
   const likeLabel = language === 'ko' ? '좋아요' : 'Like';
   const stageLabel = language === 'ko' ? '1단계' : 'Stage 1';
   const sectionLabel = language === 'ko' ? '역할 룰렛' : 'Role Roulette';
+  const flipLabel = language === 'ko' ? '카드 뒤집기' : 'Flip card';
+  const flipBackLabel = language === 'ko' ? '앞면으로' : 'Back to front';
   const headingText =
     language === 'ko'
       ? '차분하고 호기심 가득한 스와이프로 역할을 탐색해요.'
@@ -169,12 +177,12 @@ export default function Stage1Page() {
       ? '미래를 확정하는 것이 아니라, 흥미가 어디로 향하는지 살펴보는 단계예요.'
       : 'Follow your gut. You are not choosing a future yet, just noticing what feels interesting.';
   const hintLeft = language === 'ko' ? '왼쪽: 패스' : 'Swipe left to pass';
-  const hintUp = language === 'ko' ? '위로: 저장' : 'Swipe up to save for later';
   const hintRight = language === 'ko' ? '오른쪽: 좋아요' : 'Swipe right to like';
+  const hintFlip = language === 'ko' ? '가운데: 뒤집기' : 'Flip for details';
   const hintTap =
     language === 'ko'
-      ? '버튼을 누르거나 카드에서 스와이프해 보세요.'
-      : 'Tap the buttons or swipe on the card to keep exploring.';
+      ? '버튼을 누르거나 카드에서 스와이프해 보세요. 더 알고 싶다면 뒤집기.'
+      : 'Tap the buttons, swipe the card, or flip for more.';
   const progress = (currentIndex / roles.length) * 100;
   const dragDistance = Math.hypot(dragOffset.x, dragOffset.y);
   const dragIntensity = Math.min(dragDistance / 140, 1);
@@ -186,12 +194,8 @@ export default function Stage1Page() {
     dragOffset.x < 0 && Math.abs(dragOffset.x) > Math.abs(dragOffset.y)
       ? Math.min(Math.abs(dragOffset.x) / 120, 1)
       : 0;
-  const saveOpacity =
-    dragOffset.y < 0 && Math.abs(dragOffset.y) > Math.abs(dragOffset.x)
-      ? Math.min(Math.abs(dragOffset.y) / 120, 1)
-      : 0;
 
-  const triggerShimmer = (direction: 'left' | 'right' | 'up') => {
+  const triggerShimmer = (direction: 'left' | 'right') => {
     setShimmerDirection(direction);
     setShimmerKey((prev) => prev + 1);
     if (shimmerTimer.current) {
@@ -202,8 +206,9 @@ export default function Stage1Page() {
     }, 650);
   };
 
-  const handleSwipe = (direction: 'left' | 'right' | 'up', withShimmer = true) => {
+  const handleSwipe = (direction: 'left' | 'right', withShimmer = true) => {
     if (isSettling) return;
+    if (isFlipped) return;
     const roleId = currentRole.id;
     const swipeData = {
       userId,
@@ -211,6 +216,18 @@ export default function Stage1Page() {
       swipeDirection: direction,
       swipeSpeed: 0,
       cardTapCount: 0,
+    };
+
+    const persistLikedRoles = () => {
+      const swipes = storage.get<typeof swipeData[]>('roleSwipes', []) || [];
+      const liked = swipes
+        .filter((swipe) => swipe.swipeDirection === 'right' || swipe.swipeDirection === 'up')
+        .map((swipe) => swipe.roleId);
+      const profile = storage.get<Record<string, unknown>>('userProfile', {}) ?? {};
+      storage.set('userProfile', {
+        ...profile,
+        likedRoles: Array.from(new Set(liked)),
+      });
     };
 
     const finalizeSwipe = () => {
@@ -223,19 +240,20 @@ export default function Stage1Page() {
         setCurrentIndex(currentIndex + 1);
       } else {
         completeStage(1);
-        router.push('/dashboard');
+        persistLikedRoles();
+        router.push('/stage1/summary');
       }
 
       setIsSettling(false);
       setIsDragging(false);
       setDragOffset({ x: 0, y: 0 });
+      setIsFlipped(false);
     };
 
     if (withShimmer && !isDragging && !dragActive.current) {
       const nudge = 90;
       if (direction === 'left') setDragOffset({ x: -nudge, y: 0 });
       if (direction === 'right') setDragOffset({ x: nudge, y: 0 });
-      if (direction === 'up') setDragOffset({ x: 0, y: -nudge });
       setIsDragging(true);
     }
 
@@ -254,7 +272,6 @@ export default function Stage1Page() {
     const handleKey = (event: KeyboardEvent) => {
       if (event.key === 'ArrowLeft') handleSwipe('left');
       if (event.key === 'ArrowRight') handleSwipe('right');
-      if (event.key === 'ArrowUp') handleSwipe('up');
     };
 
     window.addEventListener('keydown', handleKey);
@@ -271,6 +288,7 @@ export default function Stage1Page() {
   }, []);
 
   const handlePointerDown = (event: ReactPointerEvent<HTMLDivElement>) => {
+    if (isFlipped) return;
     dragStart.current = { x: event.clientX, y: event.clientY };
     dragActive.current = true;
     setIsDragging(true);
@@ -288,12 +306,9 @@ export default function Stage1Page() {
     if (!dragStart.current) return;
     const { x, y } = dragOffset;
     const horizontal = Math.abs(x) > 80 && Math.abs(x) > Math.abs(y);
-    const vertical = y < -80 && Math.abs(y) > Math.abs(x);
 
     if (horizontal) {
       handleSwipe(x > 0 ? 'right' : 'left');
-    } else if (vertical) {
-      handleSwipe('up');
     }
 
     dragStart.current = null;
@@ -302,9 +317,14 @@ export default function Stage1Page() {
     setDragOffset({ x: 0, y: 0 });
   };
 
+  const handleFlipToggle = () => {
+    if (isSettling) return;
+    setIsFlipped((prev) => !prev);
+  };
+
   return (
     <div
-      className="relative min-h-screen overflow-hidden px-6 py-10 sm:px-10"
+      className="relative min-h-screen overflow-x-hidden px-6 py-10 sm:px-10"
       style={{
         background:
           'linear-gradient(135deg, #9BCBFF 0%, #C7B9FF 25%, #F4A9C8 50%, #FFD1A8 75%, #BEEDE3 100%)',
@@ -349,7 +369,7 @@ export default function Stage1Page() {
               {hintLeft}
             </span>
             <span className="rounded-full border border-white/70 bg-white/70 px-3 py-1">
-              {hintUp}
+              {hintFlip}
             </span>
             <span className="rounded-full border border-white/70 bg-white/70 px-3 py-1">
               {hintRight}
@@ -359,12 +379,12 @@ export default function Stage1Page() {
 
         <div className="space-y-6">
           {currentRole && (
-            <div className="relative">
+            <div className="relative card-perspective">
               <div
                 className="absolute -inset-3 rounded-[36px] bg-white/30 blur-xl"
                 style={{ animation: 'float 10s ease-in-out infinite' }}
               />
-              <div className="pointer-events-none absolute inset-0">
+              <div className="pointer-events-none absolute inset-0 z-0">
                 <div
                   className="absolute inset-0 rounded-[32px] border border-white/50 bg-white/40 shadow-xl"
                   style={{ transform: 'translate(10px, 12px) scale(0.98)' }}
@@ -375,7 +395,7 @@ export default function Stage1Page() {
                 />
               </div>
               <div
-                className="relative flex min-h-[460px] cursor-grab flex-col items-center justify-between rounded-[32px] border border-white/70 bg-white/80 p-8 shadow-2xl backdrop-blur transition-all duration-300 ease-out active:cursor-grabbing"
+                className="relative z-10 min-h-[460px] cursor-grab select-none transition-all duration-300 ease-out active:cursor-grabbing"
                 style={{
                   animation: isDragging ? undefined : 'float 8s ease-in-out infinite',
                   transform: `translate(${dragOffset.x}px, ${dragOffset.y}px) rotate(${
@@ -388,121 +408,160 @@ export default function Stage1Page() {
                 onPointerUp={handlePointerUp}
                 onPointerCancel={handlePointerUp}
               >
-                <div className="pointer-events-none absolute inset-0">
+                <div
+                  className="absolute inset-0 card-3d"
+                >
                   <div
-                    className="absolute left-6 top-6 rounded-full border border-white/80 bg-white/90 px-4 py-1 text-xs font-semibold uppercase tracking-wide text-emerald-500 shadow-sm"
-                    style={{ opacity: likeOpacity }}
-                  >
-                    {likeLabel}
-                  </div>
-                  <div
-                    className="absolute right-6 top-6 rounded-full border border-white/80 bg-white/90 px-4 py-1 text-xs font-semibold uppercase tracking-wide text-rose-500 shadow-sm"
-                    style={{ opacity: passOpacity }}
-                  >
-                    {passLabel}
-                  </div>
-                  <div
-                    className="absolute left-1/2 top-6 -translate-x-1/2 rounded-full border border-white/80 bg-white/90 px-4 py-1 text-xs font-semibold uppercase tracking-wide text-amber-500 shadow-sm"
-                    style={{ opacity: saveOpacity }}
-                  >
-                    {saveLabel}
-                  </div>
-                  <div
-                    className="absolute inset-0 rounded-[32px] border border-white/80"
+                    className="card-face card-front card-surface p-8"
                     style={{
-                      opacity: dragIntensity * 0.4,
-                      boxShadow: `0 0 0 1px rgba(255, 255, 255, ${
-                        0.4 + dragIntensity * 0.4
-                      }) inset`,
+                      transform: isFlipped ? 'rotateY(180deg)' : 'rotateY(0deg)',
+                      opacity: isFlipped ? 0 : 1,
+                      pointerEvents: isFlipped ? 'none' : 'auto',
                     }}
-                  />
-                  {shimmerDirection && (
-                    <div className="absolute inset-0 overflow-hidden rounded-[32px]">
+                  >
+                    <div className="pointer-events-none absolute inset-0">
                       <div
-                        key={shimmerKey}
-                        className="absolute -inset-20 shimmer-layer"
+                        className="absolute left-6 top-6 rounded-full border border-white/80 bg-white/90 px-4 py-1 text-xs font-semibold uppercase tracking-wide text-emerald-500 shadow-sm"
+                        style={{ opacity: likeOpacity }}
+                      >
+                        {likeLabel}
+                      </div>
+                      <div
+                        className="absolute right-6 top-6 rounded-full border border-white/80 bg-white/90 px-4 py-1 text-xs font-semibold uppercase tracking-wide text-rose-500 shadow-sm"
+                        style={{ opacity: passOpacity }}
+                      >
+                        {passLabel}
+                      </div>
+                      <div
+                        className="absolute inset-0 rounded-[32px] border border-white/80"
                         style={{
-                          animation: `${
-                            shimmerDirection === 'up'
-                              ? 'shimmer-up'
-                              : shimmerDirection === 'left'
-                                ? 'shimmer-left'
-                                : 'shimmer-right'
-                          } 650ms ease-out`,
+                          opacity: dragIntensity * 0.4,
+                          boxShadow: `0 0 0 1px rgba(255, 255, 255, ${
+                            0.4 + dragIntensity * 0.4
+                          }) inset`,
                         }}
                       />
+                      {shimmerDirection && (
+                        <div className="absolute inset-0 overflow-hidden rounded-[32px]">
+                          <div
+                            key={shimmerKey}
+                            className="absolute -inset-20 shimmer-layer"
+                            style={{
+                              animation: `${
+                                shimmerDirection === 'left'
+                                  ? 'shimmer-left'
+                                  : 'shimmer-right'
+                              } 650ms ease-out`,
+                            }}
+                          />
+                        </div>
+                      )}
                     </div>
-                  )}
-                </div>
-                <div className="flex flex-col items-center gap-4">
-                  <div
-                    className="flex h-28 w-28 items-center justify-center rounded-full bg-gradient-to-br from-sky-200 via-violet-200 to-rose-200 shadow-inner"
-                    style={{ animation: 'float 6s ease-in-out infinite' }}
-                  >
-                    <svg
-                      className="h-12 w-12 text-slate-600/80"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="1.8"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    >
-                      {roleIcon}
-                    </svg>
+                    <div className="flex flex-col items-center gap-4">
+                      <div
+                        className="flex h-28 w-28 items-center justify-center rounded-full bg-gradient-to-br from-sky-200 via-violet-200 to-rose-200 shadow-inner"
+                        style={{ animation: 'float 6s ease-in-out infinite' }}
+                      >
+                        <svg
+                          className="h-12 w-12 text-slate-600/80"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="1.8"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        >
+                          {roleIcon}
+                        </svg>
+                      </div>
+                      <span className="rounded-full border border-white/70 bg-white/70 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-slate-600">
+                        {roleDomain}
+                      </span>
+                    </div>
+
+                    <div className="space-y-3 text-center">
+                      <h2 className="text-3xl font-semibold text-slate-800">{roleTitle}</h2>
+                      <p className="text-sm text-slate-600 sm:text-base">{roleTagline}</p>
+                      {roleModels && roleModels.length > 0 && (
+                        <div className="pt-2">
+                          <p className="text-[11px] uppercase tracking-wide text-slate-500">
+                            {roleModelsLabel}
+                          </p>
+                          <div className="mt-2 flex flex-wrap justify-center gap-2">
+                            {roleModels.map((name) => (
+                              <span
+                                key={name}
+                                className="rounded-full border border-white/70 bg-white/80 px-2.5 py-1 text-xs text-slate-600"
+                              >
+                                {name}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                      {roleCompanies && roleCompanies.length > 0 && (
+                        <div className="pt-3">
+                          <p className="text-[11px] uppercase tracking-wide text-slate-500">
+                            {roleCompaniesLabel}
+                          </p>
+                          <div className="mt-2 flex flex-wrap justify-center gap-2">
+                            {roleCompanies.map((name) => (
+                              <span
+                                key={name}
+                                className="rounded-full border border-white/70 bg-white/80 px-2.5 py-1 text-xs text-slate-600"
+                              >
+                                {name}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
                   </div>
-                  <span className="rounded-full border border-white/70 bg-white/70 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-slate-600">
-                    {roleDomain}
-                  </span>
-                </div>
 
-                <div className="space-y-3 text-center">
-                  <h2 className="text-3xl font-semibold text-slate-800">{roleTitle}</h2>
-                  <p className="text-sm text-slate-600 sm:text-base">{roleTagline}</p>
-                  {roleModels && roleModels.length > 0 && (
-                    <div className="pt-2">
-                      <p className="text-[11px] uppercase tracking-wide text-slate-500">
-                        {roleModelsLabel}
-                      </p>
-                      <div className="mt-2 flex flex-wrap justify-center gap-2">
-                        {roleModels.map((name) => (
-                          <span
-                            key={name}
-                            className="rounded-full border border-white/70 bg-white/80 px-2.5 py-1 text-xs text-slate-600"
-                          >
-                            {name}
-                          </span>
-                        ))}
+                  <div
+                    className="card-face card-back card-surface p-8"
+                    style={{
+                      transform: isFlipped ? 'rotateY(0deg)' : 'rotateY(-180deg)',
+                      opacity: isFlipped ? 1 : 0,
+                      pointerEvents: isFlipped ? 'auto' : 'none',
+                    }}
+                  >
+                    <div className="space-y-5">
+                      <div className="flex items-center justify-between gap-3">
+                        <h3 className="text-2xl font-semibold text-slate-800">{roleTitle}</h3>
+                        <span className="rounded-full border border-white/70 bg-white/70 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-slate-600">
+                          {roleDomain}
+                        </span>
                       </div>
-                    </div>
-                  )}
-                  {roleCompanies && roleCompanies.length > 0 && (
-                    <div className="pt-3">
-                      <p className="text-[11px] uppercase tracking-wide text-slate-500">
-                        {roleCompaniesLabel}
-                      </p>
-                      <div className="mt-2 flex flex-wrap justify-center gap-2">
-                        {roleCompanies.map((name) => (
-                          <span
-                            key={name}
-                            className="rounded-full border border-white/70 bg-white/80 px-2.5 py-1 text-xs text-slate-600"
-                          >
-                            {name}
-                          </span>
-                        ))}
+                      <div>
+                        <p className="text-[11px] uppercase tracking-wide text-slate-500">
+                          {roleDetailsLabel}
+                        </p>
+                        <p className="mt-2 text-sm text-slate-600">{roleDetails}</p>
                       </div>
+                      {roleResources && roleResources.length > 0 && (
+                        <div>
+                          <p className="text-[11px] uppercase tracking-wide text-slate-500">
+                            {roleResourcesLabel}
+                          </p>
+                          <ul className="mt-2 space-y-2 text-sm text-slate-600">
+                            {roleResources.map((item) => (
+                              <li key={item} className="flex items-start gap-2">
+                                <span className="mt-1.5 h-1.5 w-1.5 rounded-full bg-slate-400" />
+                                <span>{item}</span>
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
                     </div>
-                  )}
-                </div>
-
-                <div className="flex gap-4">
-                  <div className="h-10 w-10 rounded-full bg-rose-100/70" />
-                  <div className="h-10 w-10 rounded-full bg-amber-100/70" />
-                  <div className="h-10 w-10 rounded-full bg-emerald-100/70" />
-                </div>
+                    <div className="text-center text-xs text-slate-500">{flipBackLabel}</div>
+                  </div>
               </div>
             </div>
-          )}
+          </div>
+        )}
 
           <div className="flex items-center justify-center gap-4">
             <button
@@ -527,9 +586,9 @@ export default function Stage1Page() {
 
             <button
               type="button"
-              onClick={() => handleSwipe('up')}
-              className="group flex h-16 w-16 items-center justify-center rounded-full border border-white/70 bg-white/90 text-amber-500 shadow-xl transition-all duration-300 ease-out hover:-translate-y-1 hover:bg-white"
-              aria-label="Save for later"
+              onClick={handleFlipToggle}
+              className="group flex h-16 w-16 items-center justify-center rounded-full border border-white/70 bg-white/90 text-sky-500 shadow-xl transition-all duration-300 ease-out hover:-translate-y-1 hover:bg-white"
+              aria-label={isFlipped ? flipBackLabel : flipLabel}
             >
               <svg
                 className="h-6 w-6"
@@ -540,7 +599,10 @@ export default function Stage1Page() {
                 strokeLinecap="round"
                 strokeLinejoin="round"
               >
-                <path d="M12 3l2.2 4.6 5 .7-3.6 3.5.9 5L12 14.6 7.5 16.8l.9-5L4.8 8.3l5-.7L12 3z" />
+                <path d="M3 12a9 9 0 0 1 15.4-6.4" />
+                <path d="M21 12a9 9 0 0 1-15.4 6.4" />
+                <path d="M18.4 3.6v4h-4" />
+                <path d="M5.6 20.4v-4h4" />
               </svg>
             </button>
 
@@ -571,6 +633,43 @@ export default function Stage1Page() {
       </div>
 
       <style jsx>{`
+        .card-perspective {
+          perspective: 1200px;
+        }
+
+        .card-3d {
+          transform-style: preserve-3d;
+          transition: transform 500ms ease-out;
+          will-change: transform;
+          transform-origin: center;
+          height: 100%;
+          width: 100%;
+        }
+
+        .card-face {
+          position: absolute;
+          inset: 0;
+          display: flex;
+          flex-direction: column;
+          justify-content: space-between;
+          backface-visibility: hidden;
+          -webkit-backface-visibility: hidden;
+          transition: transform 500ms ease-out, opacity 220ms ease-out;
+        }
+
+        .card-surface {
+          border-radius: 32px;
+          border: 1px solid rgba(255, 255, 255, 0.7);
+          background: rgba(255, 255, 255, 0.8);
+          backdrop-filter: blur(16px);
+          -webkit-backdrop-filter: blur(16px);
+          overflow: hidden;
+        }
+
+        .card-front {
+          transform: rotateY(0deg);
+        }
+
         .shimmer-layer {
           background: linear-gradient(
             110deg,
@@ -607,20 +706,6 @@ export default function Stage1Page() {
           }
           100% {
             transform: translateX(-120%);
-            opacity: 0;
-          }
-        }
-
-        @keyframes shimmer-up {
-          0% {
-            transform: translateY(120%);
-            opacity: 0;
-          }
-          30% {
-            opacity: 0.8;
-          }
-          100% {
-            transform: translateY(-120%);
             opacity: 0;
           }
         }

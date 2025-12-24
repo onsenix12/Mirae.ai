@@ -14,6 +14,14 @@
     "companies": {
       "en": ["Apple", "Airbnb", "Google"],
       "ko": ["애플", "에어비앤비", "구글"]
+    },
+    "details": {
+      "en": "Researches user needs, maps journeys, and tests prototypes.",
+      "ko": "사용자 니즈를 조사하고 여정을 설계하며 프로토타입을 테스트해요."
+    },
+    "resources": {
+      "en": ["Nielsen Norman Group", "Google UX Design (Coursera)", "Figma Learn"],
+      "ko": ["Nielsen Norman Group", "구글 UX 디자인(코세라)", "Figma Learn"]
     }
   },
   {
@@ -31,6 +39,14 @@
     "companies": {
       "en": ["Netflix", "Meta", "IBM"],
       "ko": ["넷플릭스", "메타", "IBM"]
+    },
+    "details": {
+      "en": "Cleans data, builds models, and explains insights.",
+      "ko": "데이터를 정리하고 모델을 만들며 인사이트를 설명해요."
+    },
+    "resources": {
+      "en": ["Kaggle Learn", "fast.ai", "Google Data Analytics"],
+      "ko": ["Kaggle Learn", "fast.ai", "구글 데이터 애널리틱스"]
     }
   },
   {
@@ -48,6 +64,14 @@
     "companies": {
       "en": ["Spotify", "Microsoft", "Amazon"],
       "ko": ["스포티파이", "마이크로소프트", "아마존"]
+    },
+    "details": {
+      "en": "Defines problems, aligns teams, and ships outcomes.",
+      "ko": "문제를 정의하고 팀을 정렬해 결과물을 출시해요."
+    },
+    "resources": {
+      "en": ["Mind the Product", "SVPG", "Product School"],
+      "ko": ["Mind the Product", "SVPG", "Product School"]
     }
   },
   {
@@ -65,6 +89,14 @@
     "companies": {
       "en": ["Google", "Microsoft", "GitHub"],
       "ko": ["구글", "마이크로소프트", "깃허브"]
+    },
+    "details": {
+      "en": "Designs, codes, reviews, and maintains software systems.",
+      "ko": "설계, 개발, 리뷰, 유지보수를 통해 소프트웨어를 완성해요."
+    },
+    "resources": {
+      "en": ["GitHub Docs", "freeCodeCamp", "MDN Web Docs"],
+      "ko": ["GitHub Docs", "freeCodeCamp", "MDN Web Docs"]
     }
   },
   {
@@ -82,6 +114,14 @@
     "companies": {
       "en": ["Boston Dynamics", "Tesla", "ABB"],
       "ko": ["보스턴 다이내믹스", "테슬라", "ABB"]
+    },
+    "details": {
+      "en": "Builds robots using sensors, control systems, and hardware.",
+      "ko": "센서, 제어, 하드웨어로 로봇을 만들어요."
+    },
+    "resources": {
+      "en": ["ROS Tutorials", "IEEE Robotics", "MIT OpenCourseWare Robotics"],
+      "ko": ["ROS 튜토리얼", "IEEE Robotics", "MIT OpenCourseWare Robotics"]
     }
   },
   {
@@ -99,6 +139,14 @@
     "companies": {
       "en": ["WWF", "The Nature Conservancy", "UNEP"],
       "ko": ["WWF", "네이처 컨서번시", "UNEP"]
+    },
+    "details": {
+      "en": "Collects field data and plans conservation strategies.",
+      "ko": "현장 데이터를 수집하고 보전 전략을 세워요."
+    },
+    "resources": {
+      "en": ["NOAA", "UNEP", "National Geographic Education"],
+      "ko": ["NOAA", "UNEP", "내셔널 지오그래픽 에듀케이션"]
     }
   },
   {
@@ -116,6 +164,14 @@
     "companies": {
       "en": ["Pfizer", "Moderna", "Novartis"],
       "ko": ["화이자", "모더나", "노바티스"]
+    },
+    "details": {
+      "en": "Runs experiments, analyzes results, and improves treatments.",
+      "ko": "실험을 수행하고 결과를 분석해 치료를 개선해요."
+    },
+    "resources": {
+      "en": ["NIH", "PubMed", "Nature Careers"],
+      "ko": ["NIH", "PubMed", "Nature Careers"]
     }
   },
   {
@@ -133,6 +189,14 @@
     "companies": {
       "en": ["Mayo Clinic", "Kaiser Permanente", "NHS"],
       "ko": ["메이요 클리닉", "카이저 퍼머넌테", "NHS"]
+    },
+    "details": {
+      "en": "Assesses needs, provides counseling, and creates care plans.",
+      "ko": "필요를 평가하고 상담하며 치료 계획을 세워요."
+    },
+    "resources": {
+      "en": ["APA", "NIMH", "Psychology Today"],
+      "ko": ["APA", "NIMH", "Psychology Today"]
     }
   },
   {
@@ -150,6 +214,14 @@
     "companies": {
       "en": ["Grameen Bank", "TOMS", "Ashoka"],
       "ko": ["그라민 은행", "톰스", "아쇼카"]
+    },
+    "details": {
+      "en": "Builds mission-driven ventures that help communities.",
+      "ko": "사회 문제를 해결하는 미션 중심 사업을 만들어요."
+    },
+    "resources": {
+      "en": ["Ashoka", "Skoll Foundation", "Acumen"],
+      "ko": ["Ashoka", "Skoll Foundation", "Acumen"]
     }
   },
   {
@@ -167,6 +239,14 @@
     "companies": {
       "en": ["Khan Academy", "UNESCO", "Teach For All"],
       "ko": ["칸 아카데미", "유네스코", "티치 포 올"]
+    },
+    "details": {
+      "en": "Designs lessons, supports learners, and builds confidence.",
+      "ko": "수업을 설계하고 학습자를 지원하며 자신감을 키워요."
+    },
+    "resources": {
+      "en": ["Edutopia", "Khan Academy", "UNESCO"],
+      "ko": ["Edutopia", "칸 아카데미", "UNESCO"]
     }
   },
   {
@@ -184,6 +264,14 @@
     "companies": {
       "en": ["BBC", "Reuters", "The New York Times"],
       "ko": ["BBC", "로이터", "뉴욕 타임스"]
+    },
+    "details": {
+      "en": "Reports, verifies sources, and crafts clear stories.",
+      "ko": "취재하고 사실을 확인해 이야기를 전달해요."
+    },
+    "resources": {
+      "en": ["Poynter", "Reuters Handbook of Journalism", "NPR Training"],
+      "ko": ["Poynter", "로이터 저널리즘 핸드북", "NPR Training"]
     }
   },
   {
@@ -201,6 +289,14 @@
     "companies": {
       "en": ["OECD", "World Bank", "Brookings"],
       "ko": ["OECD", "세계은행", "브루킹스 연구소"]
+    },
+    "details": {
+      "en": "Researches policy options and models impact.",
+      "ko": "정책을 연구하고 영향과 효과를 분석해요."
+    },
+    "resources": {
+      "en": ["Brookings", "OECD iLibrary", "World Bank Data"],
+      "ko": ["브루킹스 연구소", "OECD iLibrary", "세계은행 데이터"]
     }
   },
   {
@@ -218,6 +314,14 @@
     "companies": {
       "en": ["IDEO", "Wieden+Kennedy", "Pentagram"],
       "ko": ["IDEO", "와이든+케네디", "펜타그램"]
+    },
+    "details": {
+      "en": "Shapes brand voice, visuals, and long-term positioning.",
+      "ko": "브랜드의 목소리와 이미지, 방향성을 설계해요."
+    },
+    "resources": {
+      "en": ["IDEO U", "Brand New (UnderConsideration)", "WARC"],
+      "ko": ["IDEO U", "Brand New (UnderConsideration)", "WARC"]
     }
   },
   {
@@ -235,6 +339,14 @@
     "companies": {
       "en": ["Goldman Sachs", "BlackRock", "JPMorgan"],
       "ko": ["골드만삭스", "블랙록", "JP모건"]
+    },
+    "details": {
+      "en": "Analyzes markets, models risk, and forecasts performance.",
+      "ko": "시장을 분석하고 위험을 평가하며 전망을 세워요."
+    },
+    "resources": {
+      "en": ["CFA Institute", "Investopedia", "Aswath Damodaran"],
+      "ko": ["CFA Institute", "Investopedia", "아스워스 다모다란"]
     }
   },
   {
@@ -252,6 +364,14 @@
     "companies": {
       "en": ["Arup", "AECOM", "UN-Habitat"],
       "ko": ["아룹", "AECOM", "UN-해비타트"]
+    },
+    "details": {
+      "en": "Plans land use, mobility, and community-centered spaces.",
+      "ko": "토지와 교통, 커뮤니티 공간을 계획해요."
+    },
+    "resources": {
+      "en": ["Planetizen", "APA Planning", "UN-Habitat"],
+      "ko": ["Planetizen", "APA Planning", "UN-해비타트"]
     }
   }
 ]
