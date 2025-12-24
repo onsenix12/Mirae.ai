@@ -1,6 +1,7 @@
 ﻿'use client';
 
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import type { PointerEvent as ReactPointerEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import { useUserStore } from '@/lib/stores/userStore';
 import { storage } from '@/lib/utils/storage';
@@ -115,32 +116,144 @@ const roles = [
 
 export default function Stage1Page() {
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
+  const [isDragging, setIsDragging] = useState(false);
+  const [isSettling, setIsSettling] = useState(false);
+  const [shimmerDirection, setShimmerDirection] = useState<'left' | 'right' | 'up' | null>(null);
+  const [shimmerKey, setShimmerKey] = useState(0);
   const router = useRouter();
   const { userId, completeStage } = useUserStore();
+  const dragStart = useRef<{ x: number; y: number } | null>(null);
+  const dragActive = useRef(false);
+  const shimmerTimer = useRef<number | null>(null);
+  const swipeTimer = useRef<number | null>(null);
 
   const currentRole = roles[currentIndex];
   const progress = (currentIndex / roles.length) * 100;
+  const dragDistance = Math.hypot(dragOffset.x, dragOffset.y);
+  const dragIntensity = Math.min(dragDistance / 140, 1);
+  const likeOpacity =
+    dragOffset.x > 0 && Math.abs(dragOffset.x) > Math.abs(dragOffset.y)
+      ? Math.min(dragOffset.x / 120, 1)
+      : 0;
+  const passOpacity =
+    dragOffset.x < 0 && Math.abs(dragOffset.x) > Math.abs(dragOffset.y)
+      ? Math.min(Math.abs(dragOffset.x) / 120, 1)
+      : 0;
+  const saveOpacity =
+    dragOffset.y < 0 && Math.abs(dragOffset.y) > Math.abs(dragOffset.x)
+      ? Math.min(Math.abs(dragOffset.y) / 120, 1)
+      : 0;
 
-  const handleSwipe = (direction: 'left' | 'right' | 'up') => {
+  const triggerShimmer = (direction: 'left' | 'right' | 'up') => {
+    setShimmerDirection(direction);
+    setShimmerKey((prev) => prev + 1);
+    if (shimmerTimer.current) {
+      window.clearTimeout(shimmerTimer.current);
+    }
+    shimmerTimer.current = window.setTimeout(() => {
+      setShimmerDirection(null);
+    }, 650);
+  };
+
+  const handleSwipe = (direction: 'left' | 'right' | 'up', withShimmer = true) => {
+    if (isSettling) return;
+    const roleId = currentRole.id;
     const swipeData = {
       userId,
-      roleId: currentRole.id,
+      roleId,
       swipeDirection: direction,
       swipeSpeed: 0,
       cardTapCount: 0,
     };
 
-    // Store swipes in localStorage
-    const existingSwipes = storage.get<typeof swipeData[]>('roleSwipes', []) || [];
-    existingSwipes.push(swipeData);
-    storage.set('roleSwipes', existingSwipes);
+    const finalizeSwipe = () => {
+      // Store swipes in localStorage
+      const existingSwipes = storage.get<typeof swipeData[]>('roleSwipes', []) || [];
+      existingSwipes.push(swipeData);
+      storage.set('roleSwipes', existingSwipes);
 
-    if (currentIndex < roles.length - 1) {
-      setCurrentIndex(currentIndex + 1);
-    } else {
-      completeStage(1);
-      router.push('/dashboard');
+      if (currentIndex < roles.length - 1) {
+        setCurrentIndex(currentIndex + 1);
+      } else {
+        completeStage(1);
+        router.push('/dashboard');
+      }
+
+      setIsSettling(false);
+      setIsDragging(false);
+      setDragOffset({ x: 0, y: 0 });
+    };
+
+    if (withShimmer && !isDragging && !dragActive.current) {
+      const nudge = 90;
+      if (direction === 'left') setDragOffset({ x: -nudge, y: 0 });
+      if (direction === 'right') setDragOffset({ x: nudge, y: 0 });
+      if (direction === 'up') setDragOffset({ x: 0, y: -nudge });
+      setIsDragging(true);
     }
+
+    if (withShimmer) {
+      setIsSettling(true);
+      triggerShimmer(direction);
+      swipeTimer.current = window.setTimeout(() => {
+        finalizeSwipe();
+      }, 240);
+    } else {
+      finalizeSwipe();
+    }
+  };
+
+  useEffect(() => {
+    const handleKey = (event: KeyboardEvent) => {
+      if (event.key === 'ArrowLeft') handleSwipe('left');
+      if (event.key === 'ArrowRight') handleSwipe('right');
+      if (event.key === 'ArrowUp') handleSwipe('up');
+    };
+
+    window.addEventListener('keydown', handleKey);
+    return () => {
+      window.removeEventListener('keydown', handleKey);
+    };
+  }, [currentRole, isSettling]);
+
+  useEffect(() => {
+    return () => {
+      if (shimmerTimer.current) window.clearTimeout(shimmerTimer.current);
+      if (swipeTimer.current) window.clearTimeout(swipeTimer.current);
+    };
+  }, []);
+
+  const handlePointerDown = (event: ReactPointerEvent<HTMLDivElement>) => {
+    dragStart.current = { x: event.clientX, y: event.clientY };
+    dragActive.current = true;
+    setIsDragging(true);
+    event.currentTarget.setPointerCapture(event.pointerId);
+  };
+
+  const handlePointerMove = (event: ReactPointerEvent<HTMLDivElement>) => {
+    if (!dragActive.current || !dragStart.current) return;
+    const x = event.clientX - dragStart.current.x;
+    const y = event.clientY - dragStart.current.y;
+    setDragOffset({ x, y });
+  };
+
+  const handlePointerUp = () => {
+    if (!dragStart.current) return;
+    const { x, y } = dragOffset;
+    const horizontal = Math.abs(x) > 80 && Math.abs(x) > Math.abs(y);
+    const vertical = y < -80 && Math.abs(y) > Math.abs(x);
+
+    if (horizontal) {
+      handleSwipe(x > 0 ? 'right' : 'left');
+    } else if (vertical) {
+      handleSwipe('up');
+    }
+
+    dragStart.current = null;
+    dragActive.current = false;
+    setIsDragging(false);
+    setDragOffset({ x: 0, y: 0 });
   };
 
   return (
@@ -209,9 +322,65 @@ export default function Stage1Page() {
                 style={{ animation: 'float 10s ease-in-out infinite' }}
               />
               <div
-                className="relative flex min-h-[460px] flex-col items-center justify-between rounded-[32px] border border-white/70 bg-white/80 p-8 shadow-2xl backdrop-blur"
-                style={{ animation: 'float 8s ease-in-out infinite' }}
+                className="relative flex min-h-[460px] cursor-grab flex-col items-center justify-between rounded-[32px] border border-white/70 bg-white/80 p-8 shadow-2xl backdrop-blur transition-all duration-300 ease-out active:cursor-grabbing"
+                style={{
+                  animation: isDragging ? undefined : 'float 8s ease-in-out infinite',
+                  transform: `translate(${dragOffset.x}px, ${dragOffset.y}px) rotate(${
+                    dragOffset.x / 18
+                  }deg) scale(${1 + dragIntensity * 0.02})`,
+                  boxShadow: `0 24px 60px rgba(15, 23, 42, ${0.15 + dragIntensity * 0.15})`,
+                }}
+                onPointerDown={handlePointerDown}
+                onPointerMove={handlePointerMove}
+                onPointerUp={handlePointerUp}
+                onPointerCancel={handlePointerUp}
               >
+                <div className="pointer-events-none absolute inset-0">
+                  <div
+                    className="absolute left-6 top-6 rounded-full border border-white/80 bg-white/90 px-4 py-1 text-xs font-semibold uppercase tracking-wide text-emerald-500 shadow-sm"
+                    style={{ opacity: likeOpacity }}
+                  >
+                    Like
+                  </div>
+                  <div
+                    className="absolute right-6 top-6 rounded-full border border-white/80 bg-white/90 px-4 py-1 text-xs font-semibold uppercase tracking-wide text-rose-500 shadow-sm"
+                    style={{ opacity: passOpacity }}
+                  >
+                    Pass
+                  </div>
+                  <div
+                    className="absolute left-1/2 top-6 -translate-x-1/2 rounded-full border border-white/80 bg-white/90 px-4 py-1 text-xs font-semibold uppercase tracking-wide text-amber-500 shadow-sm"
+                    style={{ opacity: saveOpacity }}
+                  >
+                    Save
+                  </div>
+                  <div
+                    className="absolute inset-0 rounded-[32px] border border-white/80"
+                    style={{
+                      opacity: dragIntensity * 0.4,
+                      boxShadow: `0 0 0 1px rgba(255, 255, 255, ${
+                        0.4 + dragIntensity * 0.4
+                      }) inset`,
+                    }}
+                  />
+                  {shimmerDirection && (
+                    <div className="absolute inset-0 overflow-hidden rounded-[32px]">
+                      <div
+                        key={shimmerKey}
+                        className="absolute -inset-20 shimmer-layer"
+                        style={{
+                          animation: `${
+                            shimmerDirection === 'up'
+                              ? 'shimmer-up'
+                              : shimmerDirection === 'left'
+                                ? 'shimmer-left'
+                                : 'shimmer-right'
+                          } 650ms ease-out`,
+                        }}
+                      />
+                    </div>
+                  )}
+                </div>
                 <div className="flex flex-col items-center gap-4">
                   <div
                     className="h-28 w-28 rounded-full bg-gradient-to-br from-sky-200 via-violet-200 to-rose-200 shadow-inner"
@@ -320,6 +489,60 @@ export default function Stage1Page() {
       </div>
 
       <style jsx>{`
+        .shimmer-layer {
+          background: linear-gradient(
+            110deg,
+            rgba(255, 255, 255, 0) 0%,
+            rgba(255, 255, 255, 0.75) 45%,
+            rgba(255, 255, 255, 0.2) 60%,
+            rgba(255, 255, 255, 0) 75%
+          );
+          opacity: 0;
+          mix-blend-mode: screen;
+        }
+
+        @keyframes shimmer-right {
+          0% {
+            transform: translateX(-120%);
+            opacity: 0;
+          }
+          30% {
+            opacity: 0.8;
+          }
+          100% {
+            transform: translateX(120%);
+            opacity: 0;
+          }
+        }
+
+        @keyframes shimmer-left {
+          0% {
+            transform: translateX(120%);
+            opacity: 0;
+          }
+          30% {
+            opacity: 0.8;
+          }
+          100% {
+            transform: translateX(-120%);
+            opacity: 0;
+          }
+        }
+
+        @keyframes shimmer-up {
+          0% {
+            transform: translateY(120%);
+            opacity: 0;
+          }
+          30% {
+            opacity: 0.8;
+          }
+          100% {
+            transform: translateY(-120%);
+            opacity: 0;
+          }
+        }
+
         @keyframes float {
           0%,
           100% {
