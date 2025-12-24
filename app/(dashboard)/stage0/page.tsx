@@ -55,60 +55,79 @@ export default function Stage0Page() {
   };
 
   const canProceed = answers[question.id]?.length > 0;
+  const canGoBack = currentQ > 0;
+
+  const handleBack = () => {
+    if (currentQ > 0) {
+      setCurrentQ((prev) => Math.max(0, prev - 1));
+    } else {
+      router.push('/dashboard');
+    }
+  };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 to-pink-50 p-8">
-      <div className="max-w-2xl mx-auto">
-        <div className="mb-8">
-          <div className="flex justify-between items-center mb-2">
-            <p className="text-sm text-gray-600">
-              {t('stage0ProgressLabel')} {currentQ + 1} / {questions.length}
-            </p>
-            <p className="text-sm text-gray-600">{Math.round(progress)}%</p>
-          </div>
-          <div className="bg-gray-200 rounded-full h-2 overflow-hidden">
-            <div
-              className="bg-purple-600 h-full transition-all"
-              style={{ width: `${progress}%` }}
-            />
+    <div
+      className="min-h-screen px-6 sm:px-8 py-10 bg-cover bg-center bg-no-repeat"
+      style={{ backgroundImage: "url('/asset/Background.png')" }}
+    >
+      <div className="max-w-3xl mx-auto space-y-6">
+        <div className="glass-card rounded-3xl p-6 sm:p-7 relative overflow-hidden">
+          <div className="absolute inset-0 pointer-events-none soft-glow" />
+          <div className="relative space-y-2">
+            <div className="flex items-center justify-between text-sm text-slate-600">
+              <p>
+                {t('stage0ProgressLabel')} {currentQ + 1} / {questions.length}
+              </p>
+              <p>{Math.round(progress)}%</p>
+            </div>
+            <div className="bg-white/70 border border-white/70 rounded-full h-3 overflow-hidden shadow-inner">
+              <div
+                className="h-full bg-gradient-to-r from-[#9BCBFF] via-[#F4A9C8] to-[#BEEDE3] transition-all duration-500"
+                style={{ width: `${progress}%` }}
+              />
+            </div>
           </div>
         </div>
 
-        <div className="bg-white rounded-2xl shadow-xl p-8 mb-6">
-          <h2 className="text-2xl font-bold mb-6">{t(question.questionKey)}</h2>
+        <div className="glass-card rounded-3xl p-8 sm:p-10 shadow-xl relative overflow-hidden">
+          <div className="absolute inset-0 pointer-events-none soft-glow" />
+          <div className="relative">
+            <p className="text-xs uppercase tracking-wide text-slate-500 mb-2">{t('stage0Name')}</p>
+            <h2 className="text-2xl sm:text-3xl font-bold mb-6 text-slate-900">
+              {t(question.questionKey)}
+            </h2>
 
-          <div className="space-y-3">
-            {question.options.map((option) => {
-              const isSelected = answers[question.id]?.includes(option.id);
+            <div className="space-y-3">
+              {question.options.map((option) => {
+                const isSelected = answers[question.id]?.includes(option.id);
 
-              return (
-                <button
-                  key={option.id}
-                  onClick={() => handleSelect(option.id)}
-                  className={`
-                    w-full p-4 rounded-xl border-2 transition-all text-left
-                    ${
+                return (
+                  <button
+                    key={option.id}
+                    onClick={() => handleSelect(option.id)}
+                    className={[
+                      'w-full p-4 sm:p-5 rounded-2xl border transition-all text-left',
+                      'bg-white/80 border-white/60 hover:-translate-y-0.5 hover:shadow-lg',
                       isSelected
-                        ? 'border-purple-600 bg-purple-50 shadow-md'
-                        : 'border-gray-200 hover:border-purple-300'
-                    }
-                  `}
-                >
-                  <div className="flex items-center gap-3">
-                    {option.emoji && <span className="text-2xl">{option.emoji}</span>}
-                    <span className="font-medium">{t(option.labelKey)}</span>
-                  </div>
-                </button>
-              );
-            })}
+                        ? 'ring-2 ring-[#9BCBFF] shadow-md'
+                        : 'hover:border-white/90',
+                    ].join(' ')}
+                  >
+                    <div className="flex items-center gap-3">
+                      {option.emoji && <span className="text-2xl">{option.emoji}</span>}
+                      <span className="font-semibold text-slate-800">{t(option.labelKey)}</span>
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
           </div>
         </div>
 
-        <div className="flex justify-between">
+        <div className="flex flex-wrap items-center justify-between gap-3">
           <button
-            onClick={() => setCurrentQ(Math.max(0, currentQ - 1))}
-            disabled={currentQ === 0}
-            className="px-6 py-3 rounded-lg border-2 border-gray-300 disabled:opacity-50"
+            onClick={handleBack}
+            className="px-6 py-3 rounded-full border border-white/70 bg-white/70 text-slate-700 font-semibold hover:bg-white/90 transition"
           >
             {t('stage0Prev')}
           </button>
@@ -116,7 +135,7 @@ export default function Stage0Page() {
           <button
             onClick={handleComplete}
             disabled={!canProceed}
-            className="px-6 py-3 rounded-lg bg-purple-600 text-white font-medium disabled:opacity-50 hover:bg-purple-700 transition"
+            className="soft-button px-6 py-3 rounded-full text-sm sm:text-base font-semibold disabled:opacity-60 disabled:cursor-not-allowed"
           >
             {t('stage0Complete')}
           </button>

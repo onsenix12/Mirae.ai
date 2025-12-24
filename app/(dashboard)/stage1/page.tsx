@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useUserStore } from '@/lib/stores/userStore';
 import { useI18n } from '@/lib/i18n';
+import { ThumbsDown, Star, Heart } from 'lucide-react';
 
 // Placeholder roles - will be expanded to 50
 const roles = [
@@ -83,21 +84,21 @@ export default function Stage1Page() {
             onClick={() => handleSwipe('left')}
             className="w-16 h-16 rounded-full bg-white shadow-lg flex items-center justify-center hover:scale-110 transition"
           >
-            <span className="text-2xl">👎</span>
+            <ThumbsDown className="w-7 h-7 text-slate-500" />
           </button>
 
           <button
             onClick={() => handleSwipe('up')}
             className="w-16 h-16 rounded-full bg-white shadow-lg flex items-center justify-center hover:scale-110 transition"
           >
-            <span className="text-2xl">⭐</span>
+            <Star className="w-7 h-7 text-amber-400 fill-amber-400" />
           </button>
 
           <button
             onClick={() => handleSwipe('right')}
             className="w-16 h-16 rounded-full bg-white shadow-lg flex items-center justify-center hover:scale-110 transition"
           >
-            <span className="text-2xl">❤️</span>
+            <Heart className="w-7 h-7 text-red-500 fill-red-500" />
           </button>
         </div>
 

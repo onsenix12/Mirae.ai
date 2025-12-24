@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useUserStore } from '@/lib/stores/userStore';
 import { useI18n } from '@/lib/i18n';
+import { Star } from 'lucide-react';
 
 const specializations = [
   { id: 'ux-design', nameKey: 'specializationUxDesign', alignment: 85 },
@@ -42,7 +43,7 @@ export default function Stage4Page() {
         <div className="grid grid-cols-2 gap-4">
           {specializations.map((spec) => {
             const isSelected = selected.includes(spec.id);
-            const stars = '⭐'.repeat(Math.floor(spec.alignment / 20));
+            const starCount = Math.floor(spec.alignment / 20);
 
             return (
               <div
@@ -55,7 +56,11 @@ export default function Stage4Page() {
               >
                 <div className="flex items-start justify-between mb-4">
                   <h3 className="text-xl font-bold">{t(spec.nameKey)}</h3>
-                  <span className="text-sm text-gray-500">{stars}</span>
+                  <div className="flex gap-1">
+                    {Array.from({ length: starCount }).map((_, i) => (
+                      <Star key={i} className="w-4 h-4 fill-amber-400 text-amber-400" />
+                    ))}
+                  </div>
                 </div>
                 <p className="text-sm text-gray-600">
                   {t('stage4Alignment', { value: spec.alignment.toString() })}
