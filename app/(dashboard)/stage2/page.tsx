@@ -216,7 +216,13 @@ export default function Stage2Page() {
   const suggestions = useMemo(() => {
     const suggestionMap = new Map<
       string,
-      { score: number; reasons: Set<string>; label: CourseLabel; subject: CourseSubject }
+      {
+        score: number;
+        reasons: Set<string>;
+        label: CourseLabel;
+        subject: CourseSubject;
+        category: CourseCategory;
+      }
     >();
 
     courses.forEach((subject) => {
@@ -259,6 +265,7 @@ export default function Stage2Page() {
               reasons,
               label: course,
               subject,
+              category,
             });
           }
         });
@@ -273,6 +280,11 @@ export default function Stage2Page() {
         ...value,
       }));
   }, [likedRoles, strengths, selectedKeys, language]);
+
+  const getRecommendedBucket = (category: CourseCategory, score: number) => {
+    if (category === 'general' || score >= 4) return 'anchor';
+    return 'signal';
+  };
 
   const addToAnchor = (key: string) => {
     setSignal((prev) => prev.filter((item) => item !== key));
@@ -383,6 +395,10 @@ export default function Stage2Page() {
                         : suggestion.subject.subject_en;
                     const courseLabel =
                       language === 'ko' ? suggestion.label.kr : suggestion.label.en;
+                    const recommendedBucket = getRecommendedBucket(
+                      suggestion.category,
+                      suggestion.score
+                    );
                     return (
                       <div
                         key={suggestion.key}
@@ -412,7 +428,11 @@ export default function Stage2Page() {
                             type="button"
                             onClick={() => addToAnchor(suggestion.key)}
                             disabled={anchor.length >= maxBucketSize}
-                            className="text-xs font-semibold px-2 py-1 rounded-full bg-sky-100/80 text-sky-700 disabled:opacity-50 transition-all duration-300 ease-out"
+                            className={`text-xs font-semibold px-2 py-1 rounded-full border transition-all duration-300 ease-out disabled:opacity-50 ${
+                              recommendedBucket === 'anchor'
+                                ? 'bg-sky-200/95 border-sky-200 text-sky-900 shadow-[0_0_16px_rgba(56,189,248,0.45)] ring-2 ring-sky-300/70'
+                                : 'bg-sky-100/60 border-white/70 text-sky-700'
+                            }`}
                           >
                             {addToAnchorLabel}
                           </button>
@@ -420,7 +440,11 @@ export default function Stage2Page() {
                             type="button"
                             onClick={() => addToSignal(suggestion.key)}
                             disabled={signal.length >= maxBucketSize}
-                            className="text-xs font-semibold px-2 py-1 rounded-full bg-rose-100/80 text-rose-700 disabled:opacity-50 transition-all duration-300 ease-out"
+                            className={`text-xs font-semibold px-2 py-1 rounded-full border transition-all duration-300 ease-out disabled:opacity-50 ${
+                              recommendedBucket === 'signal'
+                                ? 'bg-rose-200/95 border-rose-200 text-rose-900 shadow-[0_0_16px_rgba(251,113,133,0.45)] ring-2 ring-rose-300/70'
+                                : 'bg-rose-100/60 border-white/70 text-rose-700'
+                            }`}
                           >
                             {addToSignalLabel}
                           </button>
