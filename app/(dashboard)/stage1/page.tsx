@@ -5,19 +5,111 @@ import { useRouter } from 'next/navigation';
 import { useUserStore } from '@/lib/stores/userStore';
 import { storage } from '@/lib/utils/storage';
 
-// Placeholder roles - will be expanded to 50
 const roles = [
   {
     id: 'ux-designer',
     title: 'UX Designer',
     tagline: 'Designs calm, human-centered product experiences.',
     domain: 'creative',
+    roleModels: ['Don Norman', 'Susan Kare'],
   },
   {
     id: 'data-scientist',
     title: 'Data Scientist',
     tagline: 'Finds patterns and stories inside complex data.',
     domain: 'analytical',
+    roleModels: ['Fei-Fei Li', 'DJ Patil'],
+  },
+  {
+    id: 'product-manager',
+    title: 'Product Manager',
+    tagline: 'Connects user needs, business goals, and technical delivery.',
+    domain: 'strategic',
+    roleModels: ['Marty Cagan', 'Aparna Chennapragada'],
+  },
+  {
+    id: 'software-engineer',
+    title: 'Software Engineer',
+    tagline: 'Builds reliable systems that scale and support people.',
+    domain: 'technical',
+    roleModels: ['Margaret Hamilton', 'Linus Torvalds'],
+  },
+  {
+    id: 'robotics-engineer',
+    title: 'Robotics Engineer',
+    tagline: 'Combines mechanics, code, and sensors to create movement.',
+    domain: 'technical',
+    roleModels: ['Rodney Brooks', 'Ayanna Howard'],
+  },
+  {
+    id: 'environmental-scientist',
+    title: 'Environmental Scientist',
+    tagline: 'Protects ecosystems through research and sustainable planning.',
+    domain: 'social impact',
+    roleModels: ['Rachel Carson', 'Sylvia Earle'],
+  },
+  {
+    id: 'biomedical-researcher',
+    title: 'Biomedical Researcher',
+    tagline: 'Explores how science can improve health and wellbeing.',
+    domain: 'health',
+    roleModels: ['Tu Youyou', 'Katalin Kariko'],
+  },
+  {
+    id: 'clinical-psychologist',
+    title: 'Clinical Psychologist',
+    tagline: 'Supports mental health through assessment and care.',
+    domain: 'empathy',
+    roleModels: ['Carl Rogers', 'Marsha Linehan'],
+  },
+  {
+    id: 'social-entrepreneur',
+    title: 'Social Entrepreneur',
+    tagline: 'Builds ventures that solve real community challenges.',
+    domain: 'social impact',
+    roleModels: ['Muhammad Yunus', 'Blake Mycoskie'],
+  },
+  {
+    id: 'teacher-educator',
+    title: 'Teacher / Educator',
+    tagline: 'Helps learners grow confidence and curiosity.',
+    domain: 'human-centered',
+    roleModels: ['Maria Montessori', 'Sal Khan'],
+  },
+  {
+    id: 'journalist',
+    title: 'Journalist',
+    tagline: 'Investigates, explains, and amplifies stories that matter.',
+    domain: 'communication',
+    roleModels: ['Christiane Amanpour', 'Ida B. Wells'],
+  },
+  {
+    id: 'policy-analyst',
+    title: 'Policy Analyst',
+    tagline: 'Studies systems and recommends better public decisions.',
+    domain: 'civic',
+    roleModels: ['Esther Duflo', 'Cass Sunstein'],
+  },
+  {
+    id: 'brand-strategist',
+    title: 'Brand Strategist',
+    tagline: 'Shapes identity, storytelling, and long-term positioning.',
+    domain: 'creative',
+    roleModels: ['David Ogilvy', 'Seth Godin'],
+  },
+  {
+    id: 'financial-analyst',
+    title: 'Financial Analyst',
+    tagline: 'Translates numbers into smart, sustainable choices.',
+    domain: 'analytical',
+    roleModels: ['Warren Buffett', 'Aswath Damodaran'],
+  },
+  {
+    id: 'urban-planner',
+    title: 'Urban Planner',
+    tagline: 'Designs cities that feel livable, safe, and connected.',
+    domain: 'systems',
+    roleModels: ['Jane Jacobs', 'Jan Gehl'],
   },
 ];
 
@@ -133,6 +225,23 @@ export default function Stage1Page() {
                 <div className="space-y-3 text-center">
                   <h2 className="text-3xl font-semibold text-slate-800">{currentRole.title}</h2>
                   <p className="text-sm text-slate-600 sm:text-base">{currentRole.tagline}</p>
+                  {currentRole.roleModels && currentRole.roleModels.length > 0 && (
+                    <div className="pt-2">
+                      <p className="text-[11px] uppercase tracking-wide text-slate-500">
+                        Role models
+                      </p>
+                      <div className="mt-2 flex flex-wrap justify-center gap-2">
+                        {currentRole.roleModels.map((name) => (
+                          <span
+                            key={name}
+                            className="rounded-full border border-white/70 bg-white/80 px-2.5 py-1 text-xs text-slate-600"
+                          >
+                            {name}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 <div className="flex gap-4">
