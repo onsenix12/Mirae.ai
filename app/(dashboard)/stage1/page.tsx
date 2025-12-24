@@ -4,115 +4,128 @@ import { useEffect, useRef, useState } from 'react';
 import type { PointerEvent as ReactPointerEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import { useUserStore } from '@/lib/stores/userStore';
+import { useI18n } from '@/lib/i18n';
 import { storage } from '@/lib/utils/storage';
+import rolesData from '@/lib/data/roles.json';
 
-const roles = [
-  {
-    id: 'ux-designer',
-    title: 'UX Designer',
-    tagline: 'Designs calm, human-centered product experiences.',
-    domain: 'creative',
-    roleModels: ['Don Norman', 'Susan Kare'],
-  },
-  {
-    id: 'data-scientist',
-    title: 'Data Scientist',
-    tagline: 'Finds patterns and stories inside complex data.',
-    domain: 'analytical',
-    roleModels: ['Fei-Fei Li', 'DJ Patil'],
-  },
-  {
-    id: 'product-manager',
-    title: 'Product Manager',
-    tagline: 'Connects user needs, business goals, and technical delivery.',
-    domain: 'strategic',
-    roleModels: ['Marty Cagan', 'Aparna Chennapragada'],
-  },
-  {
-    id: 'software-engineer',
-    title: 'Software Engineer',
-    tagline: 'Builds reliable systems that scale and support people.',
-    domain: 'technical',
-    roleModels: ['Margaret Hamilton', 'Linus Torvalds'],
-  },
-  {
-    id: 'robotics-engineer',
-    title: 'Robotics Engineer',
-    tagline: 'Combines mechanics, code, and sensors to create movement.',
-    domain: 'technical',
-    roleModels: ['Rodney Brooks', 'Ayanna Howard'],
-  },
-  {
-    id: 'environmental-scientist',
-    title: 'Environmental Scientist',
-    tagline: 'Protects ecosystems through research and sustainable planning.',
-    domain: 'social impact',
-    roleModels: ['Rachel Carson', 'Sylvia Earle'],
-  },
-  {
-    id: 'biomedical-researcher',
-    title: 'Biomedical Researcher',
-    tagline: 'Explores how science can improve health and wellbeing.',
-    domain: 'health',
-    roleModels: ['Tu Youyou', 'Katalin Kariko'],
-  },
-  {
-    id: 'clinical-psychologist',
-    title: 'Clinical Psychologist',
-    tagline: 'Supports mental health through assessment and care.',
-    domain: 'empathy',
-    roleModels: ['Carl Rogers', 'Marsha Linehan'],
-  },
-  {
-    id: 'social-entrepreneur',
-    title: 'Social Entrepreneur',
-    tagline: 'Builds ventures that solve real community challenges.',
-    domain: 'social impact',
-    roleModels: ['Muhammad Yunus', 'Blake Mycoskie'],
-  },
-  {
-    id: 'teacher-educator',
-    title: 'Teacher / Educator',
-    tagline: 'Helps learners grow confidence and curiosity.',
-    domain: 'human-centered',
-    roleModels: ['Maria Montessori', 'Sal Khan'],
-  },
-  {
-    id: 'journalist',
-    title: 'Journalist',
-    tagline: 'Investigates, explains, and amplifies stories that matter.',
-    domain: 'communication',
-    roleModels: ['Christiane Amanpour', 'Ida B. Wells'],
-  },
-  {
-    id: 'policy-analyst',
-    title: 'Policy Analyst',
-    tagline: 'Studies systems and recommends better public decisions.',
-    domain: 'civic',
-    roleModels: ['Esther Duflo', 'Cass Sunstein'],
-  },
-  {
-    id: 'brand-strategist',
-    title: 'Brand Strategist',
-    tagline: 'Shapes identity, storytelling, and long-term positioning.',
-    domain: 'creative',
-    roleModels: ['David Ogilvy', 'Seth Godin'],
-  },
-  {
-    id: 'financial-analyst',
-    title: 'Financial Analyst',
-    tagline: 'Translates numbers into smart, sustainable choices.',
-    domain: 'analytical',
-    roleModels: ['Warren Buffett', 'Aswath Damodaran'],
-  },
-  {
-    id: 'urban-planner',
-    title: 'Urban Planner',
-    tagline: 'Designs cities that feel livable, safe, and connected.',
-    domain: 'systems',
-    roleModels: ['Jane Jacobs', 'Jan Gehl'],
-  },
-];
+type RoleLocale = { en: string; ko: string };
+type RoleListLocale = { en: string[]; ko: string[] };
+
+interface RoleData {
+  id: string;
+  title: RoleLocale;
+  tagline: RoleLocale;
+  domain: RoleLocale;
+  roleModels: RoleListLocale;
+  companies: RoleListLocale;
+}
+
+const roles = rolesData as RoleData[];
+
+const roleIcons: Record<string, JSX.Element> = {
+  'ux-designer': (
+    <>
+      <circle cx="11" cy="11" r="6.5" />
+      <path d="M15.5 15.5L20 20" />
+    </>
+  ),
+  'data-scientist': (
+    <>
+      <path d="M4 6h16" />
+      <path d="M6 6v10a6 6 0 0 0 12 0V6" />
+      <path d="M8 12h8" />
+    </>
+  ),
+  'product-manager': (
+    <>
+      <path d="M12 3l7 4v6c0 4.4-3 7.6-7 9-4-1.4-7-4.6-7-9V7l7-4z" />
+      <path d="M8.5 12l2 2 5-5" />
+    </>
+  ),
+  'software-engineer': (
+    <>
+      <path d="M8 8l-4 4 4 4" />
+      <path d="M16 8l4 4-4 4" />
+      <path d="M12 7l-2 10" />
+    </>
+  ),
+  'robotics-engineer': (
+    <>
+      <rect x="6" y="6" width="12" height="12" rx="3" />
+      <path d="M9 10h.01" />
+      <path d="M15 10h.01" />
+      <path d="M9 15h6" />
+      <path d="M12 2v4" />
+    </>
+  ),
+  'environmental-scientist': (
+    <>
+      <path d="M12 3c4 0 7 3 7 7 0 5-4 9-7 11-3-2-7-6-7-11 0-4 3-7 7-7z" />
+      <path d="M12 6v10" />
+      <path d="M12 12c-2-1-4-1-6 0" />
+    </>
+  ),
+  'biomedical-researcher': (
+    <>
+      <circle cx="12" cy="12" r="7" />
+      <path d="M12 8v8" />
+      <path d="M8 12h8" />
+    </>
+  ),
+  'clinical-psychologist': (
+    <>
+      <path d="M12 21s-6-4.5-8-8.5C2 9 4 6.5 7 6.5c2 0 3.5 1.2 5 3 1.5-1.8 3-3 5-3 3 0 5 2.5 3 6-2 4-8 8.5-8 8.5z" />
+    </>
+  ),
+  'social-entrepreneur': (
+    <>
+      <path d="M12 3l4 4-4 4-4-4 4-4z" />
+      <path d="M7 13h10l-1.5 7h-7L7 13z" />
+    </>
+  ),
+  'teacher-educator': (
+    <>
+      <path d="M4 8l8-4 8 4-8 4-8-4z" />
+      <path d="M8 11v4c0 1.5 8 1.5 8 0v-4" />
+    </>
+  ),
+  journalist: (
+    <>
+      <rect x="4" y="5" width="16" height="14" rx="2" />
+      <path d="M8 9h8" />
+      <path d="M8 13h6" />
+      <path d="M6 9h.01" />
+    </>
+  ),
+  'policy-analyst': (
+    <>
+      <path d="M3 5h18" />
+      <path d="M6 5v13" />
+      <path d="M18 5v13" />
+      <path d="M8 9h8" />
+      <path d="M8 13h8" />
+    </>
+  ),
+  'brand-strategist': (
+    <>
+      <path d="M12 2l3 6 6 .8-4.4 4.2 1 6L12 16l-5.6 3 1-6L3 8.8 9 8l3-6z" />
+    </>
+  ),
+  'financial-analyst': (
+    <>
+      <path d="M4 19h16" />
+      <path d="M6 16l4-4 4 3 4-6" />
+      <path d="M6 9h.01" />
+    </>
+  ),
+  'urban-planner': (
+    <>
+      <rect x="4" y="6" width="6" height="12" rx="1" />
+      <rect x="14" y="4" width="6" height="14" rx="1" />
+      <path d="M10 12h4" />
+    </>
+  ),
+};
 
 export default function Stage1Page() {
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -123,12 +136,45 @@ export default function Stage1Page() {
   const [shimmerKey, setShimmerKey] = useState(0);
   const router = useRouter();
   const { userId, completeStage } = useUserStore();
+  const { language } = useI18n();
   const dragStart = useRef<{ x: number; y: number } | null>(null);
   const dragActive = useRef(false);
   const shimmerTimer = useRef<number | null>(null);
   const swipeTimer = useRef<number | null>(null);
 
   const currentRole = roles[currentIndex];
+  const roleTitle = language === 'ko' ? currentRole.title.ko : currentRole.title.en;
+  const roleTagline = language === 'ko' ? currentRole.tagline.ko : currentRole.tagline.en;
+  const roleDomain = language === 'ko' ? currentRole.domain.ko : currentRole.domain.en;
+  const roleModels = language === 'ko' ? currentRole.roleModels.ko : currentRole.roleModels.en;
+  const roleCompanies = language === 'ko' ? currentRole.companies.ko : currentRole.companies.en;
+  const roleModelsLabel = language === 'ko' ? '롤모델' : 'Role models';
+  const roleCompaniesLabel = language === 'ko' ? '함께할 수 있는 곳' : 'Where you could work';
+  const roleIcon = roleIcons[currentRole.id] ?? (
+    <text x="12" y="16" textAnchor="middle" fontSize="10" fontFamily="inherit">
+      {roleTitle.slice(0, 2)}
+    </text>
+  );
+  const passLabel = language === 'ko' ? '패스' : 'Pass';
+  const saveLabel = language === 'ko' ? '저장' : 'Save';
+  const likeLabel = language === 'ko' ? '좋아요' : 'Like';
+  const stageLabel = language === 'ko' ? '1단계' : 'Stage 1';
+  const sectionLabel = language === 'ko' ? '역할 룰렛' : 'Role Roulette';
+  const headingText =
+    language === 'ko'
+      ? '차분하고 호기심 가득한 스와이프로 역할을 탐색해요.'
+      : 'Explore roles with calm, curious swipes.';
+  const subheadingText =
+    language === 'ko'
+      ? '미래를 확정하는 것이 아니라, 흥미가 어디로 향하는지 살펴보는 단계예요.'
+      : 'Follow your gut. You are not choosing a future yet, just noticing what feels interesting.';
+  const hintLeft = language === 'ko' ? '왼쪽: 패스' : 'Swipe left to pass';
+  const hintUp = language === 'ko' ? '위로: 저장' : 'Swipe up to save for later';
+  const hintRight = language === 'ko' ? '오른쪽: 좋아요' : 'Swipe right to like';
+  const hintTap =
+    language === 'ko'
+      ? '버튼을 누르거나 카드에서 스와이프해 보세요.'
+      : 'Tap the buttons or swipe on the card to keep exploring.';
   const progress = (currentIndex / roles.length) * 100;
   const dragDistance = Math.hypot(dragOffset.x, dragOffset.y);
   const dragIntensity = Math.min(dragDistance / 140, 1);
@@ -271,18 +317,15 @@ export default function Stage1Page() {
       <div className="relative mx-auto flex w-full max-w-5xl flex-col gap-10 lg:grid lg:grid-cols-[1fr_420px] lg:items-center">
         <div className="space-y-6 text-slate-800">
           <div className="inline-flex items-center gap-2 rounded-full bg-white/70 px-4 py-2 text-xs font-semibold uppercase tracking-wide text-slate-600 shadow-sm">
-            Stage 1
+            {stageLabel}
             <span className="h-1 w-1 rounded-full bg-slate-400" />
-            Role Roulette
+            {sectionLabel}
           </div>
 
           <div>
-            <h1 className="text-3xl font-semibold sm:text-4xl">
-              Explore roles with calm, curious swipes.
-            </h1>
+            <h1 className="text-3xl font-semibold sm:text-4xl">{headingText}</h1>
             <p className="mt-3 max-w-md text-sm text-slate-600 sm:text-base">
-              Follow your gut. You are not choosing a future yet, just noticing what feels
-              interesting.
+              {subheadingText}
             </p>
           </div>
 
@@ -303,13 +346,13 @@ export default function Stage1Page() {
 
           <div className="flex flex-wrap gap-3 text-xs text-slate-600">
             <span className="rounded-full border border-white/70 bg-white/70 px-3 py-1">
-              Swipe left to pass
+              {hintLeft}
             </span>
             <span className="rounded-full border border-white/70 bg-white/70 px-3 py-1">
-              Swipe up to save for later
+              {hintUp}
             </span>
             <span className="rounded-full border border-white/70 bg-white/70 px-3 py-1">
-              Swipe right to like
+              {hintRight}
             </span>
           </div>
         </div>
@@ -321,6 +364,16 @@ export default function Stage1Page() {
                 className="absolute -inset-3 rounded-[36px] bg-white/30 blur-xl"
                 style={{ animation: 'float 10s ease-in-out infinite' }}
               />
+              <div className="pointer-events-none absolute inset-0">
+                <div
+                  className="absolute inset-0 rounded-[32px] border border-white/50 bg-white/40 shadow-xl"
+                  style={{ transform: 'translate(10px, 12px) scale(0.98)' }}
+                />
+                <div
+                  className="absolute inset-0 rounded-[32px] border border-white/40 bg-white/30 shadow-lg"
+                  style={{ transform: 'translate(20px, 24px) scale(0.96)' }}
+                />
+              </div>
               <div
                 className="relative flex min-h-[460px] cursor-grab flex-col items-center justify-between rounded-[32px] border border-white/70 bg-white/80 p-8 shadow-2xl backdrop-blur transition-all duration-300 ease-out active:cursor-grabbing"
                 style={{
@@ -340,19 +393,19 @@ export default function Stage1Page() {
                     className="absolute left-6 top-6 rounded-full border border-white/80 bg-white/90 px-4 py-1 text-xs font-semibold uppercase tracking-wide text-emerald-500 shadow-sm"
                     style={{ opacity: likeOpacity }}
                   >
-                    Like
+                    {likeLabel}
                   </div>
                   <div
                     className="absolute right-6 top-6 rounded-full border border-white/80 bg-white/90 px-4 py-1 text-xs font-semibold uppercase tracking-wide text-rose-500 shadow-sm"
                     style={{ opacity: passOpacity }}
                   >
-                    Pass
+                    {passLabel}
                   </div>
                   <div
                     className="absolute left-1/2 top-6 -translate-x-1/2 rounded-full border border-white/80 bg-white/90 px-4 py-1 text-xs font-semibold uppercase tracking-wide text-amber-500 shadow-sm"
                     style={{ opacity: saveOpacity }}
                   >
-                    Save
+                    {saveLabel}
                   </div>
                   <div
                     className="absolute inset-0 rounded-[32px] border border-white/80"
@@ -383,24 +436,53 @@ export default function Stage1Page() {
                 </div>
                 <div className="flex flex-col items-center gap-4">
                   <div
-                    className="h-28 w-28 rounded-full bg-gradient-to-br from-sky-200 via-violet-200 to-rose-200 shadow-inner"
+                    className="flex h-28 w-28 items-center justify-center rounded-full bg-gradient-to-br from-sky-200 via-violet-200 to-rose-200 shadow-inner"
                     style={{ animation: 'float 6s ease-in-out infinite' }}
-                  />
+                  >
+                    <svg
+                      className="h-12 w-12 text-slate-600/80"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="1.8"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
+                      {roleIcon}
+                    </svg>
+                  </div>
                   <span className="rounded-full border border-white/70 bg-white/70 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-slate-600">
-                    {currentRole.domain}
+                    {roleDomain}
                   </span>
                 </div>
 
                 <div className="space-y-3 text-center">
-                  <h2 className="text-3xl font-semibold text-slate-800">{currentRole.title}</h2>
-                  <p className="text-sm text-slate-600 sm:text-base">{currentRole.tagline}</p>
-                  {currentRole.roleModels && currentRole.roleModels.length > 0 && (
+                  <h2 className="text-3xl font-semibold text-slate-800">{roleTitle}</h2>
+                  <p className="text-sm text-slate-600 sm:text-base">{roleTagline}</p>
+                  {roleModels && roleModels.length > 0 && (
                     <div className="pt-2">
                       <p className="text-[11px] uppercase tracking-wide text-slate-500">
-                        Role models
+                        {roleModelsLabel}
                       </p>
                       <div className="mt-2 flex flex-wrap justify-center gap-2">
-                        {currentRole.roleModels.map((name) => (
+                        {roleModels.map((name) => (
+                          <span
+                            key={name}
+                            className="rounded-full border border-white/70 bg-white/80 px-2.5 py-1 text-xs text-slate-600"
+                          >
+                            {name}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  {roleCompanies && roleCompanies.length > 0 && (
+                    <div className="pt-3">
+                      <p className="text-[11px] uppercase tracking-wide text-slate-500">
+                        {roleCompaniesLabel}
+                      </p>
+                      <div className="mt-2 flex flex-wrap justify-center gap-2">
+                        {roleCompanies.map((name) => (
                           <span
                             key={name}
                             className="rounded-full border border-white/70 bg-white/80 px-2.5 py-1 text-xs text-slate-600"
@@ -483,7 +565,7 @@ export default function Stage1Page() {
           </div>
 
           <p className="text-center text-xs text-slate-600">
-            Tap the buttons or swipe on the card to keep exploring.
+            {hintTap}
           </p>
         </div>
       </div>
