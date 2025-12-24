@@ -174,16 +174,30 @@ export default function Stage2Page() {
   }, []);
 
   useEffect(() => {
-    const profile = storage.get<{ strengths?: string[] }>('userProfile');
+    const profile = storage.get<{ strengths?: string[]; likedRoles?: string[] }>('userProfile');
     if (profile?.strengths) {
       setStrengths(profile.strengths);
+    }
+
+    const storedLiked = profile?.likedRoles ?? [];
+    if (storedLiked.length > 0) {
+      setLikedRoles(Array.from(new Set(storedLiked)));
+      return;
     }
 
     const swipes = storage.get<RoleSwipe[]>('roleSwipes', []) ?? [];
     const liked = swipes
       .filter((swipe) => swipe.swipeDirection === 'right')
       .map((swipe) => swipe.roleId);
-    setLikedRoles(Array.from(new Set(liked)));
+    const uniqueLiked = Array.from(new Set(liked));
+    setLikedRoles(uniqueLiked);
+
+    if (uniqueLiked.length > 0) {
+      storage.set('userProfile', {
+        ...(profile ?? {}),
+        likedRoles: uniqueLiked,
+      });
+    }
   }, []);
 
   useEffect(() => {
