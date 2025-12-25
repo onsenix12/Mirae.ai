@@ -1702,7 +1702,7 @@ export default function MiraePlusStatement() {
               >
                 ✕
               </button>
-              <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between mb-5">
+              <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between mb-5 pr-12">
                 <div>
                   <p className="text-xs uppercase tracking-wide text-slate-500">Personal Statement Support</p>
                   <h2 className="text-2xl font-semibold text-slate-800">Your Growth Map</h2>
@@ -1710,7 +1710,7 @@ export default function MiraePlusStatement() {
                     Mirae tracks strengths, interests, and growth over time to help you articulate your journey.
                   </p>
                 </div>
-                <div className="flex flex-wrap items-center gap-2">
+                <div className="flex flex-wrap items-center gap-2 flex-shrink-0">
                   <button
                     onClick={() => setAdventureView('archive')}
                     className={`px-4 py-2 rounded-full text-xs font-semibold transition ${
