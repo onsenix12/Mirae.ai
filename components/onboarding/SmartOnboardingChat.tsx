@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
+import { useI18n } from '@/lib/i18n';
 import { FileUploadZone } from './shared/FileUploadZone';
 
 interface Message {
@@ -29,10 +30,11 @@ export const SmartOnboardingChat: React.FC<SmartOnboardingChatProps> = ({
   inputValue,
   onSend,
 }) => {
+  const { t, language } = useI18n();
   const [messages, setMessages] = useState<Message[]>([
     {
       role: 'assistant',
-      content: "No one else can see what we talk about here. Not teachers, not parents, not friends. Just you and me.\n\nBefore we start, I'd love to know a little about where you're at right now. Cool if I ask a few quick questions?",
+      content: t('onboardingChatIntro'),
     },
   ]);
   const [isLoading, setIsLoading] = useState(false);
@@ -51,6 +53,13 @@ export const SmartOnboardingChat: React.FC<SmartOnboardingChatProps> = ({
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
+
+  useEffect(() => {
+    setMessages((prev) => {
+      if (prev.length !== 1 || prev[0].role !== 'assistant') return prev;
+      return [{ ...prev[0], content: t('onboardingChatIntro') }];
+    });
+  }, [language, t]);
 
   // Listen for send event
   useEffect(() => {
@@ -75,6 +84,7 @@ export const SmartOnboardingChat: React.FC<SmartOnboardingChatProps> = ({
           body: JSON.stringify({
             messages: newMessages.map(m => ({ role: m.role, content: m.content })),
             context: latestContext,
+            language,
           }),
         });
 
@@ -101,7 +111,7 @@ export const SmartOnboardingChat: React.FC<SmartOnboardingChatProps> = ({
             ...newMessages,
             {
               role: 'assistant',
-              content: "I'm here. Want to share a bit more so I can guide you?",
+              content: t('onboardingChatNudge'),
             },
           ]);
         }
@@ -118,7 +128,7 @@ export const SmartOnboardingChat: React.FC<SmartOnboardingChatProps> = ({
             setShowDocumentUpload(true);
             setMessages(prev => [...prev, {
               role: 'assistant',
-              content: "One more thing—some students find it helpful to share things like:\n\n📎 Career.net results (커리어넷 검사 결과)\n📎 Interest/aptitude test results\n📎 Notes from school counseling\n📎 Project work or writing samples\n\nIf you have anything like that and want to share, I can help us talk through what you're seeing in them.\n\nBut if not, no worries—we can just keep chatting!"
+              content: t('onboardingUploadPrompt')
             }]);
           }, 500);
         }
@@ -128,7 +138,7 @@ export const SmartOnboardingChat: React.FC<SmartOnboardingChatProps> = ({
           ...newMessages,
           {
             role: 'assistant',
-            content: "Hmm, I'm having trouble connecting right now. Can you try that again?",
+            content: t('onboardingChatRetry'),
           },
         ]);
       } finally {
@@ -149,6 +159,8 @@ export const SmartOnboardingChat: React.FC<SmartOnboardingChatProps> = ({
     onInputChange,
     onComplete,
     onContextUpdate,
+    t,
+    language,
   ]);
 
   return (
@@ -195,7 +207,7 @@ export const SmartOnboardingChat: React.FC<SmartOnboardingChatProps> = ({
             onClick={() => setShowUploadUI(true)}
             className="px-6 py-3 rounded-full bg-gradient-to-br from-[#E5E0FF] to-[#F4E4FF] border-2 border-[#C7B9FF]/60 text-slate-800 font-semibold hover:shadow-lg transition"
           >
-            📤 Upload something
+            📤 {t('onboardingUploadButton')}
           </button>
           <button
             onClick={() => {
@@ -204,7 +216,7 @@ export const SmartOnboardingChat: React.FC<SmartOnboardingChatProps> = ({
             }}
             className="px-6 py-3 rounded-full bg-white/70 border-2 border-slate-300 text-slate-700 font-semibold hover:bg-white/90 transition"
           >
-            Skip for now
+            {t('onboardingUploadSkip')}
           </button>
         </div>
       )}
@@ -223,7 +235,7 @@ export const SmartOnboardingChat: React.FC<SmartOnboardingChatProps> = ({
             {uploadedFiles.length > 0 && (
               <div className="mt-4 space-y-2">
                 <p className="text-sm font-medium text-gray-700">
-                  Uploaded files ({uploadedFiles.length}/6):
+                  {t('onboardingUploadFilesLabel', { count: uploadedFiles.length })}
                 </p>
                 <ul className="space-y-1">
                   {uploadedFiles.map((file, idx) => (
@@ -253,7 +265,7 @@ export const SmartOnboardingChat: React.FC<SmartOnboardingChatProps> = ({
               disabled={uploadedFiles.length === 0}
               className="px-6 py-3 rounded-full bg-gradient-to-br from-[#E5E0FF] to-[#F4E4FF] border-2 border-[#C7B9FF]/60 text-slate-800 font-semibold hover:shadow-lg transition disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              Done uploading
+              {t('onboardingUploadDone')}
             </button>
             <button
               onClick={() => {
@@ -263,7 +275,7 @@ export const SmartOnboardingChat: React.FC<SmartOnboardingChatProps> = ({
               }}
               className="px-6 py-3 rounded-full bg-white/70 border-2 border-slate-300 text-slate-700 font-semibold hover:bg-white/90 transition"
             >
-              Cancel
+              {t('onboardingUploadCancel')}
             </button>
           </div>
         </div>

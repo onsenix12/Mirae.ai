@@ -38,7 +38,7 @@ export const OnboardingSidebar: React.FC<OnboardingSidebarProps> = ({ onFinish }
           </div>
         ) : (
           <p className="text-xs text-slate-500 italic">
-            Keywords will appear as we chat...
+            {t('onboardingKeywordsEmpty')}
           </p>
         )}
       </div>
@@ -64,26 +64,33 @@ export const OnboardingSidebar: React.FC<OnboardingSidebarProps> = ({ onFinish }
       {/* Student Context Summary (optional) */}
       {state.studentData.yearLevel && (
         <div className="glass-card rounded-3xl p-5 shadow-lg border border-white/60">
-          <p className="text-xs font-semibold text-slate-600 mb-2">Your Info</p>
+          <p className="text-xs font-semibold text-slate-600 mb-2">
+            {t('onboardingInfoTitle')}
+          </p>
           <div className="space-y-1 text-xs text-slate-700">
             {state.studentData.yearLevel && (
               <p>
-                📚 Year {state.studentData.yearLevel === 'year1' ? '1' : state.studentData.yearLevel === 'year2' ? '2' : '3'}
+                📚 {t('onboardingInfoYear', {
+                  value:
+                    state.studentData.yearLevel === 'year1'
+                      ? '1'
+                      : state.studentData.yearLevel === 'year2'
+                        ? '2'
+                        : '3',
+                })}
               </p>
             )}
             {state.studentData.courseSelectionStatus && (
               <p>
-                ✏️ {
-                  state.studentData.courseSelectionStatus === 'picked'
-                    ? 'Courses picked'
-                    : state.studentData.courseSelectionStatus === 'deciding'
-                      ? 'Still deciding'
-                      : 'Reconsidering choices'
-                }
+                ✏️ {state.studentData.courseSelectionStatus === 'picked'
+                  ? t('onboardingInfoStatusPicked')
+                  : state.studentData.courseSelectionStatus === 'deciding'
+                    ? t('onboardingInfoStatusDeciding')
+                    : t('onboardingInfoStatusReconsidering')}
               </p>
             )}
             {state.uploadedFiles.length > 0 && (
-              <p>📎 {state.uploadedFiles.length} document(s) uploaded</p>
+              <p>📎 {t('onboardingInfoUploads', { count: state.uploadedFiles.length })}</p>
             )}
           </div>
         </div>
@@ -91,4 +98,3 @@ export const OnboardingSidebar: React.FC<OnboardingSidebarProps> = ({ onFinish }
     </div>
   );
 };
-

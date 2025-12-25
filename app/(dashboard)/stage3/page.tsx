@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
+import { useI18n } from '@/lib/i18n';
 import { ChatMessage, ConversationPhase } from '@/lib/types/skillTranslation';
 
 /**
@@ -20,6 +21,7 @@ import { ChatMessage, ConversationPhase } from '@/lib/types/skillTranslation';
 
 export default function SkillTranslationPage() {
   const router = useRouter();
+  const { t, language } = useI18n();
   const messagesEndRef = useRef<HTMLDivElement>(null);
   
   // State
@@ -68,6 +70,7 @@ export default function SkillTranslationPage() {
             userContext,
             currentTurn: 0,
             forceRealAPI: false,
+            language,
           }),
         });
         
@@ -92,7 +95,7 @@ export default function SkillTranslationPage() {
         console.error('💥 Chat initialization error:', error);
         const emergencyMessage: ChatMessage = {
           role: 'assistant',
-          content: '죄송해요, 다시 한번 말씀해주시겠어요?',
+          content: t('stage3Retry'),
           timestamp: new Date(),
           source: 'fallback',
         };
@@ -160,6 +163,7 @@ export default function SkillTranslationPage() {
           userContext,
           currentTurn,
           forceRealAPI: false,
+          language,
         }),
       });
       
@@ -193,7 +197,7 @@ export default function SkillTranslationPage() {
       // Emergency fallback
       const emergencyMessage: ChatMessage = {
         role: 'assistant',
-        content: '죄송해요, 다시 한번 말씀해주시겠어요?',
+        content: t('stage3Retry'),
         timestamp: new Date(),
         source: 'fallback',
       };
@@ -217,17 +221,17 @@ export default function SkillTranslationPage() {
         <div className="mb-6">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">Skill Translation</h1>
+              <h1 className="text-3xl font-bold text-gray-900">{t('stage3Title')}</h1>
               <p className="text-gray-600 mt-2">
-                선택한 과목으로 어떤 역량을 키워갈지 함께 이야기해봐요
+                {t('stage3Subtitle')}
               </p>
             </div>
             
             {/* Dev Mode Indicator */}
             {process.env.NODE_ENV === 'development' && (
               <div className="text-xs bg-gray-100 px-3 py-1 rounded-full">
-                Source: {source}
-                {useMockMode && <span className="ml-2 text-red-600">MOCK</span>}
+                {t('stage3DevSourceLabel')}: {source}
+                {useMockMode && <span className="ml-2 text-red-600">{t('stage3MockLabel')}</span>}
               </div>
             )}
           </div>
@@ -253,7 +257,7 @@ export default function SkillTranslationPage() {
             <div className="flex items-center justify-center h-full">
               <div className="text-center">
                 <div className="animate-pulse text-4xl mb-4">💬</div>
-                <p className="text-gray-400">대화를 시작하고 있어요...</p>
+                <p className="text-gray-400">{t('stage3Starting')}</p>
               </div>
             </div>
           )}
@@ -315,7 +319,7 @@ export default function SkillTranslationPage() {
             type="text"
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            placeholder="생각을 나눠주세요..."
+            placeholder={t('stage3Placeholder')}
             className="flex-1 px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-purple-400 focus:outline-none transition"
             disabled={isLoading}
           />
@@ -324,7 +328,7 @@ export default function SkillTranslationPage() {
             disabled={!input.trim() || isLoading}
             className="px-6 py-3 bg-purple-500 text-white rounded-xl font-medium hover:bg-purple-600 transition disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            Send
+            {t('stage3Send')}
           </button>
         </form>
         
@@ -333,23 +337,23 @@ export default function SkillTranslationPage() {
           onClick={handleFinish}
           className="w-full px-6 py-3 bg-gray-100 text-gray-700 rounded-xl font-medium hover:bg-gray-200 transition"
         >
-          Finish conversation
+          {t('stage3Finish')}
         </button>
         
         {/* Hidden Mock Mode Toggle (for demo) */}
         {process.env.NODE_ENV === 'development' && (
           <div className="mt-4 p-4 bg-yellow-50 border-2 border-yellow-200 rounded-xl">
             <p className="text-sm text-yellow-800 font-medium mb-2">
-              🛠️ Dev Tools
+              🛠️ {t('stage3DevTools')}
             </p>
             <button
               onClick={() => setUseMockMode(!useMockMode)}
               className="px-4 py-2 bg-yellow-500 text-white rounded-lg text-sm"
             >
-              Mock Mode: {useMockMode ? 'ON' : 'OFF'}
+              {t('stage3MockModeLabel')}: {useMockMode ? t('toggleOn') : t('toggleOff')}
             </button>
             <p className="text-xs text-yellow-700 mt-2">
-              Press <kbd className="px-2 py-1 bg-white rounded">Ctrl+M</kbd> to toggle
+              {t('stage3MockModeHint')} <kbd className="px-2 py-1 bg-white rounded">Ctrl+M</kbd>
             </p>
           </div>
         )}

@@ -37,11 +37,16 @@ function getOpenAIClient(): OpenAI | null {
 /**
  * Build system prompt for OpenAI with user context
  */
-function buildSystemPrompt(userContext: UserContext): string {
+function buildSystemPrompt(userContext: UserContext, language: 'ko' | 'en'): string {
   const coursesText = userContext.courses.join(', ');
-  const keywordsText = userContext.keywords?.join(', ') || '알 수 없음';
-  const strengthsText = userContext.strengths?.energizers?.join(', ') || '알 수 없음';
-  const interestsText = userContext.interests?.join(', ') || '알 수 없음';
+  const unknownText = language === 'ko' ? '알 수 없음' : 'Unknown';
+  const keywordsText = userContext.keywords?.join(', ') || unknownText;
+  const strengthsText = userContext.strengths?.energizers?.join(', ') || unknownText;
+  const interestsText = userContext.interests?.join(', ') || unknownText;
+  const responseLanguage =
+    language === 'ko'
+      ? 'Respond in Korean using a friendly 해요체.'
+      : 'Respond in English using a warm, friendly tone.';
   
   return `You are Mirae (미래), a warm and curious companion helping Korean high school students explore academic paths.
 
@@ -65,7 +70,7 @@ ${userContext.courses.map(c => `- ${c}`).join('\n')}
 **CONVERSATION RULES:**
 1. Ask ONE question at a time (keep responses under 100 words)
 2. Reference their specific courses and context naturally
-3. Use warm Korean (해요체 - polite but friendly)
+3. ${responseLanguage}
 4. Ask "why does that matter?" for depth
 5. Distinguish "fit" (genuine interest) vs "fear" (pressure/anxiety)
 6. Normalize uncertainty and ambiguity
@@ -93,6 +98,7 @@ Remember: You're helping them THINK, not telling them WHAT to think.`;
 }
 
 export async function POST(req: NextRequest) {
+  let language: 'ko' | 'en' = 'ko';
   try {
     const body = await req.json();
     const { 
@@ -100,7 +106,9 @@ export async function POST(req: NextRequest) {
       userContext, 
       currentTurn = 0,
       forceRealAPI = false, // Allow client to force real API (for testing)
+      language: requestLanguage = 'ko',
     } = body;
+    language = requestLanguage;
     
     // Validate user context
     if (!userContext?.name || !userContext?.courses) {
@@ -122,7 +130,7 @@ export async function POST(req: NextRequest) {
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
         
-        const systemPrompt = buildSystemPrompt(userContext);
+        const systemPrompt = buildSystemPrompt(userContext, language);
         
         const completion = await Promise.race([
           client.chat.completions.create({
@@ -177,9 +185,14 @@ export async function POST(req: NextRequest) {
       currentTurn,
       userContext
     );
+
+    const fallbackMessage =
+      language === 'en'
+        ? 'Thanks for sharing. Tell me a bit more about what feels important to you in those courses.'
+        : fallbackResponse.message;
     
     return NextResponse.json({
-      message: fallbackResponse.message,
+      message: fallbackMessage,
       source: 'fallback',
       currentTurn: fallbackResponse.nextTurn,
       phase: fallbackResponse.phase,
@@ -193,7 +206,10 @@ export async function POST(req: NextRequest) {
     // LAYER 3: Emergency Fallback
     // ============================================
     return NextResponse.json({
-      message: '죄송해요, 잠시 문제가 생겼어요. 다시 한번 말씀해주시겠어요?',
+      message:
+        language === 'en'
+          ? 'Sorry—something went wrong. Could you say that again?'
+          : '죄송해요, 잠시 문제가 생겼어요. 다시 한번 말씀해주시겠어요?',
       source: 'emergency',
       error: error.message,
     });
@@ -212,4 +228,3 @@ export async function GET() {
     fallback: 'available',
   });
 }
-

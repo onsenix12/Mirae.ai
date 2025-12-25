@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useCallback } from 'react';
+import { useI18n } from '@/lib/i18n';
 import { validateFiles, FileValidationConfig } from '@/lib/utils/fileValidation';
 
 interface FileUploadZoneProps {
@@ -16,6 +17,7 @@ export const FileUploadZone: React.FC<FileUploadZoneProps> = ({
   maxFileSize,
   acceptedTypes
 }) => {
+  const { t } = useI18n();
   const [isDragging, setIsDragging] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
 
@@ -79,10 +81,13 @@ export const FileUploadZone: React.FC<FileUploadZoneProps> = ({
         <div className="space-y-2">
           <div className="text-4xl">📎</div>
           <p className="text-gray-600 font-medium">
-            Drag files here or tap to browse
+            {t('uploadZonePrompt')}
           </p>
           <p className="text-sm text-gray-400">
-            Supported: PNG, JPG, PDF • Max {maxFiles} files • {(maxFileSize / 1024 / 1024).toFixed(0)}MB each
+            {t('uploadZoneHint', {
+              maxFiles,
+              maxSizeMb: (maxFileSize / 1024 / 1024).toFixed(0),
+            })}
           </p>
         </div>
       </div>
@@ -95,4 +100,3 @@ export const FileUploadZone: React.FC<FileUploadZoneProps> = ({
     </div>
   );
 };
-

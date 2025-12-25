@@ -274,11 +274,11 @@ export default function DashboardPage() {
                     {/* Stage Label */}
                     <div className="text-center">
                       <p className={`text-xs font-semibold transition-colors ${isViewing ? 'text-slate-800' : isCurrent ? 'text-slate-700' : 'text-slate-600'}`}>
-                        {stage.letter === 'S' ? 'S | Strength' :
+                        {stage.letter === 'S' ? 'Strength' :
                          stage.letter === 'C' ? 'Curiosity' :
-                         stage.letter === 'O' ? 'O' :
-                         stage.letter === 'P' ? 'P | Proof' :
-                         stage.letter === 'E' ? 'E | Evolve' : '+'}
+                         stage.letter === 'O' ? 'Options' :
+                         stage.letter === 'P' ? 'Proof' :
+                         stage.letter === 'E' ? 'Evolve' : '+'}
                       </p>
                       {isViewing && (
                         <p className="text-[10px] text-[#9BCBFF] font-medium animate-fade-in">{t('journeyCurrent')}</p>

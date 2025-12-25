@@ -167,7 +167,7 @@ export default function OnboardingPage() {
                 </div>
               ) : (
                 <p className="text-xs text-slate-500 italic">
-                  Keywords will appear as we chat...
+                  {t('onboardingKeywordsEmpty')}
                 </p>
               )}
             </div>

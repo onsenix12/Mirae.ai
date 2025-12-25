@@ -63,7 +63,7 @@ const KEYWORD_TOOL = {
 
 export async function POST(req: NextRequest) {
   try {
-    const { messages, context } = await req.json();
+    const { messages, context, language = 'ko' } = await req.json();
     const knownContext = {
       yearLevel: context?.yearLevel ?? null,
       courseSelectionStatus: context?.courseSelectionStatus ?? null,
@@ -87,6 +87,13 @@ export async function POST(req: NextRequest) {
           role: 'system',
           content:
             'When the student reveals any context (year level, course status, or feelings), call the collect_context tool with the fields you can infer. Also call extract_keywords to capture meaningful interests, subjects, activities, or strengths they mention. You may call tools multiple times. Do not mention the tools.'
+        },
+        {
+          role: 'system',
+          content:
+            language === 'ko'
+              ? 'Respond in Korean using a friendly 해요체.'
+              : 'Respond in English using a warm, friendly tone.',
         },
         {
           role: 'system',
@@ -146,6 +153,13 @@ export async function POST(req: NextRequest) {
         model: 'gpt-4-turbo',
         messages: [
           { role: 'system', content: SYSTEM_PROMPT },
+          {
+            role: 'system',
+            content:
+              language === 'ko'
+                ? 'Respond in Korean using a friendly 해요체.'
+                : 'Respond in English using a warm, friendly tone.',
+          },
           {
             role: 'system',
             content: `Known context: ${JSON.stringify(updatedContext)}. Missing in order: ${updatedMissing.join(

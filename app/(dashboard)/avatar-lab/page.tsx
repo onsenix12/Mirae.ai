@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import Image from 'next/image';
+import { useI18n } from '@/lib/i18n';
 import { AvatarCustomizerPanel } from '@/components/avatar/AvatarCustomizerPanel';
 import type { CardId, ProgressState, AvatarConfig } from '@/components/avatar/avatarTypes';
 
@@ -14,6 +15,7 @@ const ALL_CARDS: CardId[] = [
 ];
 
 export default function AvatarLabPage() {
+  const { t } = useI18n();
   const [collectedCards, setCollectedCards] = useState<CardId[]>([
     'S_StrengthPattern_01',
     'C_CuriosityThread_01',
@@ -47,13 +49,13 @@ export default function AvatarLabPage() {
         {/* Header */}
         <div className="mb-8">
           <div className="inline-flex items-center gap-2 rounded-full bg-white/70 px-4 py-2 text-xs font-semibold uppercase tracking-wide text-slate-600 shadow-sm mb-4">
-            Avatar Lab
+            {t('avatarLabTag')}
           </div>
           <h1 className="text-4xl font-semibold text-slate-800 mb-2">
-            Avatar Customization System
+            {t('avatarLabTitle')}
           </h1>
           <p className="text-slate-600 max-w-2xl">
-            Test the layered avatar system with unlockable accessories. Toggle cards below to simulate progress.
+            {t('avatarLabSubtitle')}
           </p>
         </div>
 
@@ -72,10 +74,10 @@ export default function AvatarLabPage() {
             {/* Card Collection Simulator */}
             <div className="rounded-3xl border border-white/40 bg-white/85 p-6 shadow-lg backdrop-blur-lg">
               <h3 className="text-lg font-semibold text-slate-800 mb-4">
-                Simulate Card Collection
+                {t('avatarLabSimulateTitle')}
               </h3>
               <p className="text-xs text-slate-600 mb-4">
-                Toggle cards to unlock/lock accessories
+                {t('avatarLabSimulateHint')}
               </p>
               <div className="space-y-2">
                 {ALL_CARDS.map(cardId => {
@@ -120,7 +122,9 @@ export default function AvatarLabPage() {
                           <p className="text-sm font-medium text-slate-800">
                             {type?.replace('_', ' ')}
                           </p>
-                          <p className="text-xs text-slate-500">Stage {stage}</p>
+                          <p className="text-xs text-slate-500">
+                            {t('avatarLabCardStage', { stage })}
+                          </p>
                         </div>
                       </div>
                     </button>
@@ -130,7 +134,10 @@ export default function AvatarLabPage() {
 
               <div className="mt-4 p-3 rounded-xl bg-slate-50 border border-slate-200">
                 <p className="text-xs text-slate-600 text-center">
-                  {collectedCards.length} / {ALL_CARDS.length} cards collected
+                  {t('avatarLabCardsCollected', {
+                    count: collectedCards.length,
+                    total: ALL_CARDS.length,
+                  })}
                 </p>
               </div>
             </div>
@@ -138,32 +145,32 @@ export default function AvatarLabPage() {
             {/* Info Panel */}
             <div className="rounded-3xl border border-white/40 bg-white/85 p-6 shadow-lg backdrop-blur-lg">
               <h3 className="text-lg font-semibold text-slate-800 mb-3">
-                How it works
+                {t('avatarLabHowItWorksTitle')}
               </h3>
               <ul className="space-y-2 text-sm text-slate-600">
                 <li className="flex items-start gap-2">
                   <span className="text-slate-400 mt-1">•</span>
-                  <span>Base Mirae PNG remains unchanged</span>
+                  <span>{t('avatarLabHowItWorksItem1')}</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="text-slate-400 mt-1">•</span>
-                  <span>Accessories layer behind/in front of base</span>
+                  <span>{t('avatarLabHowItWorksItem2')}</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="text-slate-400 mt-1">•</span>
-                  <span>Smart unlock rules based on collected cards</span>
+                  <span>{t('avatarLabHowItWorksItem3')}</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="text-slate-400 mt-1">•</span>
-                  <span>Auto-style suggests recommended combinations</span>
+                  <span>{t('avatarLabHowItWorksItem4')}</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="text-slate-400 mt-1">•</span>
-                  <span>Export composed avatar as PNG (2x resolution)</span>
+                  <span>{t('avatarLabHowItWorksItem5')}</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="text-slate-400 mt-1">•</span>
-                  <span>Config saved to localStorage</span>
+                  <span>{t('avatarLabHowItWorksItem6')}</span>
                 </li>
               </ul>
             </div>
@@ -171,7 +178,7 @@ export default function AvatarLabPage() {
             {/* Base Image Preview */}
             <div className="rounded-3xl border border-white/40 bg-white/85 p-6 shadow-lg backdrop-blur-lg">
               <h3 className="text-sm font-semibold text-slate-800 mb-3">
-                Base Mirae PNG
+                {t('avatarLabBaseTitle')}
               </h3>
               <div className="relative w-full aspect-square rounded-2xl bg-gradient-to-br from-sky-50 to-violet-50 flex items-center justify-center overflow-hidden">
                 <Image
@@ -183,7 +190,7 @@ export default function AvatarLabPage() {
                 />
               </div>
               <p className="text-xs text-slate-500 mt-3 text-center">
-                Original Mirae character (unchanged)
+                {t('avatarLabBaseCaption')}
               </p>
             </div>
           </div>

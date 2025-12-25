@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import { useI18n } from '@/lib/i18n';
 import { ChatBubble } from './shared/ChatBubble';
 import { OptionButton } from './shared/OptionButton';
 import { FileUploadZone } from './shared/FileUploadZone';
@@ -14,6 +15,7 @@ export const DocumentUploadPhase: React.FC<DocumentUploadPhaseProps> = ({
   onUploadComplete,
   onSkip
 }) => {
+  const { t } = useI18n();
   const [showUploadUI, setShowUploadUI] = React.useState(false);
   const [uploadedFiles, setUploadedFiles] = React.useState<File[]>([]);
 
@@ -31,20 +33,7 @@ export const DocumentUploadPhase: React.FC<DocumentUploadPhaseProps> = ({
     <div className="flex flex-col gap-4">
       <ChatBubble sender="mirae">
         <div className="space-y-3">
-          <p>One more thing—some students find it helpful to share things like:</p>
-          <ul className="list-none space-y-1 ml-2">
-            <li>📎 Career.net results (커리어넷 검사 결과)</li>
-            <li>📎 Interest/aptitude test results</li>
-            <li>📎 Notes from school counseling</li>
-            <li>📎 Project work or writing samples</li>
-          </ul>
-          <p className="mt-3">
-            If you have anything like that and want to share, I can help 
-            us talk through what you're seeing in them.
-          </p>
-          <p className="text-sm text-gray-500">
-            But if not, no worries—we can just keep chatting!
-          </p>
+          <p className="whitespace-pre-line">{t('onboardingUploadPrompt')}</p>
         </div>
       </ChatBubble>
 
@@ -54,13 +43,13 @@ export const DocumentUploadPhase: React.FC<DocumentUploadPhaseProps> = ({
             onClick={() => setShowUploadUI(true)}
             variant="primary"
           >
-            📤 Upload something
+            📤 {t('onboardingUploadButton')}
           </OptionButton>
           <OptionButton 
             onClick={onSkip}
             variant="ghost"
           >
-            Skip for now
+            {t('onboardingUploadSkip')}
           </OptionButton>
         </div>
       )}
@@ -78,7 +67,7 @@ export const DocumentUploadPhase: React.FC<DocumentUploadPhaseProps> = ({
             {uploadedFiles.length > 0 && (
               <div className="mt-4 space-y-2">
                 <p className="text-sm font-medium text-gray-700">
-                  Uploaded files ({uploadedFiles.length}/6):
+                  {t('onboardingUploadFilesLabel', { count: uploadedFiles.length })}
                 </p>
                 <ul className="space-y-1">
                   {uploadedFiles.map((file, idx) => (
@@ -101,13 +90,13 @@ export const DocumentUploadPhase: React.FC<DocumentUploadPhaseProps> = ({
               variant="primary"
               disabled={uploadedFiles.length === 0}
             >
-              Done uploading
+              {t('onboardingUploadDone')}
             </OptionButton>
             <OptionButton 
               onClick={onSkip}
               variant="ghost"
             >
-              Cancel
+              {t('onboardingUploadCancel')}
             </OptionButton>
           </div>
         </>
@@ -115,4 +104,3 @@ export const DocumentUploadPhase: React.FC<DocumentUploadPhaseProps> = ({
     </div>
   );
 };
-
