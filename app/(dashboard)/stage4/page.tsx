@@ -28,6 +28,17 @@ type Candidate = {
   exchange?: string;
 };
 
+type MatchSnapshot = {
+  phase: 'intro' | 'major' | 'university' | 'result';
+  mode: 'major' | 'university';
+  roundCandidates: Candidate[];
+  nextRoundCandidates: Candidate[];
+  matchIndex: number;
+  round: number;
+  majorWinner: Candidate | null;
+  universityWinner: Candidate | null;
+};
+
 const MAJOR_CANDIDATES: Candidate[] = [
   {
     id: 'cs',
@@ -282,6 +293,46 @@ const buildUniversitiesForMajor = (major: Candidate): Candidate[] =>
     details: [...university.details, `Popular track: ${major.name}`],
   }));
 
+const getMatchReasons = (candidate: Candidate, mode: 'major' | 'university'): string[] => {
+  const reasons: string[] = [];
+
+  if (mode === 'major') {
+    if (candidate.matchPercent !== undefined) {
+      reasons.push(`Strong alignment (${candidate.matchPercent}%)`);
+    }
+    if (candidate.careers?.length) {
+      reasons.push(`Career fit: ${candidate.careers[0]}`);
+    }
+    if (candidate.coreCourses?.length) {
+      reasons.push(`Core course: ${candidate.coreCourses[0]}`);
+    }
+    if (candidate.workloadStyle) {
+      reasons.push(`Workload: ${candidate.workloadStyle}`);
+    }
+    if (candidate.collaboration) {
+      reasons.push(`Collaboration: ${candidate.collaboration}`);
+    }
+  } else {
+    if (candidate.internshipPipeline) {
+      reasons.push(`Internships: ${candidate.internshipPipeline}`);
+    }
+    if (candidate.aidStrength) {
+      reasons.push(`Aid strength: ${candidate.aidStrength}`);
+    }
+    if (candidate.campusVibe) {
+      reasons.push(`Campus vibe: ${candidate.campusVibe}`);
+    }
+    if (candidate.exchange) {
+      reasons.push(`Exchange: ${candidate.exchange}`);
+    }
+    if (candidate.selectivity) {
+      reasons.push(`Selectivity: ${candidate.selectivity}`);
+    }
+  }
+
+  return reasons.slice(0, 3);
+};
+
 export default function Stage4Page() {
   const [phase, setPhase] = useState<'intro' | 'major' | 'university' | 'result'>('intro');
   const [mode, setMode] = useState<'major' | 'university'>('major');
@@ -291,6 +342,7 @@ export default function Stage4Page() {
   const [round, setRound] = useState(1);
   const [majorWinner, setMajorWinner] = useState<Candidate | null>(null);
   const [universityWinner, setUniversityWinner] = useState<Candidate | null>(null);
+  const [history, setHistory] = useState<MatchSnapshot[]>([]);
   const router = useRouter();
   const { completeStage } = useUserStore();
 
@@ -301,6 +353,7 @@ export default function Stage4Page() {
     setNextRoundCandidates([]);
     setMatchIndex(0);
     setRound(1);
+    setHistory([]);
   };
 
   const startUniversityTournament = (major: Candidate) => {
@@ -321,9 +374,24 @@ export default function Stage4Page() {
     setRound(1);
     setMajorWinner(null);
     setUniversityWinner(null);
+    setHistory([]);
   };
 
   const handlePick = (winner: Candidate) => {
+    setHistory((prev) => [
+      ...prev,
+      {
+        phase,
+        mode,
+        roundCandidates: [...roundCandidates],
+        nextRoundCandidates: [...nextRoundCandidates],
+        matchIndex,
+        round,
+        majorWinner,
+        universityWinner,
+      },
+    ]);
+
     const updatedWinners = [...nextRoundCandidates, winner];
     const totalMatches = roundCandidates.length / 2;
     const roundFinished = matchIndex + 1 >= totalMatches;
@@ -349,6 +417,24 @@ export default function Stage4Page() {
     setNextRoundCandidates([]);
     setMatchIndex(0);
     setRound(round + 1);
+  };
+
+  const handleUndo = () => {
+    setHistory((prev) => {
+      if (!prev.length) {
+        return prev;
+      }
+      const snapshot = prev[prev.length - 1];
+      setPhase(snapshot.phase);
+      setMode(snapshot.mode);
+      setRoundCandidates(snapshot.roundCandidates);
+      setNextRoundCandidates(snapshot.nextRoundCandidates);
+      setMatchIndex(snapshot.matchIndex);
+      setRound(snapshot.round);
+      setMajorWinner(snapshot.majorWinner);
+      setUniversityWinner(snapshot.universityWinner);
+      return prev.slice(0, -1);
+    });
   };
 
   const handleComplete = () => {
@@ -479,6 +565,21 @@ export default function Stage4Page() {
                     </div>
                   )}
                   <p className="text-sm text-gray-600 mb-4">{candidate.summary}</p>
+                  <div className="mb-4">
+                    <p className="text-xs uppercase tracking-wide text-gray-400 mb-2">
+                      Why this matchup
+                    </p>
+                    <div className="flex flex-wrap gap-2">
+                      {getMatchReasons(candidate, mode).map((reason) => (
+                        <span
+                          key={reason}
+                          className="text-xs text-amber-700 bg-amber-50 border border-amber-100 rounded-full px-3 py-1"
+                        >
+                          {reason}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
                   <ul className="text-sm text-gray-600 space-y-1">
                     {candidate.details.map((detail) => (
                       <li key={detail}>• {detail}</li>
@@ -500,6 +601,13 @@ export default function Stage4Page() {
                 className="text-sm text-gray-500 hover:text-gray-700"
               >
                 Restart tournament
+              </button>
+              <button
+                onClick={handleUndo}
+                className="text-sm text-gray-500 hover:text-gray-700 disabled:text-gray-300"
+                disabled={history.length === 0}
+              >
+                Undo last pick
               </button>
               {majorWinner && mode === 'university' && (
                 <div className="text-sm text-gray-600">
