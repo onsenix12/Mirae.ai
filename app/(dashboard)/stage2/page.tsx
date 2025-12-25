@@ -262,6 +262,7 @@ export default function Stage2Page() {
   const [showSuggestions, setShowSuggestions] = useState(true);
   const [savedSlots, setSavedSlots] = useState<SelectionSlot[]>([null, null, null]);
   const [focusedCourseKey, setFocusedCourseKey] = useState<string | null>(null);
+  const [targetSemester, setTargetSemester] = useState<string>('');
   const router = useRouter();
   const { completeStage, progress } = useUserStore();
   const { language, t } = useI18n();
@@ -418,6 +419,28 @@ export default function Stage2Page() {
 
     const recommended = Array.from(new Set(profile.stage0Summary?.recommendedRoles ?? []));
     setStage0Roles(recommended);
+
+    const allowedSemesters = new Set(semesterOptions.map((option) => option.value));
+    const preferred =
+      profile.stage2Selection?.targetSemester ||
+      profile.academicStage ||
+      (profile.yearLevel ? `year-${profile.yearLevel}-sem-1` : '');
+    if (preferred && allowedSemesters.has(preferred)) {
+      setTargetSemester(preferred);
+      return;
+    }
+    const fallback = semesterOptions[0]?.value ?? '';
+    if (fallback) {
+      setTargetSemester(fallback);
+      if (profile.stage2Selection?.targetSemester !== fallback) {
+        updateUserProfile({
+          stage2Selection: {
+            ...(profile.stage2Selection ?? { anchor: [], signal: [], savedAt: new Date().toISOString() }),
+            targetSemester: fallback,
+          },
+        });
+      }
+    }
   };
 
   useEffect(() => {
@@ -723,8 +746,8 @@ export default function Stage2Page() {
   const radarTitle = language === 'ko' ? 'Course radar' : 'Course radar';
   const radarSubtitle =
     language === 'ko'
-      ? 'Stars are tailored picks; candy orbs are more to explore.'
-      : 'Stars are tailored picks; candy orbs are more to explore.';
+      ? '추천 과목은 별, 탐색 과목은 원으로 표시돼요.'
+      : 'Stars highlight recommended picks; orbs mark courses to explore.';
   const radarFocusHint =
     language === 'ko' ? 'Pick a star or orb to see details.' : 'Pick a star or orb to see details.';
   const radarLegendRecommended = language === 'ko' ? 'Recommended' : 'Recommended';
@@ -734,6 +757,14 @@ export default function Stage2Page() {
   const viewSummaryLabel = language === 'ko' ? '요약 보기' : 'View summary';
   const courseDetailsLabel = language === 'ko' ? '과목 상세' : 'Course details';
   const selectedCourseLabel = language === 'ko' ? '선택됨' : 'Selected';
+  const targetSemesterLabel = language === 'ko' ? '대상 학기' : 'Target semester';
+
+  const semesterOptions = [
+    { value: 'year-2-sem-1', label: language === 'ko' ? '2학년 1학기' : 'Year 2 Semester 1' },
+    { value: 'year-2-sem-2', label: language === 'ko' ? '2학년 2학기' : 'Year 2 Semester 2' },
+    { value: 'year-3-sem-1', label: language === 'ko' ? '3학년 1학기' : 'Year 3 Semester 1' },
+    { value: 'year-3-sem-2', label: language === 'ko' ? '3학년 2학기' : 'Year 3 Semester 2' },
+  ];
 
   const getDescription = (course: CourseLabel) => {
     const description = language === 'ko' ? course.description?.kr : course.description?.en;
@@ -747,11 +778,11 @@ export default function Stage2Page() {
         <button
           type="button"
           aria-label={infoLabel}
-          className="h-6 w-6 rounded-full border border-white/70 text-[10px] font-bold text-slate-500 bg-white/80 flex items-center justify-center hover:text-slate-700 transition"
+          className="h-6 w-6 rounded-full border border-slate-300 text-[10px] font-bold text-slate-600 bg-white flex items-center justify-center hover:bg-slate-100 hover:text-slate-800 hover:border-slate-400 transition shadow-sm"
         >
           i
         </button>
-        <div className="pointer-events-none absolute right-0 top-7 z-10 w-64 rounded-lg border border-white/70 bg-white/90 p-3 text-xs text-slate-600 shadow-xl opacity-0 transition-opacity group-hover:opacity-100">
+        <div className="pointer-events-none absolute right-0 top-7 z-10 w-64 rounded-lg border border-slate-200 bg-white p-3 text-xs text-slate-700 shadow-xl opacity-0 transition-opacity group-hover:opacity-100">
           {description}
         </div>
       </div>
@@ -763,6 +794,7 @@ export default function Stage2Page() {
       anchor,
       signal,
       savedAt: new Date().toISOString(),
+      targetSemester,
     };
     const selectedCourseLabels = Array.from(new Set([...anchor, ...signal]))
       .map((key) => courseLookup.get(key))
@@ -831,9 +863,9 @@ export default function Stage2Page() {
               language === 'ko'
                 ? 'Stage 2 과목 선택을 완료했어요'
                 : 'Completed Stage 2 course selection',
-            scopeStage: 'O',
-            activityType: 'MiraeActivity',
-            source: 'Mirae',
+            scopeStage: 'O' as const,
+            activityType: 'MiraeActivity' as const,
+            source: 'Mirae' as const,
             shortReflection,
           },
         ];
@@ -957,9 +989,9 @@ export default function Stage2Page() {
         </div>
 
         {/* Horizontal subject filters */}
-        <div className="mb-6 rounded-[28px] border border-white/60 bg-white/70 p-5 shadow-[0_20px_50px_-40px_rgba(155,203,255,0.45)] backdrop-blur">
+        <div className="mb-6 rounded-[28px] border border-slate-200/80 bg-gradient-to-br from-white/95 to-slate-50/90 p-5 shadow-[0_8px_30px_-15px_rgba(100,116,139,0.25)] backdrop-blur">
           <div className="flex flex-wrap items-center gap-3 mb-4">
-            <h2 className="text-xs uppercase tracking-[0.3em] text-[#9BCBFF] mr-2">
+            <h2 className="text-xs uppercase tracking-[0.3em] text-[#7BA8D8] font-bold mr-2">
               {subjectTitle}
             </h2>
             <input
@@ -967,7 +999,7 @@ export default function Stage2Page() {
               value={searchTerm}
               onChange={(event) => setSearchTerm(event.target.value)}
               placeholder={searchPlaceholder}
-              className="flex-1 min-w-[200px] max-w-[300px] rounded-2xl border border-white/60 bg-white/80 px-4 py-2 text-sm text-slate-700 placeholder:text-slate-500 focus:border-[#9BCBFF]/70 focus:outline-none"
+              className="flex-1 min-w-[200px] max-w-[300px] rounded-2xl border border-slate-200/80 bg-white px-4 py-2 text-sm text-slate-800 placeholder:text-slate-400 focus:border-[#9BCBFF] focus:outline-none focus:ring-2 focus:ring-[#9BCBFF]/20 shadow-sm"
             />
             <div className="flex flex-wrap gap-2">
               {(['all', 'language', 'stem', 'social', 'arts', 'other'] as SubjectCategory[]).map((category) => {
@@ -978,10 +1010,10 @@ export default function Stage2Page() {
                     key={category}
                     type="button"
                     onClick={() => setSelectedSubjectCategory(category)}
-                    className={`text-xs font-semibold px-3 py-1.5 rounded-full border transition ${
+                    className={`text-xs font-semibold px-3 py-1.5 rounded-full border transition-all ${
                       isActive
-                        ? 'border-[#9BCBFF]/60 bg-[#9BCBFF]/30 text-slate-800'
-                        : 'border-white/70 bg-white/75 text-slate-600 hover:bg-white/90'
+                        ? 'border-[#9BCBFF] bg-[#9BCBFF] text-white shadow-md'
+                        : 'border-slate-300 bg-white text-slate-600 hover:border-[#9BCBFF]/50 hover:bg-slate-50'
                     }`}
                   >
                     {label}
@@ -1002,10 +1034,10 @@ export default function Stage2Page() {
                   key={subject.id}
                   type="button"
                   onClick={() => setSelectedSubjectId(subject.id)}
-                  className={`rounded-2xl px-4 py-2 text-sm font-semibold transition ${
+                  className={`rounded-2xl px-4 py-2 text-sm font-semibold transition-all ${
                     isActive
-                      ? 'border border-[#9BCBFF]/60 bg-[#9BCBFF]/25 text-slate-700'
-                      : 'border border-white/60 bg-white/60 text-slate-600 hover:bg-white/90'
+                      ? 'border-2 border-[#9BCBFF] bg-[#9BCBFF]/10 text-slate-800 shadow-md'
+                      : 'border border-slate-300 bg-white text-slate-600 hover:border-slate-400 hover:bg-slate-50'
                   }`}
                 >
                   {label}
@@ -1018,16 +1050,16 @@ export default function Stage2Page() {
         {/* Main content: Radar (3/5) and Suggestions (2/5) */}
         <div className="grid gap-6 lg:grid-cols-[3fr_2fr] mb-6">
           {/* Left: Radar Course Section */}
-          <section className="rounded-[32px] border border-white/60 bg-white/70 p-6 shadow-[0_30px_70px_-50px_rgba(155,203,255,0.45)] backdrop-blur">
+          <section className="rounded-[32px] border border-slate-200/80 bg-gradient-to-br from-white to-blue-50/60 p-6 shadow-[0_8px_40px_-20px_rgba(100,116,139,0.3)] backdrop-blur">
             <div className="mb-4">
               <div className="flex flex-wrap items-start justify-between gap-4 mb-3">
                 <div>
                   <h2 className="text-2xl font-semibold text-slate-800">{radarTitle}</h2>
                   <p className="mt-1 text-sm text-slate-600">{radarSubtitle}</p>
                 </div>
-                <div className="flex flex-wrap items-center gap-2 text-xs text-slate-600">
-                  <span className="flex items-center gap-2 rounded-full border border-[#F4A9C8]/40 bg-[#F4A9C8]/20 px-3 py-1">
-                    <svg viewBox="0 0 100 100" className="h-4 w-4 text-[#FFD1A8]">
+                <div className="flex flex-wrap items-center gap-2 text-xs font-medium text-slate-700">
+                  <span className="flex items-center gap-2 rounded-full border border-pink-300 bg-gradient-to-br from-pink-50 to-pink-100/80 px-3 py-1.5 shadow-sm">
+                    <svg viewBox="0 0 100 100" className="h-4 w-4 text-amber-400">
                       <polygon
                         points="50,5 61,38 96,38 67,58 78,91 50,70 22,91 33,58 4,38 39,38"
                         fill="currentColor"
@@ -1035,7 +1067,7 @@ export default function Stage2Page() {
                     </svg>
                     {radarLegendRecommended}
                   </span>
-                  <span className="flex items-center gap-2 rounded-full border border-[#BEEDE3]/60 bg-[#BEEDE3]/40 px-3 py-1">
+                  <span className="flex items-center gap-2 rounded-full border border-teal-300 bg-gradient-to-br from-teal-50 to-teal-100/80 px-3 py-1.5 shadow-sm">
                     <span className="relative h-3 w-3 rounded-full bg-gradient-to-br from-[#BEEDE3] via-[#C7B9FF] to-[#9BCBFF] shadow-[0_0_6px_rgba(155,203,255,0.5)]">
                       <span className="absolute left-0.5 top-0.5 h-1.5 w-1.5 rounded-full bg-white/70" />
                     </span>
@@ -1043,7 +1075,7 @@ export default function Stage2Page() {
                   </span>
                 </div>
               </div>
-              <div className="w-full rounded-2xl border border-white/60 bg-white/80 px-4 py-3">
+              <div className="w-full rounded-2xl border border-blue-200 bg-gradient-to-br from-blue-50/80 to-white px-4 py-3 shadow-sm">
                 <p className="text-sm font-semibold text-slate-800 mb-1">{radarFocusHint}</p>
                 <p className="text-xs text-slate-600">
                   Closest to the center = strongest matches. Stars are recommended picks.
@@ -1051,24 +1083,24 @@ export default function Stage2Page() {
               </div>
             </div>
 
-            <div className="grid gap-6 lg:grid-cols-[1fr_280px] items-start">
+            <div className="grid gap-6 lg:grid-cols-2 items-start">
                 <div className="relative">
                   <div className="relative mx-auto w-full max-w-[520px] aspect-square">
                     <div
                       className="absolute inset-0 rounded-full"
                       style={{
                         backgroundImage:
-                          'radial-gradient(circle at center, rgba(155,203,255,0.7) 1px, transparent 1px)',
+                          'radial-gradient(circle at center, rgba(100,116,139,0.15) 1px, transparent 1px)',
                         backgroundSize: '22px 22px',
                       }}
                     />
-                    <div className="absolute inset-0 rounded-full border-2 border-white/60" />
-                    <div className="absolute inset-[12%] rounded-full border-2 border-white/55" />
-                    <div className="absolute inset-[24%] rounded-full border-2 border-white/50" />
-                    <div className="absolute inset-[36%] rounded-full border-2 border-white/45" />
-                    <div className="absolute left-1/2 top-1/2 h-[2px] w-full -translate-y-1/2 bg-white/45" />
-                    <div className="absolute left-1/2 top-1/2 h-full w-[2px] -translate-x-1/2 bg-white/45" />
-                    <div className="absolute left-1/2 top-1/2 h-3 w-3 -translate-x-1/2 -translate-y-1/2 rounded-full bg-white shadow-[0_0_12px_rgba(255,255,255,0.6)]" />
+                    <div className="absolute inset-0 rounded-full border-2 border-slate-300/70" />
+                    <div className="absolute inset-[12%] rounded-full border-2 border-slate-300/60" />
+                    <div className="absolute inset-[24%] rounded-full border-2 border-slate-300/50" />
+                    <div className="absolute inset-[36%] rounded-full border-2 border-slate-300/40" />
+                    <div className="absolute left-1/2 top-1/2 h-[2px] w-full -translate-y-1/2 bg-slate-300/50" />
+                    <div className="absolute left-1/2 top-1/2 h-full w-[2px] -translate-x-1/2 bg-slate-300/50" />
+                    <div className="absolute left-1/2 top-1/2 h-3 w-3 -translate-x-1/2 -translate-y-1/2 rounded-full bg-slate-400 shadow-[0_0_12px_rgba(100,116,139,0.4)]" />
 
                     {radarItems.length === 0 && (
                       <div className="absolute inset-0 flex items-center justify-center text-sm text-slate-600">
@@ -1145,12 +1177,12 @@ export default function Stage2Page() {
                   </div>
                 </div>
 
-                <div className="rounded-2xl border border-white/70 bg-white/80 p-4">
+                <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
                   {focusedCourse ? (
                     <div>
                       <div className="flex items-start justify-between gap-2">
                         <div>
-                          <p className="text-[11px] uppercase tracking-[0.3em] text-[#9BCBFF]">
+                          <p className="text-[11px] uppercase tracking-[0.3em] text-[#7BA8D8] font-bold">
                             {courseDetailsLabel}
                           </p>
                           <div className="mt-2 flex items-center gap-2">
@@ -1227,7 +1259,7 @@ export default function Stage2Page() {
             </section>
 
           {/* Right: Suggested for you Section */}
-          <section className="rounded-[28px] border border-white/60 bg-white/70 p-6 shadow-[0_24px_60px_-50px_rgba(155,203,255,0.45)] backdrop-blur">
+          <section className="rounded-[28px] border border-slate-200/80 bg-gradient-to-br from-white to-purple-50/50 p-6 shadow-[0_8px_40px_-20px_rgba(100,116,139,0.3)] backdrop-blur">
             <div className="flex items-center justify-between gap-3 mb-4">
               <div>
                 <h2 className="text-lg font-semibold text-slate-800">{suggestionTitle}</h2>
@@ -1235,7 +1267,7 @@ export default function Stage2Page() {
               </div>
             </div>
 
-            <div className="space-y-3 max-h-[600px] overflow-y-auto pr-2">
+            <div className="space-y-3 max-h-[600px] overflow-y-auto pr-2 py-1">
               {displaySuggestions.length === 0 && (
                 <p className="text-sm text-slate-500">{suggestionEmpty}</p>
               )}
@@ -1252,10 +1284,10 @@ export default function Stage2Page() {
                     type="button"
                     key={suggestion.key}
                     onClick={() => handleSelectSuggestion(suggestion)}
-                    className={`w-full text-left rounded-2xl border p-4 shadow-[0_16px_30px_rgba(155,203,255,0.35)] transition hover:shadow-[0_18px_40px_rgba(155,203,255,0.45)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#9BCBFF]/60 ${
+                    className={`w-full text-left rounded-2xl border p-4 shadow-md transition-all hover:shadow-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#9BCBFF]/60 ${
                       isActive
-                        ? 'border-[#9BCBFF]/70 bg-white shadow-[0_18px_40px_rgba(155,203,255,0.5)]'
-                        : 'border-white/60 bg-white/75 hover:bg-white/90'
+                        ? 'border-2 border-[#9BCBFF] bg-gradient-to-br from-blue-50 to-white shadow-[0_4px_20px_rgba(155,203,255,0.4)]'
+                        : 'border border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50/50'
                     }`}
                   >
                     <div className="flex items-start justify-between gap-2">
@@ -1274,8 +1306,34 @@ export default function Stage2Page() {
 
         {/* Bottom sections */}
         <div className="space-y-6">
+          <div className="flex items-center justify-center gap-3 rounded-[28px] border border-slate-200/80 bg-gradient-to-br from-white/95 to-slate-50/90 px-5 py-4 text-center shadow-[0_8px_30px_-15px_rgba(100,116,139,0.25)] backdrop-blur">
+            <p className="text-xs font-semibold text-slate-700">{targetSemesterLabel}</p>
+            <select
+              value={targetSemester}
+              onChange={(event) => {
+                const nextValue = event.target.value;
+                setTargetSemester(nextValue);
+                const profile = getUserProfile();
+                updateUserProfile({
+                  stage2Selection: {
+                    ...(profile.stage2Selection ?? { anchor: [], signal: [], savedAt: new Date().toISOString() }),
+                    anchor,
+                    signal,
+                    targetSemester: nextValue,
+                  },
+                });
+              }}
+              className="rounded-full border border-slate-300 bg-white px-4 py-2 text-xs font-semibold text-slate-800 shadow-sm hover:border-slate-400 focus:border-[#9BCBFF] focus:outline-none focus:ring-2 focus:ring-[#9BCBFF]/20"
+            >
+              {semesterOptions.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+          </div>
           <section className="grid gap-6 lg:grid-cols-2">
-              <div className="rounded-[28px] border border-[#9BCBFF]/60 bg-white/70 p-6 shadow-[0_24px_50px_-40px_rgba(155,203,255,0.55)] backdrop-blur">
+              <div className="rounded-[28px] border border-blue-200 bg-gradient-to-br from-blue-50/40 to-white p-6 shadow-[0_8px_30px_-15px_rgba(59,130,246,0.3)] backdrop-blur">
                 <div className="mb-4">
                   <h2 className="font-semibold text-slate-800">{t('stage2Anchor')}</h2>
                   <p className="mt-1 text-xs text-slate-600" />
@@ -1289,7 +1347,7 @@ export default function Stage2Page() {
                     return (
                       <div
                         key={key}
-                        className="rounded-2xl border border-[#9BCBFF]/50 bg-white/75 p-3 transition"
+                        className="rounded-2xl border border-blue-200 bg-white p-3 shadow-sm transition hover:shadow-md"
                       >
                         <div className="flex items-center justify-between gap-3">
                           <div>
@@ -1301,7 +1359,7 @@ export default function Stage2Page() {
                             <button
                               type="button"
                               onClick={() => removeSelection(key)}
-                              className="rounded-full border border-[#9BCBFF]/60 bg-white/70 px-2 py-1 text-xs font-semibold text-slate-700 transition hover:bg-white/90"
+                              className="rounded-full border border-slate-300 bg-white px-3 py-1 text-xs font-semibold text-slate-700 shadow-sm transition hover:bg-red-50 hover:border-red-300 hover:text-red-600"
                             >
                               {removeLabel}
                             </button>
@@ -1316,7 +1374,7 @@ export default function Stage2Page() {
                 </p>
               </div>
 
-              <div className="rounded-[28px] border border-[#F4A9C8]/60 bg-white/70 p-6 shadow-[0_24px_50px_-40px_rgba(244,169,200,0.55)] backdrop-blur">
+              <div className="rounded-[28px] border border-pink-200 bg-gradient-to-br from-pink-50/40 to-white p-6 shadow-[0_8px_30px_-15px_rgba(244,114,182,0.3)] backdrop-blur">
                 <div className="mb-4">
                   <h2 className="font-semibold text-slate-800">{t('stage2Signal')}</h2>
                   <p className="mt-1 text-xs text-slate-600" />
@@ -1330,7 +1388,7 @@ export default function Stage2Page() {
                     return (
                       <div
                         key={key}
-                        className="rounded-2xl border border-[#F4A9C8]/50 bg-white/75 p-3 transition"
+                        className="rounded-2xl border border-pink-200 bg-white p-3 shadow-sm transition hover:shadow-md"
                       >
                         <div className="flex items-center justify-between gap-3">
                           <div>
@@ -1342,7 +1400,7 @@ export default function Stage2Page() {
                             <button
                               type="button"
                               onClick={() => removeSelection(key)}
-                              className="rounded-full border border-[#F4A9C8]/60 bg-white/70 px-2 py-1 text-xs font-semibold text-slate-700 transition hover:bg-white/90"
+                              className="rounded-full border border-slate-300 bg-white px-3 py-1 text-xs font-semibold text-slate-700 shadow-sm transition hover:bg-red-50 hover:border-red-300 hover:text-red-600"
                             >
                               {removeLabel}
                             </button>
@@ -1415,7 +1473,7 @@ export default function Stage2Page() {
             <div className="mt-2 flex flex-wrap items-center justify-center gap-3">
               <button
                 onClick={handleSave}
-                className="rounded-full bg-[#BEEDE3] px-6 py-3 text-sm font-semibold text-slate-700 shadow-[0_18px_30px_-20px_rgba(155,203,255,0.6)] transition hover:bg-[#9BCBFF]/60"
+                className="rounded-full bg-slate-900 px-6 py-3 text-sm font-semibold text-white shadow-sm transition-all duration-300 ease-out hover:bg-slate-800"
               >
                 {t('stage2Save')}
               </button>

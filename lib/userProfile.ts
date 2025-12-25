@@ -93,6 +93,7 @@ export type UserProfile = {
     anchor: string[];
     signal: string[];
     savedAt: string;
+    targetSemester?: string;
   };
   stage2Slots?: ({ anchor: string[]; signal: string[]; savedAt: string } | null)[];
   stage4Result?: {

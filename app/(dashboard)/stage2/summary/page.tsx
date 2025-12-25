@@ -6,6 +6,7 @@ import { useI18n } from '@/lib/i18n';
 import { getUserProfile, updateUserProfile } from '@/lib/userProfile';
 import coursesData from '@/lib/data/courses-descriptions.json';
 import rolesData from '@/lib/data/roles.json';
+import { Zap, Heart, Sparkles, FileText } from 'lucide-react';
 
 type CourseCategory = 'general' | 'career' | 'interdisciplinary';
 
@@ -350,15 +351,15 @@ export default function Stage2SummaryPage() {
       ? 'Review how your picks align with your profile.'
       : 'Review how your picks align with your profile.';
   const backLabel = language === 'ko' ? 'Back to Stage 2' : 'Back to Stage 2';
-  const requiredLabel = language === 'ko' ? 'Required' : 'Required';
-  const electivesLabel = language === 'ko' ? 'Electives' : 'Electives';
+  const requiredLabel = language === 'ko' ? 'Required Courses' : 'Required Courses';
+  const electivesLabel = language === 'ko' ? 'Elective Courses' : 'Elective Courses';
   const profileLabel = language === 'ko' ? 'Profile snapshot' : 'Profile snapshot';
   const alignmentLabel = language === 'ko' ? 'Alignment' : 'Alignment';
   const emptyLabel = language === 'ko' ? 'No saved selection yet.' : 'No saved selection yet.';
-  const docKeywordsLabel = language === 'ko' ? '온보딩/업로드 키워드' : 'Onboarding + uploads';
+  const docKeywordsLabel = language === 'ko' ? '선호도' : 'Preference';
   const dashboardLabel = language === 'ko' ? 'Back to dashboard' : 'Back to dashboard';
   const redoLabel = language === 'ko' ? 'Clear & redo Stage 2' : 'Clear & redo Stage 2';
-  const nextStageLabel = language === 'ko' ? 'Continue to Stage 3' : 'Continue to Stage 3';
+  const nextStageLabel = language === 'ko' ? '다음 단계' : 'Next step';
   const confirmTitle = language === 'ko' ? 'Clear Stage 2 selection?' : 'Clear Stage 2 selection?';
   const confirmBody =
     language === 'ko'
@@ -366,6 +367,52 @@ export default function Stage2SummaryPage() {
       : 'Your saved selection will be cleared so you can rebuild it.';
   const confirmCancel = language === 'ko' ? '취소' : 'Cancel';
   const confirmConfirm = language === 'ko' ? 'Yes, clear' : 'Yes, clear';
+  const semesterLabel = language === 'ko' ? '대상 학기' : 'Target semester';
+  const semesterDisplay = (value?: string) => {
+    switch (value) {
+      case 'year-1-sem-1':
+        return language === 'ko' ? '1학년 1학기' : 'Year 1 Semester 1';
+      case 'year-1-sem-2':
+        return language === 'ko' ? '1학년 2학기' : 'Year 1 Semester 2';
+      case 'year-2-sem-1':
+        return language === 'ko' ? '2학년 1학기' : 'Year 2 Semester 1';
+      case 'year-2-sem-2':
+        return language === 'ko' ? '2학년 2학기' : 'Year 2 Semester 2';
+      case 'year-3-sem-1':
+        return language === 'ko' ? '3학년 1학기' : 'Year 3 Semester 1';
+      case 'year-3-sem-2':
+        return language === 'ko' ? '3학년 2학기' : 'Year 3 Semester 2';
+      default:
+        return language === 'ko' ? '미설정' : 'Not set';
+    }
+  };
+  const alignmentMetrics = [
+    {
+      label: language === 'ko' ? '강점' : 'Strength',
+      value: alignment.strengthCount,
+    },
+    {
+      label: language === 'ko' ? '역할' : 'Role',
+      value: alignment.roleCount,
+    },
+    {
+      label: language === 'ko' ? '키워드' : 'Keywords',
+      value: alignment.docCount,
+    },
+  ];
+  const alignmentMax = Math.max(
+    1,
+    alignment.strengthCount,
+    alignment.roleCount,
+    alignment.docCount
+  );
+  const radarPoints = alignmentMetrics.map((metric, index) => {
+    const angle = (Math.PI * 2 * index) / alignmentMetrics.length - Math.PI / 2;
+    const radius = (metric.value / alignmentMax) * 60;
+    const x = 80 + Math.cos(angle) * radius;
+    const y = 80 + Math.sin(angle) * radius;
+    return `${x},${y}`;
+  });
 
   const handleRedo = () => {
     updateUserProfile({ stage2Selection: undefined });
@@ -398,199 +445,241 @@ export default function Stage2SummaryPage() {
 
   return (
     <div
-      className="min-h-screen px-6 py-12 bg-cover bg-center bg-no-repeat"
+      className="min-h-screen px-6 py-3 bg-cover bg-center bg-no-repeat"
       style={{ backgroundImage: "url('/asset/Background.png')" }}
     >
-      <div className="mx-auto w-full max-w-6xl space-y-8">
-        <div className="rounded-3xl border border-white/70 bg-white/85 p-6 shadow-sm backdrop-blur">
-          <h1 className="text-3xl font-semibold text-slate-800">{summaryTitle}</h1>
-          <p className="mt-2 text-sm text-slate-600">{summarySubtitle}</p>
-          <div className="mt-4 flex flex-wrap gap-3 text-xs text-slate-600">
+      <div className="mx-auto w-full max-w-7xl space-y-2 text-sm text-slate-600">
+        <div>
+          <h1 className="text-3xl font-semibold tracking-tight text-slate-800">{summaryTitle}</h1>
+          <p className="mt-1 text-sm text-slate-600">{summarySubtitle}</p>
+        </div>
+        <div className="rounded-3xl border border-white/70 bg-white/85 p-4 shadow-sm backdrop-blur">
+          <div className="flex flex-wrap gap-3 text-sm text-slate-600">
             <span className="rounded-full border border-white/70 bg-white/80 px-3 py-1">
               {alignment.total} selected
             </span>
             <span className="rounded-full border border-white/70 bg-white/80 px-3 py-1">
               Fit score: {alignment.score}%
             </span>
+            <span className="rounded-full border border-white/70 bg-white/80 px-3 py-1">
+              {semesterLabel}: {semesterDisplay(selection?.targetSemester)}
+            </span>
           </div>
         </div>
 
-        <div className="grid gap-6 lg:grid-cols-[2fr_1fr]">
-          <div className="space-y-6">
-            <div className="rounded-3xl border border-white/70 bg-white/85 p-6 shadow-sm backdrop-blur">
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-lg font-semibold text-slate-800">{requiredLabel}</h2>
-                <span className="text-xs text-slate-500">{selectedCourses.required.length}</span>
+        <div className="grid gap-2.5 lg:grid-cols-[1fr_2fr]">
+          <div className="space-y-2.5">
+            <div className="rounded-3xl border border-slate-200/80 bg-gradient-to-br from-white to-blue-50/50 p-4 shadow-sm backdrop-blur space-y-2.5">
+              <div>
+                <div className="flex items-center justify-between mb-2">
+                  <h2 className="text-lg font-semibold text-slate-800">{requiredLabel}</h2>
+                  <span className="text-sm text-slate-500">{selectedCourses.required.length}</span>
+                </div>
+                <div className="space-y-2 max-h-[220px] overflow-y-auto">
+                  {selectedCourses.required.map((course) => {
+                    const courseLabel = language === 'ko' ? course.kr : course.en;
+                    const subjectLabel = language === 'ko' ? course.subjectKr : course.subjectEn;
+                    return (
+                      <div
+                        key={`${course.subjectEn}-${course.category}-${course.en}`}
+                        className="rounded-2xl border border-blue-200/70 bg-gradient-to-br from-white to-blue-50/30 p-4 shadow-sm"
+                      >
+                        <p className="text-base font-semibold text-slate-800">{courseLabel}</p>
+                      </div>
+                    );
+                  })}
+                  {selectedCourses.required.length === 0 && (
+                    <p className="text-sm text-slate-500">No required courses selected.</p>
+                  )}
+                </div>
               </div>
-              <div className="space-y-3">
-                {selectedCourses.required.map((course) => {
-                  const courseLabel = language === 'ko' ? course.kr : course.en;
-                  const subjectLabel = language === 'ko' ? course.subjectKr : course.subjectEn;
-                  return (
-                    <div
-                      key={`${course.subjectEn}-${course.category}-${course.en}`}
-                      className="rounded-2xl border border-white/70 bg-white/80 p-4 shadow-sm"
-                    >
-                      <p className="text-sm font-semibold text-slate-800">{courseLabel}</p>
-                      <p className="text-xs text-slate-500">{subjectLabel}</p>
-                    </div>
-                  );
-                })}
-                {selectedCourses.required.length === 0 && (
-                  <p className="text-sm text-slate-500">No required courses selected.</p>
-                )}
-              </div>
-            </div>
 
-            <div className="rounded-3xl border border-white/70 bg-white/85 p-6 shadow-sm backdrop-blur">
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-lg font-semibold text-slate-800">{electivesLabel}</h2>
-                <span className="text-xs text-slate-500">{selectedCourses.electives.length}</span>
-              </div>
-              <div className="space-y-3">
-                {selectedCourses.electives.map((course) => {
-                  const courseLabel = language === 'ko' ? course.kr : course.en;
-                  const subjectLabel = language === 'ko' ? course.subjectKr : course.subjectEn;
-                  return (
-                    <div
-                      key={`${course.subjectEn}-${course.category}-${course.en}`}
-                      className="rounded-2xl border border-white/70 bg-white/80 p-4 shadow-sm"
-                    >
-                      <p className="text-sm font-semibold text-slate-800">{courseLabel}</p>
-                      <p className="text-xs text-slate-500">{subjectLabel}</p>
-                    </div>
-                  );
-                })}
-                {selectedCourses.electives.length === 0 && (
-                  <p className="text-sm text-slate-500">No electives selected.</p>
-                )}
+              <div className="border-t border-blue-100 pt-2.5">
+                <div className="flex items-center justify-between mb-2">
+                  <h2 className="text-lg font-semibold text-slate-800">{electivesLabel}</h2>
+                  <span className="text-sm text-slate-500">{selectedCourses.electives.length}</span>
+                </div>
+                <div className="space-y-2 max-h-[220px] overflow-y-auto">
+                  {selectedCourses.electives.map((course) => {
+                    const courseLabel = language === 'ko' ? course.kr : course.en;
+                    const subjectLabel = language === 'ko' ? course.subjectKr : course.subjectEn;
+                    return (
+                      <div
+                        key={`${course.subjectEn}-${course.category}-${course.en}`}
+                        className="rounded-2xl border border-pink-200/70 bg-gradient-to-br from-white to-pink-50/30 p-4 shadow-sm"
+                      >
+                        <p className="text-base font-semibold text-slate-800">{courseLabel}</p>
+                      </div>
+                    );
+                  })}
+                  {selectedCourses.electives.length === 0 && (
+                    <p className="text-sm text-slate-500">No electives selected.</p>
+                  )}
+                </div>
               </div>
             </div>
           </div>
 
-          <div className="space-y-6">
-            <div className="rounded-3xl border border-white/70 bg-white/85 p-6 shadow-sm backdrop-blur">
-              <h2 className="text-lg font-semibold text-slate-800">{profileLabel}</h2>
-              <div className="mt-4 space-y-4 text-sm text-slate-600">
-                <div>
-                  <p className="text-xs font-semibold text-slate-500">Stage 0 strengths</p>
-                  <div className="mt-2 flex flex-wrap gap-2">
+          <div className="space-y-2">
+            <div className="rounded-3xl border border-slate-200/80 bg-gradient-to-br from-white to-slate-50/60 p-4 shadow-[0_8px_30px_-15px_rgba(100,116,139,0.25)] backdrop-blur">
+              <h2 className="text-lg font-semibold text-slate-800 mb-2">{profileLabel}</h2>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                {/* Strengths */}
+                <div className="group">
+                  <div className="flex items-center gap-2 mb-2">
+                    <div className="flex h-6 w-6 items-center justify-center rounded-lg bg-gradient-to-br from-amber-400 to-orange-500 shadow-sm">
+                      <Zap className="h-3.5 w-3.5 text-white" strokeWidth={2.5} />
+                    </div>
+                    <p className="text-sm font-semibold text-slate-700 uppercase tracking-wide">Strengths</p>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
                     {strengthLabels.length > 0 ? (
                       strengthLabels.map((label) => (
                         <span
                           key={label}
-                          className="rounded-full border border-white/70 bg-white/80 px-3 py-1 text-xs text-slate-700"
+                          className="rounded-full border border-amber-200 bg-gradient-to-br from-amber-50 to-orange-50/80 px-3 py-1 text-sm font-medium text-amber-900 shadow-sm"
                         >
                           {label}
                         </span>
                       ))
                     ) : (
-                      <span className="text-xs text-slate-500">No strengths yet.</span>
+                      <span className="text-sm text-slate-400 italic">No strengths yet</span>
                     )}
                   </div>
                 </div>
-                <div>
-                  <p className="text-xs font-semibold text-slate-500">Stage 1 liked roles</p>
-                  <div className="mt-2 flex flex-wrap gap-2">
+
+                {/* Liked Roles */}
+                <div className="group">
+                  <div className="flex items-center gap-2 mb-2">
+                    <div className="flex h-6 w-6 items-center justify-center rounded-lg bg-gradient-to-br from-pink-400 to-rose-500 shadow-sm">
+                      <Heart className="h-3.5 w-3.5 text-white fill-white" strokeWidth={2} />
+                    </div>
+                    <p className="text-sm font-semibold text-slate-700 uppercase tracking-wide">Liked Roles</p>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
                     {likedRoleLabels.length > 0 ? (
                       likedRoleLabels.map((label) => (
                         <span
                           key={label}
-                          className="rounded-full border border-white/70 bg-white/80 px-3 py-1 text-xs text-slate-700"
+                          className="rounded-full border border-pink-200 bg-gradient-to-br from-pink-50 to-rose-50/80 px-3 py-1 text-sm font-medium text-pink-900 shadow-sm"
                         >
                           {label}
                         </span>
                       ))
                     ) : (
-                      <span className="text-xs text-slate-500">No liked roles yet.</span>
+                      <span className="text-sm text-slate-400 italic">No liked roles yet</span>
                     )}
                   </div>
                 </div>
-                <div>
-                  <p className="text-xs font-semibold text-slate-500">Stage 0 suggested roles</p>
-                  <div className="mt-2 flex flex-wrap gap-2">
-                    {stage0RoleLabels.length > 0 ? (
-                      stage0RoleLabels.map((label) => (
-                        <span
-                          key={label}
-                          className="rounded-full border border-white/70 bg-white/80 px-3 py-1 text-xs text-slate-700"
-                        >
-                          {label}
-                        </span>
-                      ))
-                    ) : (
-                      <span className="text-xs text-slate-500">No suggested roles yet.</span>
-                    )}
+
+                {/* Keywords */}
+                <div className="group">
+                  <div className="flex items-center gap-2 mb-2">
+                    <div className="flex h-6 w-6 items-center justify-center rounded-lg bg-gradient-to-br from-blue-400 to-cyan-500 shadow-sm">
+                      <FileText className="h-3.5 w-3.5 text-white" strokeWidth={2.5} />
+                    </div>
+                    <p className="text-sm font-semibold text-slate-700 uppercase tracking-wide">{docKeywordsLabel}</p>
                   </div>
-                </div>
-                <div>
-                  <p className="text-xs font-semibold text-slate-500">{docKeywordsLabel}</p>
-                  <div className="mt-2 flex flex-wrap gap-2">
+                  <div className="flex flex-wrap gap-2">
                     {docKeywords.length > 0 ? (
                       docKeywords.slice(0, 8).map((label) => (
                         <span
                           key={label}
-                          className="rounded-full border border-white/70 bg-white/80 px-3 py-1 text-xs text-slate-700"
+                          className="rounded-full border border-blue-200 bg-gradient-to-br from-blue-50 to-cyan-50/80 px-3 py-1 text-sm font-medium text-blue-900 shadow-sm"
                         >
                           {label}
                         </span>
                       ))
                     ) : (
-                      <span className="text-xs text-slate-500">No keywords yet.</span>
+                      <span className="text-sm text-slate-400 italic">No keywords yet</span>
                     )}
                   </div>
                 </div>
               </div>
             </div>
 
-            <div className="rounded-3xl border border-white/70 bg-white/85 p-6 shadow-sm backdrop-blur">
-              <h2 className="text-lg font-semibold text-slate-800">{alignmentLabel}</h2>
-              <div className="mt-4 space-y-3 text-sm text-slate-600">
-                <div className="flex items-center justify-between">
-                  <span>Matches strengths</span>
-                  <span>{alignment.strengthCount} courses</span>
+            <div className="rounded-3xl border border-white/70 bg-white/85 p-5 shadow-sm backdrop-blur min-h-[360px] flex flex-col">
+              <h2 className="text-xl font-semibold text-slate-800 mb-3">{alignmentLabel}</h2>
+              <div className="grid gap-5 md:grid-cols-2 items-center flex-1">
+                <div className="flex items-center justify-center">
+                  <svg viewBox="0 0 160 160" className="h-56 w-56">
+                    <defs>
+                      <linearGradient id="stage2RadarFill" x1="0" y1="0" x2="1" y2="1">
+                        <stop offset="0%" stopColor="rgba(155, 203, 255, 0.5)" />
+                        <stop offset="100%" stopColor="rgba(244, 169, 200, 0.45)" />
+                      </linearGradient>
+                    </defs>
+                    {[18, 36, 54, 72].map((ring) => (
+                      <circle key={ring} cx="80" cy="80" r={ring} fill="none" stroke="#EDEFF6" strokeWidth="1" />
+                    ))}
+                    {alignmentMetrics.map((metric, index) => {
+                      const angle = (Math.PI * 2 * index) / alignmentMetrics.length - Math.PI / 2;
+                      const x = 80 + Math.cos(angle) * 60;
+                      const y = 80 + Math.sin(angle) * 60;
+                      return (
+                        <g key={metric.label}>
+                          <line x1="80" y1="80" x2={x} y2={y} stroke="#D9E2F2" strokeWidth="1" />
+                          <text x={80 + Math.cos(angle) * 74} y={80 + Math.sin(angle) * 74} fontSize="9" fill="#6B7280" textAnchor="middle">
+                            {metric.label}
+                          </text>
+                        </g>
+                      );
+                    })}
+                    <polygon
+                      points={radarPoints.join(' ')}
+                      fill="url(#stage2RadarFill)"
+                      stroke="#9BCBFF"
+                      strokeWidth="1.5"
+                    />
+                    <circle cx="80" cy="80" r="3" fill="#F4A9C8" />
+                  </svg>
                 </div>
-                <div className="flex items-center justify-between">
-                  <span>Matches liked roles</span>
-                  <span>{alignment.roleCount} courses</span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span>
-                    {language === 'ko'
-                      ? '온보딩/업로드 키워드 매칭'
-                      : 'Matches onboarding + uploads'}
-                  </span>
-                  <span>{alignment.docCount} courses</span>
-                </div>
-                <div className="flex items-center justify-between font-semibold text-slate-700">
-                  <span>Overall alignment</span>
-                  <span>{alignment.anyCount} / {alignment.total}</span>
+                <div className="space-y-3 text-sm text-slate-600">
+                  <div className="flex items-center justify-between">
+                    <span>Matches strengths</span>
+                    <span>{alignment.strengthCount} courses</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span>Matches liked roles</span>
+                    <span>{alignment.roleCount} courses</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span>
+                      {language === 'ko'
+                        ? '선호도 매칭'
+                        : 'Matches preferences'}
+                    </span>
+                    <span>{alignment.docCount} courses</span>
+                  </div>
+                  <div className="flex items-center justify-between font-semibold text-slate-700">
+                    <span>Overall alignment</span>
+                    <span>{alignment.anyCount} / {alignment.total}</span>
+                  </div>
                 </div>
               </div>
             </div>
 
-            <button
-              type="button"
-              onClick={() => router.push('/stage3')}
-              className="w-full rounded-full bg-slate-900 px-5 py-3 text-sm font-semibold text-white shadow-sm transition-all duration-300 ease-out hover:bg-slate-800"
-            >
-              {nextStageLabel}
-            </button>
-
-            <div className="flex flex-wrap gap-3">
+            <div className="flex flex-wrap items-center justify-center gap-3 mt-3">
               <button
                 type="button"
                 onClick={() => router.push('/dashboard')}
-                className="rounded-full border border-white/70 bg-white/80 px-5 py-2 text-sm font-semibold text-slate-700 shadow-sm transition-all duration-300 ease-out hover:bg-white"
+                className="rounded-full border border-white/70 bg-white/80 px-6 py-2.5 text-sm font-semibold text-slate-700 shadow-sm transition-all duration-300 ease-out hover:bg-white"
               >
                 {dashboardLabel}
               </button>
               <button
                 type="button"
                 onClick={() => setShowConfirm(true)}
-                className="rounded-full border border-white/70 bg-white/80 px-5 py-2 text-sm font-semibold text-slate-700 shadow-sm transition-all duration-300 ease-out hover:bg-white"
+                className="rounded-full border border-white/70 bg-white/80 px-6 py-2.5 text-sm font-semibold text-slate-700 shadow-sm transition-all duration-300 ease-out hover:bg-white"
               >
                 {redoLabel}
+              </button>
+              <button
+                type="button"
+                onClick={() => router.push('/stage3')}
+                className="rounded-full bg-slate-900 px-6 py-2.5 text-sm font-semibold text-white shadow-sm transition-all duration-300 ease-out hover:bg-slate-800"
+              >
+                {nextStageLabel}
               </button>
             </div>
           </div>

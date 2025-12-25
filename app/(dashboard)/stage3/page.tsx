@@ -17,7 +17,7 @@ import { getUserProfile } from '@/lib/userProfile';
 // Translations
 const translations = {
   ko: {
-    title: 'Skill Translation',
+    title: 'Journal Review',
     subtitle: '선택한 과목으로 어떤 역량을 키워갈지 함께 이야기해봐요',
     placeholder: '생각을 나눠주세요...',
     send: 'Send',
@@ -26,7 +26,7 @@ const translations = {
     error: '죄송해요, 다시 한번 말씀해주시겠어요?',
   },
   en: {
-    title: 'Skill Translation',
+    title: 'Journal Review',
     subtitle: "Let's talk about what skills you'll build through your chosen courses",
     placeholder: 'Share your thoughts...',
     send: 'Send',

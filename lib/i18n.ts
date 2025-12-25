@@ -129,7 +129,7 @@ const messages: Record<Language, Messages> = {
     stage1SummaryRoleModels: '\uB864\uBAA8\uB378',
     stage1SummaryWhereWork: '\uC77C\uD560 \uC218 \uC788\uB294 \uACF3',
     // Stage 2
-    stage2Title: '과목 선택 설계',
+    stage2Title: '과목 로드맵',
     stage2Subjects: '과목 목록',
     stage2Anchor: '핵심 과목',
     stage2Signal: '선택 과목',
@@ -349,7 +349,7 @@ const messages: Record<Language, Messages> = {
     stage1Description: 'Explore roles',
     stage2Name: 'Course Roadmap',
     stage2Description: 'Design your courses',
-    stage3Name: 'Skill Translation',
+    stage3Name: 'Journal Review',
     stage3Description: 'Map your growth journey',
     stage4Name: 'Tournament',
     stage4Description: 'Narrow specializations',
@@ -402,7 +402,7 @@ const messages: Record<Language, Messages> = {
     stage1SummaryRoleModels: 'Role models',
     stage1SummaryWhereWork: 'Where you could work',
     // Stage 2
-    stage2Title: 'Course Selection Builder',
+    stage2Title: 'Course Roadmap',
     stage2Subjects: 'Subjects',
     stage2Anchor: 'Core Courses',
     stage2Signal: 'Elective Courses',
@@ -410,7 +410,7 @@ const messages: Record<Language, Messages> = {
     stage2SignalCount: '({count}/6 selected)',
     stage2Save: 'Save selection',
     // Stage 3
-    stage3Title: 'Skill Translation',
+    stage3Title: 'Journal Review',
     stage3Subtitle: 'Let\'s talk about what skills you\'ll build from your chosen courses.',
     stage3Empty: 'Hi! Tell me what skills you want to build from your chosen courses.',
     stage3Loading: 'AI is typing...',

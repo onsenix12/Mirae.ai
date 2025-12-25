@@ -19,6 +19,15 @@ const stages = [
   { id: 5, nameKey: 'stage5Name', descriptionKey: 'stage5Description', path: '/collection', letter: '+', promptKey: 'journeyPromptStoryboard' },
 ];
 
+const stageSubtitles: Record<number, string> = {
+  0: 'Discover your unique strengths and patterns.',
+  1: "Let's explore safely. No commitments needed.",
+  2: 'Explore courses that keep your options open.',
+  3: 'Reflect on what resonates with you.',
+  4: 'Refine your path based on your experiences.',
+  5: 'Visualize and celebrate your journey.',
+};
+
 const academicStages = [
   { id: 'pre-year-1', label: 'Pre-Year 1' },
   { id: 'year-1-sem-1', label: 'Year 1 Semester 1' },
@@ -394,7 +403,7 @@ export default function DashboardPage() {
 
                           {/* Subtitle */}
                           <p className="text-base text-slate-600">
-                            Let&apos;s explore safely. No commitments needed.
+                            {viewingStage && stageSubtitles[viewingStage.id]}
                           </p>
                         </div>
 
