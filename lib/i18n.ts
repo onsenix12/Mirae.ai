@@ -81,6 +81,7 @@ const messages: Record<Language, Messages> = {
     stage0OptionEmpathy: '공감 능력',
     stage0OptionOrganization: '체계적 정리',
     stage0Prev: '← 이전',
+    stage0Next: '다음 →',
     stage0Complete: '완료',
     stage0ProgressLabel: '질문',
     // Stage 1
@@ -223,6 +224,7 @@ const messages: Record<Language, Messages> = {
     stage0OptionEmpathy: 'Empathy',
     stage0OptionOrganization: 'Organization',
     stage0Prev: '← Back',
+    stage0Next: 'Next →',
     stage0Complete: 'Finish',
     stage0ProgressLabel: 'Question',
     // Stage 1

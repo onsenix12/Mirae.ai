@@ -1,32 +1,63 @@
-// lib/fallback/patternMatcher.ts
+// lib/fallback/patternMatcher.ts - UPDATED WITH CONTEXT SUPPORT
 
 import { 
   ConversationTurn, 
   UserContext, 
-  ConversationPhase 
+  ConversationPhase,
+  ConversationType,
 } from '@/lib/types/skillTranslation';
 import { 
-  HAPPY_PATH_TURNS, 
+  HAPPY_PATH_YEAR1_POST,
+  HAPPY_PATH_YEAR1_PRE,
+  HAPPY_PATH_YEAR2_RECON,
+  HAPPY_PATH_YEAR3_PRESSURE,
   FIT_FEAR_RESPONSES, 
   GENERIC_FALLBACKS 
 } from './happyPath';
+import {
+  HAPPY_PATH_TURNS_EN,
+  FIT_FEAR_RESPONSES_EN,
+  GENERIC_FALLBACKS_EN
+} from './happyPathEn';
 
 /**
- * Pattern Matcher
- * 
- * Intelligently matches user input to conversation turns
- * and generates appropriate responses.
+ * Get the appropriate happy path based on conversation type and language
  */
+function getHappyPathForType(type: ConversationType, language: 'ko' | 'en' = 'ko'): ConversationTurn[] {
+  // For English, use the general English happy path (we can add type-specific English paths later)
+  if (language === 'en') {
+    return HAPPY_PATH_TURNS_EN;
+  }
+  
+  // For Korean, use type-specific paths
+  switch (type) {
+    case 'year1_pre_selection':
+      return HAPPY_PATH_YEAR1_PRE;
+    case 'year1_post_selection':
+      return HAPPY_PATH_YEAR1_POST;
+    case 'year2_reconsidering':
+      return HAPPY_PATH_YEAR2_RECON;
+    case 'year3_pressure':
+      return HAPPY_PATH_YEAR3_PRESSURE;
+    default:
+      return HAPPY_PATH_YEAR1_POST; // Fallback to most common
+  }
+}
 
 /**
- * Main function to find the best matching response
+ * Main function to find the best matching response - NOW CONTEXT-AWARE
  */
 export function findBestMatch(
   userInput: string,
   currentTurn: number,
-  context: UserContext
+  context: UserContext,
+  conversationType: ConversationType,
+  language: 'ko' | 'en' = 'ko'
 ): { message: string; nextTurn: number; phase: ConversationPhase } {
   const normalizedInput = userInput.toLowerCase().trim();
+  
+  // Get the appropriate happy path for this conversation type and language
+  const HAPPY_PATH_TURNS = getHappyPathForType(conversationType, language);
   
   // Special case: START token for initial message
   if (userInput === 'START' || currentTurn === 0) {
@@ -35,17 +66,16 @@ export function findBestMatch(
     return {
       message,
       nextTurn: 1,
-      phase: 'recap',
+      phase: turn.phase,
     };
   }
   
-  // Get expected turn based on conversation flow
+  // Get expected turn
   const expectedTurn = HAPPY_PATH_TURNS[currentTurn];
   
   if (!expectedTurn) {
-    // We've gone past the script - use generic fallback
     return {
-      message: getGenericFallback(),
+      message: getGenericFallback(language),
       nextTurn: currentTurn,
       phase: 'closing',
     };
@@ -57,13 +87,12 @@ export function findBestMatch(
   );
   
   if (hasMatchingPattern) {
-    // User is following the happy path!
     const nextTurn = HAPPY_PATH_TURNS[currentTurn + 1];
     
     if (nextTurn) {
-      // Special handling for Turn 12 (Fit vs Fear response)
-      if (nextTurn.turnNumber === 12) {
-        const fitFearResponse = detectFitVsFear(normalizedInput, context);
+      // Special handling for fit-vs-fear in Year 1 post-selection
+      if (conversationType === 'year1_post_selection' && nextTurn.turnNumber === 12) {
+        const fitFearResponse = detectFitVsFear(normalizedInput, context, language);
         return {
           message: fitFearResponse,
           nextTurn: currentTurn + 1,
@@ -80,34 +109,34 @@ export function findBestMatch(
     }
   }
   
-  // Check for vague/unclear responses
-  if (isVagueResponse(normalizedInput)) {
+  // Check for vague responses
+  if (isVagueResponse(normalizedInput, language)) {
     const vagueResponse = expectedTurn.alternatives?.vague;
     if (vagueResponse) {
       const message = renderMessage(vagueResponse, context);
       return {
         message,
-        nextTurn: currentTurn, // Stay on same turn
+        nextTurn: currentTurn,
         phase: expectedTurn.phase,
       };
     }
   }
   
   // Check for questions
-  if (isQuestion(normalizedInput)) {
+  if (isQuestion(normalizedInput, language)) {
     const questionResponse = expectedTurn.alternatives?.question;
     if (questionResponse) {
       const message = renderMessage(questionResponse, context);
       return {
         message,
-        nextTurn: currentTurn, // Stay on same turn
+        nextTurn: currentTurn,
         phase: expectedTurn.phase,
       };
     }
   }
   
-  // Fallback: try to find ANY matching turn ahead
-  const fuzzyMatch = findFuzzyMatch(normalizedInput, currentTurn);
+  // Fuzzy match
+  const fuzzyMatch = findFuzzyMatch(normalizedInput, currentTurn, HAPPY_PATH_TURNS);
   if (fuzzyMatch) {
     const message = renderMessage(fuzzyMatch.miraeMessage, context);
     return {
@@ -117,89 +146,83 @@ export function findBestMatch(
     };
   }
   
-  // Ultimate fallback: generic response
+  // Ultimate fallback
   return {
-    message: getGenericFallback(),
-    nextTurn: currentTurn, // Stay on same turn
+    message: getGenericFallback(language),
+    nextTurn: currentTurn,
     phase: expectedTurn.phase,
   };
 }
 
 /**
- * Detect if user response indicates FIT vs FEAR motivation
+ * Detect fit vs fear motivation
  */
 export function detectFitVsFear(
   userInput: string,
-  context: UserContext
+  context: UserContext,
+  language: 'ko' | 'en' = 'ko'
 ): string {
   const input = userInput.toLowerCase();
+  const FIT_FEAR = language === 'en' ? FIT_FEAR_RESPONSES_EN : FIT_FEAR_RESPONSES;
   
-  // FIT signals
-  const fitKeywords = ['흥미', '재미', '좋아', '궁금', '배우고 싶', '하고 싶'];
+  const fitKeywords = language === 'en'
+    ? ['interested', 'fun', 'like', 'curious', 'want to learn', 'want to', 'enjoy']
+    : ['흥미', '재미', '좋아', '궁금', '배우고 싶', '하고 싶'];
   const hasFitSignal = fitKeywords.some(keyword => input.includes(keyword));
   
-  // FEAR signals
-  const fearKeywords = ['필요', '걱정', '불안', '갖춰야', '뒤처질', '해야'];
+  const fearKeywords = language === 'en'
+    ? ['need', 'worry', 'anxious', 'should have', 'fall behind', 'must', 'required']
+    : ['필요', '걱정', '불안', '갖춰야', '뒤처질', '해야'];
   const hasFearSignal = fearKeywords.some(keyword => input.includes(keyword));
   
-  // BOTH signals
   if (hasFitSignal && hasFearSignal) {
-    return FIT_FEAR_RESPONSES.both(context);
+    return FIT_FEAR.both(context);
   }
   
-  // FIT only
   if (hasFitSignal) {
-    return FIT_FEAR_RESPONSES.fit(context);
+    return FIT_FEAR.fit(context);
   }
   
-  // FEAR only
   if (hasFearSignal) {
-    return FIT_FEAR_RESPONSES.fear(context);
+    return FIT_FEAR.fear(context);
   }
   
-  // Default to FIT (positive assumption)
-  return FIT_FEAR_RESPONSES.fit(context);
+  return FIT_FEAR.fit(context);
 }
 
-/**
- * Check if user response is vague/unclear
- */
-function isVagueResponse(input: string): boolean {
-  const vaguePatterns = [
-    '모르겠',
-    '잘 모르',
-    '글쎄',
-    '확실하지 않',
-    '잘 모르겠',
-    '생각 안',
-    '별로',
-  ];
+function isVagueResponse(input: string, language: 'ko' | 'en' = 'ko'): boolean {
+  const vaguePatterns = language === 'en'
+    ? ['dont know', "don't know", 'not sure', 'unsure', 'maybe', 'not really', 'not certain', 'uncertain']
+    : ['모르겠', '잘 모르', '글쎄', '확실하지 않', '잘 모르겠', '생각 안', '별로'];
   return vaguePatterns.some(pattern => input.includes(pattern));
 }
 
-/**
- * Check if user input is a question
- */
-function isQuestion(input: string): boolean {
-  return input.includes('?') || 
-         input.includes('뭐') ||
+function isQuestion(input: string, language: 'ko' | 'en' = 'ko'): boolean {
+  if (input.includes('?')) return true;
+  
+  if (language === 'en') {
+    return input.includes('what') ||
+           input.includes('how') ||
+           input.includes('why') ||
+           input.includes('when') ||
+           input.includes('where') ||
+           input.includes('who');
+  }
+  
+  return input.includes('뭐') ||
          input.includes('어떻게') ||
          input.includes('왜') ||
          input.includes('언제') ||
          input.includes('어디');
 }
 
-/**
- * Try to find ANY matching turn ahead in the conversation
- * (Fuzzy matching for when user jumps ahead)
- */
 function findFuzzyMatch(
   input: string,
-  currentTurn: number
+  currentTurn: number,
+  happyPath: ConversationTurn[]
 ): ConversationTurn | null {
-  // Look at next 3 turns for patterns
-  for (let i = currentTurn + 1; i < Math.min(currentTurn + 4, HAPPY_PATH_TURNS.length); i++) {
-    const turn = HAPPY_PATH_TURNS[i];
+  for (let i = currentTurn + 1; i < Math.min(currentTurn + 4, happyPath.length); i++) {
+    const turn = happyPath[i];
     const hasMatch = turn.expectedUserPatterns.some(pattern => 
       input.includes(pattern)
     );
@@ -212,9 +235,6 @@ function findFuzzyMatch(
   return null;
 }
 
-/**
- * Render a message (handle both string and function types)
- */
 function renderMessage(
   message: string | ((context: UserContext) => string),
   context: UserContext
@@ -222,34 +242,18 @@ function renderMessage(
   return typeof message === 'function' ? message(context) : message;
 }
 
-/**
- * Get a random generic fallback message
- */
-function getGenericFallback(): string {
-  const randomIndex = Math.floor(Math.random() * GENERIC_FALLBACKS.length);
-  return GENERIC_FALLBACKS[randomIndex];
+function getGenericFallback(language: 'ko' | 'en' = 'ko'): string {
+  const fallbacks = language === 'en' ? GENERIC_FALLBACKS_EN : GENERIC_FALLBACKS;
+  const randomIndex = Math.floor(Math.random() * fallbacks.length);
+  return fallbacks[randomIndex];
 }
 
-/**
- * Extract skill keywords from user input
- * (Optional: for analytics/tracking)
- */
 export function extractSkillKeywords(input: string): string[] {
   const skillKeywords = [
-    '문제 해결',
-    '창의성',
-    '협업',
-    '분석',
-    '소통',
-    '비판적 사고',
-    '프레젠테이션',
-    '데이터 분석',
-    '시각적 표현',
-    '공감',
-    '리더십',
-    '조직',
+    '문제 해결', '창의성', '협업', '분석', '소통',
+    '비판적 사고', '프레젠테이션', '데이터 분석',
+    '시각적 표현', '공감', '리더십', '조직',
   ];
   
   return skillKeywords.filter(skill => input.includes(skill));
 }
-
