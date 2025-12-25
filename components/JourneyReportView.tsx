@@ -253,32 +253,34 @@ export default function JourneyReportView({ logs, cards, studentName }: JourneyR
 
   return (
     <div className="space-y-6">
-      <div className="rounded-3xl border border-white/50 bg-white/90 p-6 shadow-lg backdrop-blur-lg">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <p className="text-xs uppercase tracking-wide text-slate-500">View My Story</p>
-            <h2 className="text-2xl font-semibold text-slate-800">My Story Snapshot</h2>
-            <p className="text-sm text-slate-500">{studentName || 'Student'} · {formatRange(logs)}</p>
-            <p className="text-sm text-slate-600 mt-2">
-              A visual story of who I am, how I have grown, and why I choose my direction.
-            </p>
-          </div>
-          <div className="rounded-2xl border border-white/50 bg-white/80 p-3">
-            <div className="w-28 h-28">
-              <MiraeCharacter cardCount={unlockedCards.length} recentCardTypes={unlockedCards.map((c) => c.type)} size={120} />
+      <div className="space-y-6 no-print">
+        <div className="rounded-3xl border border-white/50 bg-white/90 p-6 shadow-lg backdrop-blur-lg">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <p className="text-xs uppercase tracking-wide text-slate-500">View My Story</p>
+              <h2 className="text-2xl font-semibold text-slate-800">My Story Snapshot</h2>
+              <p className="text-sm text-slate-500">{studentName || 'Student'} · {formatRange(logs)}</p>
+              <p className="text-sm text-slate-600 mt-2">
+                A visual story of who I am, how I have grown, and why I choose my direction.
+              </p>
             </div>
-            <p className="text-[11px] text-slate-500 mt-2 text-center">
-              {getEvolutionMessage(
-                unlockedCards.length === 0 ? 'base' :
-                unlockedCards.length <= 2 ? 'awakening' :
-                unlockedCards.length <= 4 ? 'discovering' :
-                unlockedCards.length <= 7 ? 'emerging' :
-                'realized'
-              )}
-            </p>
-            <p className="text-[11px] text-slate-400 mt-1 text-center">
-              {unlockedCards.length} cards unlocked
-            </p>
+            <div className="rounded-2xl border border-white/50 bg-white/80 p-3">
+              <div className="w-28 h-28">
+                <MiraeCharacter cardCount={unlockedCards.length} recentCardTypes={unlockedCards.map((c) => c.type)} size={120} />
+              </div>
+              <p className="text-[11px] text-slate-500 mt-2 text-center">
+                {getEvolutionMessage(
+                  unlockedCards.length === 0 ? 'base' :
+                  unlockedCards.length <= 2 ? 'awakening' :
+                  unlockedCards.length <= 4 ? 'discovering' :
+                  unlockedCards.length <= 7 ? 'emerging' :
+                  'realized'
+                )}
+              </p>
+              <p className="text-[11px] text-slate-400 mt-1 text-center">
+                {unlockedCards.length} cards unlocked
+              </p>
+            </div>
           </div>
         </div>
       </div>
@@ -459,6 +461,107 @@ export default function JourneyReportView({ logs, cards, studentName }: JourneyR
           onChange={setDirectionText}
           systemGenerated
         />
+      </div>
+
+      <div className="print-only print-storybook">
+        <section className="storybook-page">
+          <p className="storybook-kicker">My Storybook</p>
+          <h2>{studentName || 'Student'}</h2>
+          <p className="storybook-subtitle">{formatRange(logs)} · Growth story snapshot</p>
+          <p className="storybook-body">{executiveText}</p>
+          <div className="storybook-grid">
+            <div>
+              <h3>Identity signals</h3>
+              <ul>
+                {observedTendencies.length > 0 ? (
+                  observedTendencies.map((item) => <li key={item}>{item}</li>)
+                ) : (
+                  <li>Patterns will appear as you add more logs.</li>
+                )}
+              </ul>
+            </div>
+            <div>
+              <h3>Top activity focus</h3>
+              <ul>
+                {topActivities.length > 0 ? (
+                  topActivities.map(([type, count]) => (
+                    <li key={type}>
+                      {activityTypeLabels[type as ActivityLog['activityType']]} · {count}
+                    </li>
+                  ))
+                ) : (
+                  <li>Add activities to highlight your focus.</li>
+                )}
+              </ul>
+            </div>
+          </div>
+        </section>
+
+        <section className="storybook-page">
+          <h2>My Growth Journey</h2>
+          <p className="storybook-body">{growthText}</p>
+          <div className="storybook-grid">
+            <div>
+              <h3>Curiosity timeline</h3>
+              <ul>
+                {timeline.length > 0 ? (
+                  timeline.map((item) => (
+                    <li key={item.month}>
+                      <strong>{item.month}</strong>: {item.highlights.join(', ')}
+                    </li>
+                  ))
+                ) : (
+                  <li>Log activities to build your timeline.</li>
+                )}
+              </ul>
+            </div>
+            <div>
+              <h3>Stage momentum</h3>
+              <ul>
+                {(Object.keys(stageCounts) as ScopeStage[]).map((stage) => (
+                  <li key={stage}>
+                    {stageLabels[stage]} · {stageCounts[stage]}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
+        </section>
+
+        <section className="storybook-page">
+          <h2>Why I Choose This Direction</h2>
+          <p className="storybook-body">{directionText}</p>
+          <div className="storybook-grid">
+            <div>
+              <h3>Proof moments</h3>
+              <ul>
+                {experiences.length > 0 ? (
+                  experiences.map((exp) => (
+                    <li key={`${exp.date}-${exp.title}`}>
+                      <strong>{exp.title}</strong> · {exp.insight}
+                    </li>
+                  ))
+                ) : (
+                  <li>Add projects or club entries to highlight proof moments.</li>
+                )}
+              </ul>
+            </div>
+            <div>
+              <h3>Key reflections</h3>
+              <ul>
+                {reflections.length > 0 ? (
+                  reflections.map((log) => (
+                    <li key={log.id}>
+                      {log.date}: "{log.shortReflection}"
+                    </li>
+                  ))
+                ) : (
+                  <li>Add reflections to capture key moments.</li>
+                )}
+              </ul>
+            </div>
+          </div>
+        </section>
       </div>
     </div>
   );

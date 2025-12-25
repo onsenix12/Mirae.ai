@@ -102,6 +102,81 @@ body {
   filter: blur(30px);
 }
 
+.print-only {
+  display: none;
+}
+
+@media print {
+  body {
+    background: #ffffff;
+    color: #111111;
+  }
+
+  .no-print {
+    display: none !important;
+  }
+
+  .print-only {
+    display: block !important;
+  }
+
+  .print-storybook {
+    font-family: 'Georgia', 'Times New Roman', serif;
+    padding: 24px 32px;
+  }
+
+  .print-storybook h2 {
+    font-size: 28px;
+    margin: 0 0 12px;
+  }
+
+  .print-storybook h3 {
+    font-size: 16px;
+    margin: 16px 0 8px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+
+  .print-storybook ul {
+    margin: 0;
+    padding-left: 18px;
+  }
+
+  .storybook-page {
+    page-break-after: always;
+  }
+
+  .storybook-page:last-child {
+    page-break-after: auto;
+  }
+
+  .storybook-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+  }
+
+  .storybook-kicker {
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.2em;
+    margin-bottom: 12px;
+  }
+
+  .storybook-subtitle {
+    font-size: 14px;
+    margin-top: 4px;
+    color: #555555;
+  }
+
+  .storybook-body {
+    font-size: 15px;
+    line-height: 1.6;
+    margin: 16px 0;
+    white-space: pre-line;
+  }
+}
+
 @layer utilities {
   .text-balance {
     text-wrap: balance;

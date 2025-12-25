@@ -1020,6 +1020,10 @@ const AvatarPanel = ({
 }: AvatarPanelProps) => {
   const [showCustomizer, setShowCustomizer] = useState(false);
 
+  useEffect(() => {
+    console.log('AvatarPanel: equippedAccessories changed:', equippedAccessories);
+  }, [equippedAccessories]);
+
   return (
     <>
       <div className="sticky top-6">
@@ -1041,11 +1045,12 @@ const AvatarPanel = ({
 
           <div className="relative w-full aspect-[4/3] max-h-[280px] mb-4 rounded-2xl bg-gradient-to-br from-sky-50 via-violet-50 to-rose-50 flex items-center justify-center overflow-hidden">
             <MiraeCharacter
-              key={JSON.stringify(equippedAccessories)}
+              key={`main-${JSON.stringify(equippedAccessories)}`}
               cardCount={cardCount}
               recentCardTypes={recentCardTypes}
               size={220}
               equippedAccessories={equippedAccessories}
+              className="debug-main-avatar"
             />
           </div>
 
@@ -1333,9 +1338,20 @@ export default function MiraePlusStatement() {
     localStorage.setItem('miraePlus_viewMode', mode);
   };
 
+  const handleDownloadStoryPdf = () => {
+    setAdventureView('report');
+    if (typeof window !== 'undefined') {
+      window.setTimeout(() => {
+        window.print();
+      }, 200);
+    }
+  };
+
   const handleAccessoryChange = (newAccessories: EquippedAccessories) => {
+    console.log('Collection page: handleAccessoryChange called with:', newAccessories);
     setEquippedAccessories(newAccessories);
     localStorage.setItem('miraePlus_accessories', JSON.stringify(newAccessories));
+    console.log('Collection page: State updated, localStorage saved');
     
     // Dispatch custom event to notify other components
     if (typeof window !== 'undefined') {
@@ -1729,12 +1745,6 @@ export default function MiraePlusStatement() {
                         : 'bg-white/80 text-slate-600 border border-white/40 hover:bg-white'
                     }`}
                   >
-                    Journey Report
-                  </button>
-                  <button
-                    onClick={() => setAdventureView('report')}
-                    className="px-4 py-2 rounded-full text-xs font-semibold bg-[#9BCBFF]/90 text-slate-800 hover:bg-[#9BCBFF] transition"
-                  >
                     View My Story
                   </button>
                   
@@ -1758,8 +1768,7 @@ export default function MiraePlusStatement() {
                         <div className="absolute right-0 top-full mt-2 w-48 rounded-xl border border-white/40 bg-white shadow-lg z-50 overflow-hidden">
                           <button
                             onClick={() => {
-                              // TODO: Implement PDF download
-                              console.log('Download PDF');
+                              handleDownloadStoryPdf();
                               setShareDropdownOpen(false);
                             }}
                             className="w-full px-4 py-3 text-left text-sm text-slate-700 hover:bg-slate-50 transition flex items-center gap-3"

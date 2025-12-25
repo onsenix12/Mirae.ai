@@ -61,6 +61,7 @@ export const AccessoryPanel: React.FC<AccessoryPanelProps> = ({
       newEquipped[accessory.type] = accessory.id;
     }
 
+    console.log('AccessoryPanel: Calling onAccessoryChange with:', newEquipped);
     onAccessoryChange(newEquipped);
   };
 
@@ -126,6 +127,7 @@ export const AccessoryPanel: React.FC<AccessoryPanelProps> = ({
                 <div className="w-80 flex-shrink-0">
                   <div className="sticky top-0 rounded-2xl bg-gradient-to-br from-sky-50 via-violet-50 to-rose-50 p-6 h-full flex flex-col items-center justify-center">
                     <MiraeCharacter
+                      key={`preview-${JSON.stringify(equippedAccessories)}`}
                       cardCount={cardCount}
                       recentCardTypes={[]}
                       size={280}
