@@ -1516,7 +1516,7 @@ export default function MiraePlusStatement() {
                             onClick={() => handleOpenCategory(section)}
                             className="text-xs font-semibold text-slate-600 hover:text-slate-800 transition"
                           >
-                            Click to view all →
+                            Click to view all ->
                           </button>
                         )}
                       </div>
@@ -1563,7 +1563,7 @@ export default function MiraePlusStatement() {
                             onClick={() => handleOpenCategory(section)}
                             className="text-xs font-semibold text-slate-600 hover:text-slate-800 transition"
                           >
-                            Click to view all →
+                            Click to view all ->
                           </button>
                         )}
                       </div>

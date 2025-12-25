@@ -61,7 +61,8 @@ export default function DashboardPage() {
         setCardCount(unlockedCount);
       }
     }
-  }, [router, setUserId, t, userId]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [router, setUserId, userId]);
 
   // Listen for storage changes to update accessories in real-time
   useEffect(() => {

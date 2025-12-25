@@ -22,7 +22,7 @@ const formatRange = (logs: ActivityLog[]) => {
   const dates = logs.map((log) => log.date).sort();
   const start = dates[0];
   const end = dates[dates.length - 1];
-  return `${start} → ${end}`;
+  return `${start} to ${end}`;
 };
 
 const monthLabel = (date: string) => {
@@ -294,7 +294,7 @@ export default function JourneyReportView({ logs, cards, studentName }: JourneyR
                 <p className="text-sm font-semibold text-slate-700 mb-2">{item.month}</p>
                 <ul className="text-sm text-slate-600 space-y-1">
                   {item.highlights.map((highlight) => (
-                    <li key={highlight}>• {highlight}</li>
+                    <li key={highlight}>- {highlight}</li>
                   ))}
                 </ul>
               </div>

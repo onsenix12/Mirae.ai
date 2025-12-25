@@ -175,14 +175,14 @@ export default function ActivityCalendar({ logs, onAddLog }: ActivityCalendarPro
               className="h-8 w-8 rounded-full bg-white/70 border border-white/60 text-slate-600 hover:text-slate-800 transition"
               aria-label="Previous month"
             >
-              ‹
+              &lt;
             </button>
             <button
               onClick={handleNextMonth}
               className="h-8 w-8 rounded-full bg-white/70 border border-white/60 text-slate-600 hover:text-slate-800 transition"
               aria-label="Next month"
             >
-              ›
+              &gt;
             </button>
           </div>
         </div>
