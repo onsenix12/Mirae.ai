@@ -14,7 +14,7 @@ const stages = [
   { id: 2, nameKey: 'stage2Name', descriptionKey: 'stage2Description', path: '/stage2', letter: 'O', promptKey: 'journeyPromptOptions' },
   { id: 3, nameKey: 'stage3Name', descriptionKey: 'stage3Description', path: '/stage3', letter: 'P', promptKey: 'journeyPromptProof' },
   { id: 4, nameKey: 'stage4Name', descriptionKey: 'stage4Description', path: '/stage4', letter: 'E', promptKey: 'journeyPromptEvolve' },
-  { id: 5, nameKey: 'stage5Name', descriptionKey: 'stage5Description', path: '/stage5', letter: '+', promptKey: 'journeyPromptStoryboard' },
+  { id: 5, nameKey: 'stage5Name', descriptionKey: 'stage5Description', path: '/collection', letter: '+', promptKey: 'journeyPromptStoryboard' },
 ];
 
 export default function DashboardPage() {
