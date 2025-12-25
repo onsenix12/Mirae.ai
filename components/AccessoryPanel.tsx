@@ -6,6 +6,7 @@ import { Lock, Check, X } from 'lucide-react';
 import {
   ACCESSORIES,
   isAccessoryUnlocked,
+  MiraeCharacter,
   type Accessory,
   type EquippedAccessories,
   type AccessoryType,
@@ -97,7 +98,7 @@ export const AccessoryPanel: React.FC<AccessoryPanelProps> = ({
               exit={{ scale: 0.9, opacity: 0 }}
               transition={{ duration: 0.3, ease: 'easeOut' }}
               onClick={(e) => e.stopPropagation()}
-              className="w-full max-w-2xl rounded-3xl border border-white/40 bg-white/95 p-6 shadow-2xl backdrop-blur-lg max-h-[80vh] overflow-hidden flex flex-col"
+              className="w-full max-w-5xl rounded-3xl border border-white/40 bg-white/95 p-6 shadow-2xl backdrop-blur-lg max-h-[85vh] overflow-hidden flex flex-col"
             >
               {/* Header */}
               <div className="flex items-center justify-between mb-4">
@@ -114,27 +115,49 @@ export const AccessoryPanel: React.FC<AccessoryPanelProps> = ({
                 Unlock accessories by collecting cards and completing stages!
               </p>
 
-              {/* Tabs */}
-              <div className="flex gap-2 mb-4 overflow-x-auto">
-                {tabs.map((tab) => (
-                  <button
-                    key={tab.type}
-                    onClick={() => setActiveTab(tab.type)}
-                    className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-colors ${
-                      activeTab === tab.type
-                        ? 'bg-slate-800 text-white'
-                        : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-                    }`}
-                  >
-                    <span>{tab.emoji}</span>
-                    <span>{tab.label}</span>
-                  </button>
-                ))}
-              </div>
+              {/* Main Content: Preview + Customization */}
+              <div className="flex-1 flex gap-6 min-h-0">
+                {/* Left: Mirae Preview */}
+                <div className="w-80 flex-shrink-0">
+                  <div className="sticky top-0 rounded-2xl bg-gradient-to-br from-sky-50 via-violet-50 to-rose-50 p-6 h-full flex flex-col items-center justify-center">
+                    <MiraeCharacter
+                      cardCount={cardCount}
+                      recentCardTypes={[]}
+                      size={280}
+                      equippedAccessories={equippedAccessories}
+                    />
+                    <p className="mt-4 text-sm font-medium text-slate-600 text-center">
+                      Live Preview
+                    </p>
+                    <p className="text-xs text-slate-500 text-center mt-1">
+                      {Object.keys(equippedAccessories).length} accessories equipped
+                    </p>
+                  </div>
+                </div>
 
-              {/* Accessory Grid */}
-              <div className="flex-1 overflow-y-auto">
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                {/* Right: Accessory Selection */}
+                <div className="flex-1 flex flex-col min-h-0">
+                  {/* Tabs */}
+                  <div className="flex gap-2 mb-4 overflow-x-auto">
+                    {tabs.map((tab) => (
+                      <button
+                        key={tab.type}
+                        onClick={() => setActiveTab(tab.type)}
+                        className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-colors ${
+                          activeTab === tab.type
+                            ? 'bg-slate-800 text-white'
+                            : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                        }`}
+                      >
+                        <span>{tab.emoji}</span>
+                        <span>{tab.label}</span>
+                      </button>
+                    ))}
+                  </div>
+
+                  {/* Accessory Grid */}
+                  <div className="flex-1 overflow-y-auto pr-2">
+                    <div className="grid grid-cols-2 gap-3">
                   {filteredAccessories.map((accessory) => {
                     const isUnlocked = isAccessoryUnlocked(accessory, cardCount, completedStages);
                     const isEquipped = equippedAccessories[accessory.type] === accessory.id;
@@ -201,6 +224,8 @@ export const AccessoryPanel: React.FC<AccessoryPanelProps> = ({
                       </motion.button>
                     );
                   })}
+                    </div>
+                  </div>
                 </div>
               </div>
 

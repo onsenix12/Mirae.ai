@@ -668,9 +668,9 @@ export default function MiraePlusStatement() {
       <FloatingOrbsBackground />
 
       <div className="relative z-10 max-w-7xl mx-auto px-6 py-10 h-screen overflow-hidden">
-        <div className="grid grid-cols-1 lg:grid-cols-[1fr_2fr] gap-8 h-full">
+        <div className="grid grid-cols-1 lg:grid-cols-[1fr_2fr] gap-8 h-full min-h-0">
           {/* Left Column */}
-          <div className="space-y-6 h-full">
+          <div className="space-y-6 h-full min-h-0">
             <div className="mb-6">
               <h1 className="text-3xl sm:text-4xl font-semibold text-slate-800 mb-2">
                 Your story, so far
@@ -690,7 +690,7 @@ export default function MiraePlusStatement() {
           </div>
 
           {/* Right Column */}
-          <div className="space-y-6 h-full flex flex-col">
+          <div className="space-y-6 h-full min-h-0 flex flex-col">
             <div className="flex items-center gap-2">
               <button
                 onClick={() => handleViewModeChange('collection')}
@@ -716,7 +716,7 @@ export default function MiraePlusStatement() {
               </button>
             </div>
 
-            <div className="flex-1 min-h-0 overflow-y-auto pr-2">
+            <div className="relative flex-1 min-h-0 overflow-y-auto pr-2">
               {viewMode === 'collection' ? (
                 <div className="space-y-8">
                   <div className="min-h-full flex flex-col justify-center">
@@ -792,15 +792,21 @@ export default function MiraePlusStatement() {
               ) : (
                 <StatementView cards={cards} />
               )}
+
             </div>
 
             <div>
-              <button
-                onClick={() => router.push('/dashboard')}
-                className="px-5 py-2 rounded-full text-sm font-medium bg-white/80 text-slate-600 border border-white/40 hover:bg-white transition-colors"
-              >
-                Back to Dashboard
-              </button>
+              <div className="relative flex items-center justify-between gap-3">
+                <button
+                  onClick={() => router.push('/dashboard')}
+                  className="px-5 py-2 rounded-full text-sm font-medium bg-white/80 text-slate-600 border border-white/40 hover:bg-white transition-colors"
+                >
+                  Back to Dashboard
+                </button>
+                <div className="pointer-events-none absolute left-1/2 -translate-x-1/2 flex h-9 w-9 items-center justify-center rounded-full bg-white/80 text-slate-600 shadow-md animate-bounce">
+                  ↓
+                </div>
+              </div>
             </div>
           </div>
         </div>
