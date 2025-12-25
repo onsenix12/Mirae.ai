@@ -250,9 +250,9 @@ export default function Stage1Page() {
       persistSwipe();
 
       if (currentIndex < rolesToShow.length - 1) {
-        setCurrentIndex(currentIndex + 1);
-      } else {
-        completeStage(1);
+      setCurrentIndex(currentIndex + 1);
+    } else {
+      completeStage(1);
         router.push('/stage1/summary');
       }
 
@@ -336,10 +336,12 @@ export default function Stage1Page() {
 
   return (
     <div
-      className="relative min-h-screen overflow-x-hidden px-6 py-10 sm:px-10"
+      className="relative min-h-screen overflow-x-hidden px-6 pt-24 pb-10 sm:px-10 flex items-center justify-center"
       style={{
-        background:
-          'linear-gradient(135deg, #9BCBFF 0%, #C7B9FF 25%, #F4A9C8 50%, #FFD1A8 75%, #BEEDE3 100%)',
+        backgroundImage: 'url(/asset/Background.png)',
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        backgroundAttachment: 'fixed',
       }}
     >
       <div className="pointer-events-none absolute -top-20 -left-24 h-72 w-72 rounded-full bg-white/35 blur-3xl" />
@@ -392,7 +394,7 @@ export default function Stage1Page() {
         </div>
 
         <div className="space-y-6">
-          {currentRole && (
+        {currentRole && (
             <div className="relative card-perspective">
               <div
                 className="absolute -inset-3 rounded-[36px] bg-white/30 blur-xl"
@@ -566,13 +568,13 @@ export default function Stage1Page() {
                   </div>
                 </div>
               </div>
-            </div>
-          )}
+          </div>
+        )}
 
           <div className="flex items-center justify-center gap-4">
-            <button
+          <button
               type="button"
-              onClick={() => handleSwipe('left')}
+            onClick={() => handleSwipe('left')}
               className="group flex h-14 w-14 items-center justify-center rounded-full border border-white/70 bg-white/80 text-rose-500 shadow-lg transition-all duration-300 ease-out hover:-translate-y-1 hover:bg-white"
               aria-label="Pass"
             >
@@ -588,9 +590,9 @@ export default function Stage1Page() {
                 <line x1="18" y1="6" x2="6" y2="18" />
                 <line x1="6" y1="6" x2="18" y2="18" />
               </svg>
-            </button>
+          </button>
 
-            <button
+          <button
               type="button"
               onClick={handleFlipToggle}
               className="group flex h-16 w-16 items-center justify-center rounded-full border border-white/70 bg-white/90 text-sky-500 shadow-xl transition-all duration-300 ease-out hover:-translate-y-1 hover:bg-white"
@@ -610,11 +612,11 @@ export default function Stage1Page() {
                 <path d="M18.4 3.6v4h-4" />
                 <path d="M5.6 20.4v-4h4" />
               </svg>
-            </button>
+          </button>
 
-            <button
+          <button
               type="button"
-              onClick={() => handleSwipe('right')}
+            onClick={() => handleSwipe('right')}
               className="group flex h-14 w-14 items-center justify-center rounded-full border border-white/70 bg-white/80 text-emerald-500 shadow-lg transition-all duration-300 ease-out hover:-translate-y-1 hover:bg-white"
               aria-label="Like"
             >
@@ -629,8 +631,8 @@ export default function Stage1Page() {
               >
                 <path d="M20.8 4.6c-1.5-1.5-3.9-1.5-5.4 0L12 8l-3.4-3.4c-1.5-1.5-3.9-1.5-5.4 0-1.5 1.5-1.5 3.9 0 5.4L12 20l8.8-10c1.5-1.5 1.5-3.9 0-5.4z" />
               </svg>
-            </button>
-          </div>
+          </button>
+        </div>
 
           <p className="text-center text-xs text-slate-600">{hintTap}</p>
         </div>
