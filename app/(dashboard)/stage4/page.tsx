@@ -1,8 +1,11 @@
-'use client';
+﻿'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useUserStore } from '@/lib/stores/userStore';
+import { useI18n } from '@/lib/i18n';
+import { storage } from '@/lib/utils/storage';
+import rolesData from '@/lib/data/roles.json';
 
 type Candidate = {
   id: string;
@@ -38,6 +41,15 @@ type MatchSnapshot = {
   majorWinner: Candidate | null;
   universityWinner: Candidate | null;
 };
+
+type RoleProfile = {
+  id: string;
+  title?: { en?: string; ko?: string };
+  tagline?: { en?: string; ko?: string };
+  details?: { en?: string; ko?: string };
+};
+
+const BASE_PATH = '/Mirae.ai';
 
 const MAJOR_CANDIDATES: Candidate[] = [
   {
@@ -293,40 +305,44 @@ const buildUniversitiesForMajor = (major: Candidate): Candidate[] =>
     details: [...university.details, `Popular track: ${major.name}`],
   }));
 
-const getMatchReasons = (candidate: Candidate, mode: 'major' | 'university'): string[] => {
+const getMatchReasons = (
+  candidate: Candidate,
+  mode: 'major' | 'university',
+  t: (key: string, vars?: Record<string, string | number>) => string
+): string[] => {
   const reasons: string[] = [];
 
   if (mode === 'major') {
     if (candidate.matchPercent !== undefined) {
-      reasons.push(`Strong alignment (${candidate.matchPercent}%)`);
+      reasons.push(t('stage4MatchAlignment', { value: candidate.matchPercent }));
     }
     if (candidate.careers?.length) {
-      reasons.push(`Career fit: ${candidate.careers[0]}`);
+      reasons.push(t('stage4MatchCareer', { value: candidate.careers[0] }));
     }
     if (candidate.coreCourses?.length) {
-      reasons.push(`Core course: ${candidate.coreCourses[0]}`);
+      reasons.push(t('stage4MatchCourse', { value: candidate.coreCourses[0] }));
     }
     if (candidate.workloadStyle) {
-      reasons.push(`Workload: ${candidate.workloadStyle}`);
+      reasons.push(t('stage4MatchWorkload', { value: candidate.workloadStyle }));
     }
     if (candidate.collaboration) {
-      reasons.push(`Collaboration: ${candidate.collaboration}`);
+      reasons.push(t('stage4MatchCollaboration', { value: candidate.collaboration }));
     }
   } else {
     if (candidate.internshipPipeline) {
-      reasons.push(`Internships: ${candidate.internshipPipeline}`);
+      reasons.push(t('stage4MatchInternships', { value: candidate.internshipPipeline }));
     }
     if (candidate.aidStrength) {
-      reasons.push(`Aid strength: ${candidate.aidStrength}`);
+      reasons.push(t('stage4MatchAid', { value: candidate.aidStrength }));
     }
     if (candidate.campusVibe) {
-      reasons.push(`Campus vibe: ${candidate.campusVibe}`);
+      reasons.push(t('stage4MatchVibe', { value: candidate.campusVibe }));
     }
     if (candidate.exchange) {
-      reasons.push(`Exchange: ${candidate.exchange}`);
+      reasons.push(t('stage4MatchExchange', { value: candidate.exchange }));
     }
     if (candidate.selectivity) {
-      reasons.push(`Selectivity: ${candidate.selectivity}`);
+      reasons.push(t('stage4MatchSelectivity', { value: candidate.selectivity }));
     }
   }
 
@@ -343,13 +359,18 @@ export default function Stage4Page() {
   const [majorWinner, setMajorWinner] = useState<Candidate | null>(null);
   const [universityWinner, setUniversityWinner] = useState<Candidate | null>(null);
   const [history, setHistory] = useState<MatchSnapshot[]>([]);
+  const [personalizedMajors, setPersonalizedMajors] = useState<Candidate[]>(MAJOR_CANDIDATES);
+  const [confidence, setConfidence] = useState(72);
+  const [insightStrengths, setInsightStrengths] = useState<string[]>([]);
+  const [insightRoles, setInsightRoles] = useState<string[]>([]);
   const router = useRouter();
-  const { completeStage } = useUserStore();
+  const { completeStage, userId } = useUserStore();
+  const { t, language } = useI18n();
 
   const startMajorTournament = () => {
     setPhase('major');
     setMode('major');
-    setRoundCandidates(MAJOR_CANDIDATES);
+    setRoundCandidates(personalizedMajors);
     setNextRoundCandidates([]);
     setMatchIndex(0);
     setRound(1);
@@ -376,6 +397,119 @@ export default function Stage4Page() {
     setUniversityWinner(null);
     setHistory([]);
   };
+
+  useEffect(() => {
+    const profile = storage.get<{
+      strengths?: string[];
+      likedRoles?: string[];
+      docKeywords?: string[];
+    }>('userProfile');
+    const selectionKey = `stage2Selection_${userId ?? 'guest'}`;
+    const selection = storage.get<{
+      anchor?: string[];
+      signal?: string[];
+    }>(selectionKey);
+
+    const strengthMap: Record<string, string[]> = {
+      analytical: ['analysis', 'data', 'logic', 'economics', 'statistics'],
+      creative: ['design', 'creative', 'media', 'story', 'ux'],
+      empathy: ['people', 'psychology', 'community', 'social'],
+      organization: ['management', 'strategy', 'operations', 'business'],
+    };
+
+    const tokens = new Set<string>();
+    (profile?.strengths ?? []).forEach((strength) => {
+      strengthMap[strength]?.forEach((token) => tokens.add(token));
+    });
+    (profile?.docKeywords ?? []).forEach((keyword) => {
+      const normalized = keyword.toLowerCase().trim();
+      if (normalized.length >= 3) {
+        tokens.add(normalized);
+      }
+    });
+
+    const likedRoleIds = new Set(profile?.likedRoles ?? []);
+    (rolesData as RoleProfile[]).forEach((role) => {
+      if (!likedRoleIds.has(role.id)) return;
+      [role.title?.en, role.tagline?.en, role.details?.en].forEach((text) => {
+        if (!text) return;
+        text
+          .toLowerCase()
+          .split(/[^\p{L}\p{N}]+/u)
+          .filter((token) => token.length >= 3)
+          .forEach((token) => tokens.add(token));
+      });
+    });
+
+    const selectionTokens = [...(selection?.anchor ?? []), ...(selection?.signal ?? [])]
+      .map((value) => value.split('::'))
+      .flatMap((parts) => parts.filter(Boolean))
+      .map((value) => value.toLowerCase());
+    selectionTokens.forEach((token) => {
+      if (token.length >= 3) tokens.add(token);
+    });
+
+    const strengthLabels = (profile?.strengths ?? [])
+      .map((strength) => {
+        switch (strength) {
+          case 'analytical':
+            return t('stage0OptionAnalytical');
+          case 'creative':
+            return t('stage0OptionCreative');
+          case 'empathy':
+            return t('stage0OptionEmpathy');
+          case 'organization':
+            return t('stage0OptionOrganization');
+          default:
+            return strength;
+        }
+      })
+      .filter(Boolean)
+      .slice(0, 3);
+
+    const roleLabels = (profile?.likedRoles ?? [])
+      .map((roleId) => (rolesData as RoleProfile[]).find((role) => role.id === roleId))
+      .map((role) => (role ? (language === 'ko' ? role.title?.ko : role.title?.en) : null))
+      .filter((label): label is string => Boolean(label))
+      .slice(0, 3);
+
+    setInsightStrengths(strengthLabels);
+    setInsightRoles(roleLabels);
+
+    if (tokens.size === 0) {
+      setPersonalizedMajors(MAJOR_CANDIDATES);
+      return;
+    }
+
+    const keywordList = Array.from(tokens);
+    const scored = MAJOR_CANDIDATES.map((candidate, index) => {
+      const text = [
+        candidate.name,
+        candidate.summary,
+        ...candidate.details,
+        ...(candidate.careers ?? []),
+        ...(candidate.coreCourses ?? []),
+        candidate.workloadStyle,
+        candidate.collaboration,
+      ]
+        .filter(Boolean)
+        .join(' ')
+        .toLowerCase();
+
+      const score = keywordList.reduce((total, keyword) => {
+        if (!keyword || keyword.length < 3) return total;
+        return text.includes(keyword) ? total + 1 : total;
+      }, 0);
+
+      return { candidate, score, index };
+    });
+
+    const sorted = scored
+      .sort((a, b) => (b.score === a.score ? a.index - b.index : b.score - a.score))
+      .map((entry) => entry.candidate);
+
+    setPersonalizedMajors(sorted);
+  }, [language, t, userId]);
 
   const handlePick = (winner: Candidate) => {
     setHistory((prev) => [
@@ -464,28 +598,67 @@ export default function Stage4Page() {
         />
 
         <div className="mb-6 text-center">
-          <p className="text-xs uppercase tracking-[0.3em] text-white/80">Stage 4</p>
+          <p className="text-xs uppercase tracking-[0.3em] text-white/80">{t('stage4Label')}</p>
           <h1 className="text-3xl sm:text-4xl font-semibold text-white drop-shadow">
-            Tournament Bracket
+            {t('stage4TournamentTitle')}
           </h1>
+        </div>
+        <div className="mb-8 flex flex-wrap items-center justify-center gap-2 text-xs">
+          <span
+            className={`rounded-full px-4 py-1 text-slate-700 transition ${
+              phase === 'major' || phase === 'intro'
+                ? 'bg-white/60'
+                : 'bg-white/30'
+            }`}
+          >
+            {t('stage4MajorTitle')}
+          </span>
+          <span className="text-white/80">→</span>
+          <span
+            className={`rounded-full px-4 py-1 text-slate-700 transition ${
+              phase === 'university' ? 'bg-white/60' : 'bg-white/30'
+            }`}
+          >
+            {t('stage4UniversityTitle')}
+          </span>
+          <span className="text-white/80">→</span>
+          <span
+            className={`rounded-full px-4 py-1 text-slate-700 transition ${
+              phase === 'result' ? 'bg-white/60' : 'bg-white/30'
+            }`}
+          >
+            {t('stage4FinalResults')}
+          </span>
         </div>
 
         {phase === 'intro' && (
           <div className="bg-white/80 backdrop-blur rounded-3xl shadow-2xl p-8 sm:p-10 text-center border border-white/60">
+            <div className="mb-6">
+              <img
+                src={`${BASE_PATH}/asset/Stage_option.png`}
+                alt={t('stage4IntroImageAlt')}
+                className="mx-auto h-40 w-full max-w-md rounded-3xl object-cover shadow-md"
+                loading="lazy"
+              />
+            </div>
             <p className="text-gray-700 mb-6 text-base">
-              First, pick the best major. Then compare universities that offer it.
+              {t('stage4Intro')}
             </p>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-left mb-6">
               <div className="border border-white/70 bg-white/70 rounded-2xl p-5 shadow-md">
-                <h2 className="text-lg font-semibold mb-2 text-slate-800">Major Tournament</h2>
+                <h2 className="text-lg font-semibold mb-2 text-slate-800">
+                  {t('stage4MajorTitle')}
+                </h2>
                 <p className="text-sm text-slate-600">
-                  8 candidates based on your interests, passions, and courses.
+                  {t('stage4MajorDesc')}
                 </p>
               </div>
               <div className="border border-white/70 bg-white/70 rounded-2xl p-5 shadow-md">
-                <h2 className="text-lg font-semibold mb-2 text-slate-800">University Tournament</h2>
+                <h2 className="text-lg font-semibold mb-2 text-slate-800">
+                  {t('stage4UniversityTitle')}
+                </h2>
                 <p className="text-sm text-slate-600">
-                  8 universities that offer the winning major.
+                  {t('stage4UniversityDesc')}
                 </p>
               </div>
             </div>
@@ -493,7 +666,7 @@ export default function Stage4Page() {
               onClick={startMajorTournament}
               className="px-6 py-3 rounded-full font-medium text-slate-800 bg-white/90 shadow-lg hover:-translate-y-0.5 hover:shadow-xl transition-all duration-300 ease-out"
             >
-              Start Tournament
+              {t('stage4Start')}
             </button>
           </div>
         )}
@@ -503,21 +676,23 @@ export default function Stage4Page() {
             <div className="flex flex-wrap items-center justify-between gap-4">
               <div>
                 <p className="text-xs uppercase tracking-[0.3em] text-white/70">
-                  {mode === 'major' ? 'Major Tournament' : 'University Tournament'}
+                  {mode === 'major' ? t('stage4MajorTitle') : t('stage4UniversityTitle')}
                 </p>
                 <h2 className="text-2xl sm:text-3xl font-semibold text-white drop-shadow">
-                  Round {round} of {TOTAL_ROUNDS}
+                  {t('stage4RoundLabel', { round, total: TOTAL_ROUNDS })}
                 </h2>
                 <p className="text-sm text-white/80">
-                  Match {matchIndex + 1} of {totalMatches}
+                  {t('stage4MatchLabel', { current: matchIndex + 1, total: totalMatches })}
                 </p>
               </div>
-              <div className="text-sm text-white/80 bg-white/20 border border-white/30 rounded-full px-4 py-1">
-                Winners locked in this round: {nextRoundCandidates.length}
+              <div className="text-sm text-slate-700 bg-white/20 border border-white/30 rounded-full px-4 py-1">
+                {t('stage4WinnersLocked', { value: nextRoundCandidates.length })}
               </div>
             </div>
 
-            <div className="text-center text-white/80 text-sm">Pick the winner to advance</div>
+            <div className="text-center text-white/80 text-sm">
+              {t('stage4PickWinner')}
+            </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {currentPair.map((candidate) => (
@@ -528,69 +703,97 @@ export default function Stage4Page() {
                 >
                   <div className="flex items-start justify-between mb-4">
                     <h3 className="text-xl font-semibold text-slate-800">{candidate.name}</h3>
-                    <span className="text-xs uppercase tracking-[0.2em] text-slate-400">Pick</span>
+                    <span className="text-xs uppercase tracking-[0.2em] text-slate-400">
+                      {t('stage4PickLabel')}
+                    </span>
                   </div>
                   {mode === 'major' && candidate.matchPercent !== undefined && (
                     <p className="text-sm text-slate-700 font-medium mb-2">
-                      Match score: {candidate.matchPercent}%
+                      {t('stage4MatchScore', { value: candidate.matchPercent })}
                     </p>
                   )}
                   {mode === 'major' && candidate.careers && (
                     <p className="text-sm text-slate-600 mb-1">
-                      Careers: {candidate.careers.join(', ')}
+                      {t('stage4Careers', { value: candidate.careers.join(', ') })}
                     </p>
                   )}
                   {mode === 'major' && candidate.coreCourses && (
                     <p className="text-sm text-slate-600 mb-1">
-                      Core courses: {candidate.coreCourses.join(', ')}
+                      {t('stage4CoreCourses', { value: candidate.coreCourses.join(', ') })}
                     </p>
                   )}
                   {mode === 'major' && candidate.workloadStyle && (
                     <p className="text-sm text-slate-600 mb-1">
-                      Workload: {candidate.workloadStyle}
+                      {t('stage4Workload', { value: candidate.workloadStyle })}
                     </p>
                   )}
                   {mode === 'major' && candidate.portfolio && (
                     <p className="text-sm text-slate-600 mb-1">
-                      Portfolio: {candidate.portfolio}
+                      {t('stage4Portfolio', { value: candidate.portfolio })}
                     </p>
                   )}
                   {mode === 'major' && candidate.collaboration && (
                     <p className="text-sm text-slate-600 mb-1">
-                      Collaboration: {candidate.collaboration}
+                      {t('stage4Collaboration', { value: candidate.collaboration })}
                     </p>
                   )}
                   {mode === 'major' && candidate.pace && (
-                    <p className="text-sm text-slate-600 mb-3">Pace: {candidate.pace}</p>
+                    <p className="text-sm text-slate-600 mb-3">
+                      {t('stage4Pace', { value: candidate.pace })}
+                    </p>
                   )}
                   {mode === 'university' && candidate.location && (
-                    <p className="text-sm text-slate-600 mb-1">Location: {candidate.location}</p>
+                    <p className="text-sm text-slate-600 mb-1">
+                      {t('stage4Location', { value: candidate.location })}
+                    </p>
                   )}
                   {mode === 'university' && candidate.scholarships?.length && (
                     <p className="text-sm text-slate-600 mb-3">
-                      Scholarships: {candidate.scholarships.join(', ')}
+                      {t('stage4Scholarships', { value: candidate.scholarships.join(', ') })}
                     </p>
                   )}
                   {mode === 'university' && (
                     <div className="text-sm text-slate-600 mb-3 space-y-1">
-                      {candidate.tuitionRange && <p>Tuition: {candidate.tuitionRange}</p>}
-                      {candidate.aidStrength && <p>Financial aid: {candidate.aidStrength}</p>}
-                      {candidate.internshipPipeline && (
-                        <p>Internships: {candidate.internshipPipeline}</p>
+                      {candidate.tuitionRange && (
+                        <p>{t('stage4Tuition', { value: candidate.tuitionRange })}</p>
                       )}
-                      {candidate.selectivity && <p>Selectivity: {candidate.selectivity}</p>}
-                      {candidate.campusVibe && <p>Campus vibe: {candidate.campusVibe}</p>}
-                      {candidate.housing && <p>Housing: {candidate.housing}</p>}
-                      {candidate.exchange && <p>Exchange: {candidate.exchange}</p>}
+                      {candidate.aidStrength && (
+                        <p>{t('stage4FinancialAid', { value: candidate.aidStrength })}</p>
+                      )}
+                      {candidate.internshipPipeline && (
+                        <p>{t('stage4Internships', { value: candidate.internshipPipeline })}</p>
+                      )}
+                      {candidate.selectivity && (
+                        <p>{t('stage4Selectivity', { value: candidate.selectivity })}</p>
+                      )}
+                      {candidate.campusVibe && (
+                        <p>{t('stage4CampusVibe', { value: candidate.campusVibe })}</p>
+                      )}
+                      {candidate.housing && (
+                        <p>{t('stage4Housing', { value: candidate.housing })}</p>
+                      )}
+                      {candidate.exchange && (
+                        <p>{t('stage4Exchange', { value: candidate.exchange })}</p>
+                      )}
                     </div>
                   )}
                   <p className="text-sm text-slate-600 mb-4">{candidate.summary}</p>
+                  {mode === 'university' && (
+                    <a
+                      href="https://example.com"
+                      target="_blank"
+                      rel="noreferrer"
+                      className="mb-3 inline-flex items-center justify-center rounded-full border border-white/70 bg-white/80 px-3 py-1 text-xs font-medium text-slate-700 shadow-sm transition hover:bg-white"
+                    >
+                      {t('stage4UniversitySite')}
+                    </a>
+                  )}
                   <div className="mb-4">
                     <p className="text-xs uppercase tracking-[0.2em] text-slate-400 mb-2">
-                      Why this matchup
+                      {t('stage4WhyMatchup')}
                     </p>
                     <div className="flex flex-wrap gap-2">
-                      {getMatchReasons(candidate, mode).map((reason) => (
+                      {getMatchReasons(candidate, mode, t).map((reason) => (
                         <span
                           key={reason}
                           className="text-xs text-slate-700 bg-white/70 border border-white/70 rounded-full px-3 py-1 shadow-sm"
@@ -618,20 +821,20 @@ export default function Stage4Page() {
             <div className="flex flex-wrap items-center justify-between gap-3">
               <button
                 onClick={resetTournament}
-                className="text-sm text-white/80 hover:text-white"
+                className="rounded-full border border-white/60 bg-white/20 px-4 py-1 text-sm text-slate-700 shadow-sm transition hover:bg-white/35"
               >
-                Restart tournament
+                {t('stage4Restart')}
               </button>
               <button
                 onClick={handleUndo}
-                className="text-sm text-white/80 hover:text-white disabled:text-white/40"
+                className="rounded-full border border-white/60 bg-white/25 px-4 py-1 text-sm text-slate-700 shadow-sm transition hover:bg-white/35 disabled:text-slate-400"
                 disabled={history.length === 0}
               >
-                Undo last pick
+                {t('stage4Undo')}
               </button>
               {majorWinner && mode === 'university' && (
-                <div className="text-sm text-white/90">
-                  Current major: <span className="font-semibold">{majorWinner.name}</span>
+                <div className="rounded-full border border-white/60 bg-white/20 px-4 py-1 text-sm text-slate-700 shadow-sm">
+                  {t('stage4CurrentMajor', { value: majorWinner.name })}
                 </div>
               )}
             </div>
@@ -639,40 +842,151 @@ export default function Stage4Page() {
         )}
 
         {phase === 'result' && majorWinner && universityWinner && (
-          <div className="bg-white/85 backdrop-blur rounded-3xl shadow-2xl p-8 sm:p-10 text-center space-y-6 border border-white/60">
+          <div className="relative overflow-hidden bg-white/85 backdrop-blur rounded-3xl shadow-2xl p-8 sm:p-10 text-center space-y-6 border border-white/60">
+            <div className="confetti pointer-events-none absolute inset-0">
+              {Array.from({ length: 18 }).map((_, index) => (
+                <span
+                  key={index}
+                  style={{
+                    left: `${(index + 1) * 5}%`,
+                    animationDelay: `${(index % 6) * 0.12}s`,
+                    ['--drift' as string]: `${(index % 2 === 0 ? 1 : -1) * (20 + index * 2)}vw`,
+                    ['--spin' as string]: `${120 + index * 20}deg`,
+                    background:
+                      index % 3 === 0
+                        ? '#C7B9FF'
+                        : index % 3 === 1
+                          ? '#F4A9C8'
+                          : '#9BCBFF',
+                  }}
+                />
+              ))}
+            </div>
             <div>
-              <p className="text-xs uppercase tracking-[0.3em] text-slate-400">Final Results</p>
-              <h2 className="text-2xl sm:text-3xl font-semibold text-slate-800">Your winning path</h2>
+              <img
+                src={`${BASE_PATH}/asset/Stage_evolve.png`}
+                alt={t('stage4ResultImageAlt')}
+                className="mx-auto h-36 w-full max-w-md rounded-3xl object-cover shadow-md"
+                loading="lazy"
+              />
+            </div>
+            <div>
+              <p className="text-xs uppercase tracking-[0.3em] text-slate-400">
+                {t('stage4FinalResults')}
+              </p>
+              <h2 className="text-2xl sm:text-3xl font-semibold text-slate-800">
+                {t('stage4WinningPath')}
+              </h2>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="border border-white/70 bg-white/70 rounded-2xl p-5 text-left shadow-md">
-                <p className="text-xs uppercase tracking-[0.2em] text-slate-400">Major</p>
+                <p className="text-xs uppercase tracking-[0.2em] text-slate-400">
+                  {t('stage4MajorLabel')}
+                </p>
                 <h3 className="text-lg font-semibold text-slate-800">{majorWinner.name}</h3>
                 <p className="text-sm text-slate-600 mt-2">{majorWinner.summary}</p>
               </div>
               <div className="border border-white/70 bg-white/70 rounded-2xl p-5 text-left shadow-md">
-                <p className="text-xs uppercase tracking-[0.2em] text-slate-400">University</p>
+                <p className="text-xs uppercase tracking-[0.2em] text-slate-400">
+                  {t('stage4UniversityLabel')}
+                </p>
                 <h3 className="text-lg font-semibold text-slate-800">{universityWinner.name}</h3>
                 <p className="text-sm text-slate-600 mt-2">{universityWinner.summary}</p>
               </div>
+            </div>
+            <div className="bg-white/70 border border-white/70 rounded-2xl p-5 text-left shadow-md">
+              <p className="text-xs uppercase tracking-[0.2em] text-slate-400 mb-3">
+                {t('stage4CombinedTitle')}
+              </p>
+              <p className="text-sm text-slate-700">
+                {t('stage4CombinedSummary', {
+                  major: majorWinner.name,
+                  university: universityWinner.name,
+                })}
+              </p>
+              <p className="text-sm text-slate-600 mt-2">
+                {majorWinner.summary} · {universityWinner.summary}
+              </p>
+            </div>
+            {(insightStrengths.length > 0 || insightRoles.length > 0) && (
+              <div className="bg-white/70 border border-white/70 rounded-2xl p-5 text-left shadow-md">
+                <p className="text-xs uppercase tracking-[0.2em] text-slate-400 mb-3">
+                  {t('stage4InsightTitle')}
+                </p>
+                {insightStrengths.length > 0 && (
+                  <p className="text-sm text-slate-700">
+                    {t('stage4InsightStrengths', { value: insightStrengths.join(', ') })}
+                  </p>
+                )}
+                {insightRoles.length > 0 && (
+                  <p className="text-sm text-slate-700 mt-2">
+                    {t('stage4InsightRoles', { value: insightRoles.join(', ') })}
+                  </p>
+                )}
+              </div>
+            )}
+            <div className="bg-white/70 border border-white/70 rounded-2xl p-5 text-left shadow-md">
+              <p className="text-xs uppercase tracking-[0.2em] text-slate-400 mb-3">
+                {t('stage4ConfidenceLabel')}
+              </p>
+              <div className="flex items-center gap-4">
+                <span className="text-xs text-slate-500">{t('stage4ConfidenceLow')}</span>
+                <input
+                  type="range"
+                  min={40}
+                  max={100}
+                  value={confidence}
+                  onChange={(event) => setConfidence(Number(event.target.value))}
+                  className="w-full accent-[#9BCBFF]"
+                />
+                <span className="text-xs text-slate-500">{t('stage4ConfidenceHigh')}</span>
+              </div>
+              <p className="mt-2 text-sm text-slate-700">
+                {t('stage4ConfidenceValue', { value: confidence })}
+              </p>
             </div>
             <div className="flex flex-col sm:flex-row gap-3 justify-center">
               <button
                 onClick={handleComplete}
                 className="px-6 py-3 rounded-full font-medium text-slate-800 bg-white/90 shadow-lg hover:-translate-y-0.5 hover:shadow-xl transition-all duration-300 ease-out"
               >
-                Save and return to dashboard
+                {t('stage4SaveReturn')}
               </button>
               <button
                 onClick={resetTournament}
                 className="px-6 py-3 rounded-full border border-white/70 text-slate-700 bg-white/70 hover:bg-white/90 shadow-md transition-all duration-300 ease-out"
               >
-                Run another tournament
+                {t('stage4RunAnother')}
               </button>
             </div>
           </div>
         )}
       </div>
+      <style jsx>{`
+        .confetti span {
+          position: absolute;
+          top: -8%;
+          width: 10px;
+          height: 18px;
+          opacity: 0.85;
+          border-radius: 6px;
+          animation: confetti-burst 2.4s ease-out infinite;
+        }
+
+        @keyframes confetti-burst {
+          0% {
+            transform: translateY(0) translateX(0) rotate(0deg) scale(0.9);
+            opacity: 0;
+          }
+          15% {
+            opacity: 1;
+          }
+          100% {
+            transform: translateY(120vh) translateX(var(--drift)) rotate(var(--spin)) scale(0.6);
+            opacity: 0;
+          }
+        }
+      `}</style>
     </div>
   );
 }
