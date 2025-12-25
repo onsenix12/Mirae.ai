@@ -26,7 +26,8 @@ This repository contains documentation for the SCOPE+ project. The project struc
 └── docs/
     ├── PRD.md                   # Product Requirements Document
     ├── PROBLEM.md              # Problem statement and context
-    └── SOLUTION.md             # Solution architecture and design
+    ├── SOLUTION.md             # Solution architecture and design
+    └── ONBOARDING.md           # Onboarding flow implementation guide
 ```
 
 ### Application Structure
@@ -148,6 +149,7 @@ See `REVISED_APP_BLUEPRINT.md` for the complete product architecture, including:
 - **PRD.md**: Product requirements and goals
 - **PROBLEM.md**: Problem statement, constraints, and user needs
 - **SOLUTION.md**: Proposed solution details and rationale
+- **ONBOARDING.md**: Onboarding flow implementation guide with technical specifications
 
 ---
 
