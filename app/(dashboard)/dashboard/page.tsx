@@ -342,7 +342,11 @@ export default function DashboardPage() {
                         {/* Bottom Grid - Button centered */}
                         <div className="flex items-center justify-center flex-1">
                           <button
-                            onClick={() => !isViewingStageLocked && router.push(viewingStage.path)}
+                            onClick={() => {
+                              if (!isViewingStageLocked && viewingStage) {
+                                router.push(viewingStage.path);
+                              }
+                            }}
                             disabled={isViewingStageLocked}
                             className={`py-4 px-12 rounded-full text-lg font-semibold ${
                               isViewingStageLocked
@@ -405,7 +409,11 @@ export default function DashboardPage() {
                         {/* Bottom Grid - Button centered */}
                         <div className="flex items-center justify-center flex-1">
                           <button
-                            onClick={() => !isViewingStageLocked && router.push(viewingStage.path)}
+                            onClick={() => {
+                              if (!isViewingStageLocked && viewingStage) {
+                                router.push(viewingStage.path);
+                              }
+                            }}
                             disabled={isViewingStageLocked}
                             className={`py-4 px-12 rounded-full text-lg font-semibold ${
                               isViewingStageLocked
