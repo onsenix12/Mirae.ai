@@ -1742,11 +1742,11 @@ export default function MiraePlusStatement() {
                   <div className="relative">
                     <button
                       onClick={() => setShareDropdownOpen(!shareDropdownOpen)}
-                      className="px-4 py-2 rounded-full text-xs font-semibold bg-white/80 text-slate-600 border border-white/40 hover:bg-white transition flex items-center gap-2"
+                      className="w-9 h-9 rounded-full bg-white/80 text-slate-600 border border-white/40 hover:bg-white transition flex items-center justify-center"
                       type="button"
+                      title="Share"
                     >
-                      <Share2 className="w-3.5 h-3.5" />
-                      Share
+                      <Share2 className="w-4 h-4" />
                     </button>
                     
                     {shareDropdownOpen && (
