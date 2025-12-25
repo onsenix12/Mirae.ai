@@ -400,7 +400,7 @@ ${ctx.yearLevel}학년이 되었네요.
   
   {
     turnNumber: 4,
-    phase: 'what_changed',
+    phase: 'expectation_vs_reality',
     trigger: ['좋아하는', '맞지 않는'],
     miraeMessage: (ctx: UserContext) => `자신을 더 알아가는 과정이네요. 그게 정말 중요해요.
 
