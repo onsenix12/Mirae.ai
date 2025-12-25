@@ -9,6 +9,7 @@ import Image from 'next/image';
 import { Sprout } from 'lucide-react';
 import { SmartOnboardingChat } from '@/components/onboarding/SmartOnboardingChat';
 import { useOnboarding } from '@/lib/hooks/useOnboarding';
+import { getUserProfile, updateProfileFromOnboarding, updateUserProfile } from '@/lib/userProfile';
 
 export default function OnboardingPage() {
   const router = useRouter();
@@ -27,7 +28,8 @@ export default function OnboardingPage() {
       return;
     }
     setUserId(user.id);
-    setUserName(user.name || user.email?.split('@')[0] || 'Student');
+    const profile = getUserProfile();
+    setUserName(profile.name || user.name || user.email?.split('@')[0] || 'Student');
     if (typeof window !== 'undefined') {
       // Allow ?reset=true to view onboarding again
       const urlParams = new URLSearchParams(window.location.search);
@@ -81,8 +83,19 @@ export default function OnboardingPage() {
             <div className="relative flex-1 min-h-0 overflow-y-auto space-y-4 mb-4 pr-2 scrollbar-thin scrollbar-thumb-slate-300 scrollbar-track-transparent">
               <SmartOnboardingChat
                 onComplete={() => advancePhase('start')}
-                onContextUpdate={setStudentContextData}
-                onKeywordsExtracted={setKeywords}
+                onContextUpdate={(data) => {
+                  setStudentContextData(data);
+                  updateProfileFromOnboarding(data);
+                }}
+                onKeywordsExtracted={(keywords) => {
+                  setKeywords(keywords);
+                  const profile = getUserProfile();
+                  const merged = Array.from(new Set([...(profile.keywords ?? []), ...keywords]));
+                  updateUserProfile({
+                    keywords: merged,
+                    onboarding: { keywords: merged },
+                  });
+                }}
                 onInputChange={setInputValue}
                 inputValue={inputValue}
                 onSend={() => window.dispatchEvent(new Event('onboardingSmartSend'))}

@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useUserStore } from '@/lib/stores/userStore';
 import { useI18n } from '@/lib/i18n';
 import { storage } from '@/lib/utils/storage';
+import { getUserProfile } from '@/lib/userProfile';
 import rolesData from '@/lib/data/roles.json';
 
 type Candidate = {
@@ -399,11 +400,7 @@ export default function Stage4Page() {
   };
 
   useEffect(() => {
-    const profile = storage.get<{
-      strengths?: string[];
-      likedRoles?: string[];
-      docKeywords?: string[];
-    }>('userProfile');
+    const profile = getUserProfile();
     const selectionKey = `stage2Selection_${userId ?? 'guest'}`;
     const selection = storage.get<{
       anchor?: string[];
@@ -418,10 +415,14 @@ export default function Stage4Page() {
     };
 
     const tokens = new Set<string>();
-    (profile?.strengths ?? []).forEach((strength) => {
+    const rawStrengths = (profile as unknown as { strengths?: string[] }).strengths;
+    const strengthTags = Array.isArray(rawStrengths)
+      ? rawStrengths
+      : profile.strengthTags ?? [];
+    strengthTags.forEach((strength) => {
       strengthMap[strength]?.forEach((token) => tokens.add(token));
     });
-    (profile?.docKeywords ?? []).forEach((keyword) => {
+    (profile?.onboarding?.docKeywords ?? []).forEach((keyword) => {
       const normalized = keyword.toLowerCase().trim();
       if (normalized.length >= 3) {
         tokens.add(normalized);

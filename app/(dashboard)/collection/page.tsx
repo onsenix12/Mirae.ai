@@ -17,6 +17,7 @@ import {
   type EquippedAccessories,
 } from '@/components/MiraeCharacterEvolution';
 import { AccessoryPanel } from '@/components/AccessoryPanel';
+import { getUserProfile, updateUserProfile } from '@/lib/userProfile';
 
 // ============= Types =============
 type Stage = 'S' | 'C' | 'O' | 'P' | 'E';
@@ -1284,7 +1285,10 @@ export default function MiraePlusStatement() {
   // Load from localStorage
   useEffect(() => {
     const user = getUser();
-    if (user?.name) {
+    const profile = getUserProfile();
+    if (profile.name) {
+      setStudentName(profile.name);
+    } else if (user?.name) {
       setStudentName(user.name);
     } else if (user?.email) {
       setStudentName(user.email.split('@')[0]);
@@ -1295,12 +1299,39 @@ export default function MiraePlusStatement() {
     const savedAccessories = localStorage.getItem('miraePlus_accessories');
     const savedCards = localStorage.getItem('miraePlus_cards');
 
-    if (savedReflections) setReflections(JSON.parse(savedReflections));
-    if (savedViewMode) setViewMode(savedViewMode as 'collection' | 'statement');
-    if (savedAccessories) setEquippedAccessories(JSON.parse(savedAccessories));
+    if (savedReflections) {
+      const parsed = JSON.parse(savedReflections);
+      setReflections(parsed);
+      updateUserProfile({ reflections: parsed });
+    } else {
+      const profile = getUserProfile();
+      if (profile.reflections) {
+        setReflections(profile.reflections);
+      }
+    }
+    const profileState = getUserProfile();
+
+    if (savedViewMode) {
+      setViewMode(savedViewMode as 'collection' | 'statement');
+      updateUserProfile({ collection: { ...profileState.collection, viewMode: savedViewMode as 'collection' | 'statement' } });
+    } else if (profileState.collection?.viewMode) {
+      setViewMode(profileState.collection.viewMode);
+    }
+
+    if (savedAccessories) {
+      const parsed = JSON.parse(savedAccessories);
+      setEquippedAccessories(parsed);
+      updateUserProfile({ avatar: { ...profileState.avatar, equippedAccessories: parsed } });
+    } else if (profileState.avatar?.equippedAccessories) {
+      setEquippedAccessories(profileState.avatar.equippedAccessories);
+    }
+
     if (savedCards) {
       const parsedCards = JSON.parse(savedCards);
       setCards(parsedCards);
+      updateUserProfile({ collection: { ...profileState.collection, cards: parsedCards } });
+    } else if (profileState.collection?.cards) {
+      setCards(profileState.collection.cards as IdentityCard[]);
     }
     setActivityLogs(loadActivityLogs());
   }, []);
@@ -1330,12 +1361,14 @@ export default function MiraePlusStatement() {
     const updated = { ...reflections, [selectedCard.id]: currentReflection };
     setReflections(updated);
     localStorage.setItem('miraePlus_reflections', JSON.stringify(updated));
+    updateUserProfile({ reflections: updated });
     setSelectedCard(null);
   };
 
   const handleViewModeChange = (mode: 'collection' | 'statement') => {
     setViewMode(mode);
     localStorage.setItem('miraePlus_viewMode', mode);
+    updateUserProfile({ collection: { ...getUserProfile().collection, viewMode: mode } });
   };
 
   const handleDownloadStoryPdf = () => {
@@ -1352,6 +1385,9 @@ export default function MiraePlusStatement() {
     setEquippedAccessories(newAccessories);
     localStorage.setItem('miraePlus_accessories', JSON.stringify(newAccessories));
     console.log('Collection page: State updated, localStorage saved');
+    updateUserProfile({
+      avatar: { ...getUserProfile().avatar, equippedAccessories: newAccessories },
+    });
     
     // Dispatch custom event to notify other components
     if (typeof window !== 'undefined') {
@@ -1371,6 +1407,7 @@ export default function MiraePlusStatement() {
     );
     setCards(updatedCards);
     localStorage.setItem('miraePlus_cards', JSON.stringify(updatedCards));
+    updateUserProfile({ collection: { ...getUserProfile().collection, cards: updatedCards } });
   };
 
   const handleScrollToBottom = () => {
