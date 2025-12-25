@@ -429,13 +429,6 @@ export const MiraeCharacter: React.FC<MiraeCharacterProps> = ({
       
       {/* Effect (renders on top, no pointer events) */}
       {effectComponent}
-
-      {/* State indicator */}
-      <div className="absolute -bottom-6 left-1/2 -translate-x-1/2">
-        <span className="text-[10px] font-medium uppercase tracking-wider text-slate-600/60">
-          {state}
-        </span>
-      </div>
     </motion.div>
   );
 };
