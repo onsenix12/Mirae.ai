@@ -10,9 +10,9 @@ export const metadata: Metadata = {
   description: 'Dashboard-based, multi-stage, AI-powered career exploration for Korean high school students',
   icons: {
     icon: [
-      { url: '/asset/Mirae_Word_Only.png', type: 'image/png' },
+      { url: '/favicon.png', type: 'image/png', sizes: '512x512' },
     ],
-    apple: '/asset/Mirae_Word_Only.png',
+    apple: '/favicon.png',
   },
 }
 

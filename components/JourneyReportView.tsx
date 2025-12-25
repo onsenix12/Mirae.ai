@@ -125,6 +125,24 @@ const buildTimeline = (logs: ActivityLog[]) => {
     }));
 };
 
+const buildStageTimeline = (logs: ActivityLog[]) => {
+  const grouped = logs.reduce<Record<string, Record<ScopeStage, number>>>((acc, log) => {
+    const key = monthLabel(log.date);
+    if (!acc[key]) {
+      acc[key] = { S: 0, C: 0, O: 0, P: 0, E: 0 };
+    }
+    acc[key][log.scopeStage] += 1;
+    return acc;
+  }, {});
+  return Object.entries(grouped)
+    .sort((a, b) => a[0].localeCompare(b[0]))
+    .map(([month, counts]) => ({
+      month,
+      counts,
+      total: Object.values(counts).reduce((sum, value) => sum + value, 0),
+    }));
+};
+
 const buildExperiences = (logs: ActivityLog[]) => {
   return logs
     .filter((log) => ['Project', 'Club', 'ExternalWork', 'MiraeActivity'].includes(log.activityType))
@@ -207,6 +225,7 @@ const EditableBlock = ({
 export default function JourneyReportView({ logs, cards, studentName }: JourneyReportViewProps) {
   const unlockedCards = useMemo(() => cards.filter((card) => card.unlocked), [cards]);
   const timeline = useMemo(() => buildTimeline(logs), [logs]);
+  const stageTimeline = useMemo(() => buildStageTimeline(logs), [logs]);
   const experiences = useMemo(() => buildExperiences(logs), [logs]);
   const observedTendencies = useMemo(() => buildObservedTendencies(logs, cards), [logs, cards]);
   const rationale = useMemo(() => buildDirectionRationale(logs), [logs]);
@@ -477,6 +496,48 @@ export default function JourneyReportView({ logs, cards, studentName }: JourneyR
                   ))
                 ) : (
                   <p className="text-sm text-slate-400">Log activities to build your timeline.</p>
+                )}
+              </div>
+            </div>
+            <div className="rounded-2xl border border-white/50 bg-white/80 p-4">
+              <p className="text-sm font-semibold text-slate-700 mb-2">Stage shifts by month</p>
+              <div className="space-y-3">
+                {stageTimeline.length > 0 ? (
+                  stageTimeline.map((item) => (
+                    <div key={item.month} className="space-y-1">
+                      <div className="flex items-center justify-between text-xs text-slate-500">
+                        <span>{item.month}</span>
+                        <span>{item.total} entries</span>
+                      </div>
+                      <div className="flex h-2 overflow-hidden rounded-full bg-slate-100">
+                        {(Object.keys(item.counts) as ScopeStage[]).map((stage) => {
+                          const count = item.counts[stage];
+                          if (count === 0) return null;
+                          const width = item.total > 0 ? (count / item.total) * 100 : 0;
+                          return (
+                            <div
+                              key={`${item.month}-${stage}`}
+                              className={stageColors[stage]}
+                              style={{ width: `${width}%` }}
+                              title={`${stageLabels[stage]}: ${count}`}
+                            />
+                          );
+                        })}
+                      </div>
+                      <div className="flex flex-wrap gap-2 text-[11px] text-slate-500">
+                        {(Object.keys(item.counts) as ScopeStage[]).map((stage) =>
+                          item.counts[stage] > 0 ? (
+                            <span key={`${item.month}-label-${stage}`} className="flex items-center gap-1">
+                              <span className={`h-2 w-2 rounded-full ${stageColors[stage]}`} />
+                              {stageLabels[stage]} {item.counts[stage]}
+                            </span>
+                          ) : null
+                        )}
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <p className="text-sm text-slate-400">Log activities to see how stages shift over time.</p>
                 )}
               </div>
             </div>
