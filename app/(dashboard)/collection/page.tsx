@@ -20,6 +20,13 @@ type CardType = CharCardType;
 
 type CardRarity = 'Common' | 'Rare' | 'Epic';
 
+type CollectionSection = {
+  id: string;
+  title: string;
+  subtitle: string;
+  types: CardType[];
+};
+
 type IdentityCard = {
   id: string;
   stage: Stage;
@@ -1025,6 +1032,7 @@ const AvatarPanel = ({
 
           <div className="relative w-full aspect-[4/3] max-h-[280px] mb-4 rounded-2xl bg-gradient-to-br from-sky-50 via-violet-50 to-rose-50 flex items-center justify-center overflow-hidden">
             <MiraeCharacter
+              key={JSON.stringify(equippedAccessories)}
               cardCount={cardCount}
               recentCardTypes={recentCardTypes}
               size={220}
@@ -1250,6 +1258,8 @@ export default function MiraePlusStatement() {
   const [reflections, setReflections] = useState<Record<string, string>>({});
   const [currentReflection, setCurrentReflection] = useState('');
   const [equippedAccessories, setEquippedAccessories] = useState<EquippedAccessories>({});
+  const [activeCategory, setActiveCategory] = useState<CollectionSection | null>(null);
+  const [adventureOpen, setAdventureOpen] = useState(false);
   const collectionScrollRef = useRef<HTMLDivElement | null>(null);
 
   // Load from localStorage
@@ -1310,11 +1320,27 @@ export default function MiraePlusStatement() {
     });
   };
 
+  const handleOpenCategory = (section: CollectionSection) => {
+    setActiveCategory(section);
+  };
+
+  const handleCloseCategory = () => {
+    setActiveCategory(null);
+  };
+
+  const handleOpenAdventure = () => {
+    setAdventureOpen(true);
+  };
+
+  const handleCloseAdventure = () => {
+    setAdventureOpen(false);
+  };
+
   const unlockedCards = cards.filter((c) => c.unlocked);
   const allTags = Array.from(new Set(unlockedCards.flatMap((c) => c.tags)));
   const recentCardTypes = unlockedCards.slice(-3).map((c) => c.type);
   const completedStages = Array.from(new Set(unlockedCards.map((c) => c.stage)));
-  const collectionSections = [
+  const collectionSections: CollectionSection[] = [
     {
       id: 'self-strengths',
       title: 'Self & Strengths',
@@ -1426,27 +1452,41 @@ export default function MiraePlusStatement() {
                           const sectionCards = cards.filter((card) =>
                             section.types.includes(card.type)
                           );
-                          return (
-                            <div key={section.id} className="space-y-3">
-                              <div>
-                                <h2 className="text-sm font-semibold text-slate-800">
-                                  {section.title}
-                                </h2>
-                                <p className="text-xs text-slate-500">{section.subtitle}</p>
-                              </div>
-                              <div className="grid grid-cols-1 gap-3">
-                                {sectionCards.map((card) => (
-                                  <IdentityCardTile
-                                    key={card.id}
-                                    card={card}
-                                    onClick={() => handleCardClick(card)}
-                                    compact
-                                  />
-                                ))}
-                              </div>
+                    return (
+                      <div key={section.id} className="space-y-3">
+                        <div>
+                          <h2 className="text-sm font-semibold text-slate-800">
+                            {section.title}
+                          </h2>
+                          <p className="text-xs text-slate-500">{section.subtitle}</p>
+                        </div>
+                        <div className="grid grid-cols-1 gap-3">
+                          {sectionCards.filter((card) => card.unlocked).slice(0, 3).map((card) => (
+                            <IdentityCardTile
+                              key={card.id}
+                              card={card}
+                              onClick={() => handleCardClick(card)}
+                              compact
+                            />
+                          ))}
+                          {sectionCards.filter((card) => card.unlocked).length === 0 && (
+                            <div className="rounded-2xl border border-white/40 bg-white/60 p-4 text-xs text-slate-500">
+                              No unlocked cards yet.
                             </div>
-                          );
-                        })}
+                          )}
+                        </div>
+                        {sectionCards.length > 3 && (
+                          <button
+                            type="button"
+                            onClick={() => handleOpenCategory(section)}
+                            className="text-xs font-semibold text-slate-600 hover:text-slate-800 transition"
+                          >
+                            Click to view all →
+                          </button>
+                        )}
+                      </div>
+                    );
+                  })}
                     </div>
                   </div>
                   <div className="min-h-full flex flex-col justify-center">
@@ -1459,27 +1499,41 @@ export default function MiraePlusStatement() {
                           const sectionCards = cards.filter((card) =>
                             section.types.includes(card.type)
                           );
-                          return (
-                            <div key={section.id} className="space-y-3">
-                              <div>
-                                <h2 className="text-sm font-semibold text-slate-800">
-                                  {section.title}
-                                </h2>
-                                <p className="text-xs text-slate-500">{section.subtitle}</p>
-                              </div>
-                              <div className="grid grid-cols-1 gap-3">
-                                {sectionCards.map((card) => (
-                                  <IdentityCardTile
-                                    key={card.id}
-                                    card={card}
-                                    onClick={() => handleCardClick(card)}
-                                    compact
-                                  />
-                                ))}
-                              </div>
+                    return (
+                      <div key={section.id} className="space-y-3">
+                        <div>
+                          <h2 className="text-sm font-semibold text-slate-800">
+                            {section.title}
+                          </h2>
+                          <p className="text-xs text-slate-500">{section.subtitle}</p>
+                        </div>
+                        <div className="grid grid-cols-1 gap-3">
+                          {sectionCards.filter((card) => card.unlocked).slice(0, 3).map((card) => (
+                            <IdentityCardTile
+                              key={card.id}
+                              card={card}
+                              onClick={() => handleCardClick(card)}
+                              compact
+                            />
+                          ))}
+                          {sectionCards.filter((card) => card.unlocked).length === 0 && (
+                            <div className="rounded-2xl border border-white/40 bg-white/60 p-4 text-xs text-slate-500">
+                              No unlocked cards yet.
                             </div>
-                          );
-                        })}
+                          )}
+                        </div>
+                        {sectionCards.length > 3 && (
+                          <button
+                            type="button"
+                            onClick={() => handleOpenCategory(section)}
+                            className="text-xs font-semibold text-slate-600 hover:text-slate-800 transition"
+                          >
+                            Click to view all →
+                          </button>
+                        )}
+                      </div>
+                    );
+                  })}
                     </div>
                   </div>
                 </div>
@@ -1491,12 +1545,20 @@ export default function MiraePlusStatement() {
 
             <div>
               <div className="relative flex items-center justify-between gap-3">
-                <button
-                  onClick={() => router.push('/dashboard')}
-                  className="px-5 py-2 rounded-full text-sm font-medium bg-white/80 text-slate-600 border border-white/40 hover:bg-white transition-colors"
-                >
-                  Back to Dashboard
-                </button>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => router.push('/dashboard')}
+                    className="px-5 py-2 rounded-full text-sm font-medium bg-white/80 text-slate-600 border border-white/40 hover:bg-white transition-colors"
+                  >
+                    Back to Dashboard
+                  </button>
+                  <button
+                    onClick={handleOpenAdventure}
+                    className="px-5 py-2 rounded-full text-sm font-medium bg-slate-800 text-white hover:bg-slate-700 transition-colors"
+                  >
+                    View Your Adventure
+                  </button>
+                </div>
                 <button
                   type="button"
                   onClick={handleScrollToBottom}
@@ -1510,6 +1572,180 @@ export default function MiraePlusStatement() {
           </div>
         </div>
       </div>
+
+      {/* Category Modal */}
+      <AnimatePresence>
+        {activeCategory && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-40 flex items-center justify-center bg-slate-900/30 px-6 backdrop-blur-sm"
+            onClick={handleCloseCategory}
+          >
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              transition={{ duration: 0.25, ease: 'easeOut' }}
+              onClick={(e) => e.stopPropagation()}
+              className="w-full max-w-3xl rounded-3xl border border-white/40 bg-white/95 p-6 shadow-2xl backdrop-blur-lg"
+            >
+              <div className="flex items-start justify-between mb-4">
+                <div>
+                  <h2 className="text-xl font-semibold text-slate-800">{activeCategory.title}</h2>
+                  <p className="text-sm text-slate-500">{activeCategory.subtitle}</p>
+                </div>
+                <button
+                  onClick={handleCloseCategory}
+                  className="h-9 w-9 rounded-full bg-white/70 border border-white/60 text-slate-600 hover:text-slate-800 transition"
+                  aria-label="Close"
+                >
+                  ✕
+                </button>
+              </div>
+              <div className="max-h-[70vh] overflow-y-auto pr-2">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {cards
+                    .filter((card) => activeCategory.types.includes(card.type))
+                    .map((card) => (
+                      <IdentityCardTile
+                        key={card.id}
+                        card={card}
+                        onClick={() => {
+                          handleCardClick(card);
+                          handleCloseCategory();
+                        }}
+                        compact
+                      />
+                    ))}
+                </div>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Adventure Modal */}
+      <AnimatePresence>
+        {adventureOpen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-40 flex items-center justify-center bg-slate-900/30 px-6 backdrop-blur-sm"
+            onClick={handleCloseAdventure}
+          >
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              transition={{ duration: 0.25, ease: 'easeOut' }}
+              onClick={(e) => e.stopPropagation()}
+              className="w-full max-w-4xl rounded-3xl border border-white/40 bg-white/95 p-6 shadow-2xl backdrop-blur-lg"
+            >
+              <div className="flex items-start justify-between mb-5">
+                <div>
+                  <p className="text-xs uppercase tracking-wide text-slate-500">Adventure Report</p>
+                  <h2 className="text-2xl font-semibold text-slate-800">Your Growth Map</h2>
+                  <p className="text-sm text-slate-500">
+                    Mirae is noticing your strengths, interests, and growth over time.
+                  </p>
+                </div>
+                <button
+                  onClick={handleCloseAdventure}
+                  className="h-9 w-9 rounded-full bg-white/70 border border-white/60 text-slate-600 hover:text-slate-800 transition"
+                  aria-label="Close"
+                >
+                  ✕
+                </button>
+              </div>
+
+              <div className="grid gap-6 lg:grid-cols-[1.1fr_1fr]">
+                <div className="space-y-4">
+                  <div className="rounded-2xl border border-white/50 bg-white/80 p-4">
+                    <p className="text-sm font-semibold text-slate-700 mb-2">Signals Mirae Sees</p>
+                    <div className="flex flex-wrap gap-2 text-xs">
+                      {['Analytical', 'Empathy', 'Design-curious', 'Community-driven', 'Reflective'].map((signal) => (
+                        <span key={signal} className="rounded-full bg-slate-100 px-3 py-1 text-slate-600">
+                          {signal}
+                        </span>
+                      ))}
+                    </div>
+                    <p className="text-xs text-slate-500 mt-3">
+                      These are patterns your recent activities reveal, even when you do not say them out loud.
+                    </p>
+                  </div>
+
+                  <div className="rounded-2xl border border-white/50 bg-white/80 p-4">
+                    <p className="text-sm font-semibold text-slate-700 mb-3">Activity Archive</p>
+                    <div className="grid grid-cols-7 gap-2 text-center text-[10px] text-slate-400 mb-2">
+                      {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((day) => (
+                        <span key={day}>{day}</span>
+                      ))}
+                    </div>
+                    <div className="grid grid-cols-7 gap-2">
+                      {Array.from({ length: 28 }).map((_, index) => {
+                        const intensity = [0, 1, 2, 3][index % 4];
+                        const shade = [
+                          'bg-slate-100',
+                          'bg-[#BEEDE3]',
+                          'bg-[#C7B9FF]',
+                          'bg-[#F4A9C8]',
+                        ][intensity];
+                        return (
+                          <div
+                            key={index}
+                            className={`h-7 rounded-lg ${shade} shadow-sm`}
+                            aria-hidden
+                          />
+                        );
+                      })}
+                    </div>
+                    <p className="text-xs text-slate-500 mt-3">
+                      Simulated activity log (study, reflection, projects, and uploads).
+                    </p>
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  <div className="rounded-2xl border border-white/50 bg-white/80 p-4">
+                    <p className="text-sm font-semibold text-slate-700 mb-2">Recent Entries</p>
+                    <ul className="space-y-3 text-sm text-slate-600">
+                      {[
+                        'Drafted a “Future Day” storyboard',
+                        'Saved 3 role ideas from Role Roulette',
+                        'Added research notes from a design article',
+                        'Uploaded a club project outline',
+                        'Reflected on strengths after Stage 0',
+                      ].map((entry) => (
+                        <li key={entry} className="flex items-start gap-2">
+                          <span className="mt-1 h-2 w-2 rounded-full bg-[#9BCBFF]" />
+                          <span>{entry}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+
+                  <div className="rounded-2xl border border-white/50 bg-white/80 p-4">
+                    <p className="text-sm font-semibold text-slate-700 mb-2">Connected Sources (Simulated)</p>
+                    <div className="flex flex-wrap gap-2 text-xs text-slate-600">
+                      {['Google Drive', 'Notion To-Do', 'School Planner', 'Club Folder'].map((source) => (
+                        <span key={source} className="rounded-full bg-slate-100 px-3 py-1">
+                          {source}
+                        </span>
+                      ))}
+                    </div>
+                    <p className="text-xs text-slate-500 mt-3">
+                      These are placeholders for future integrations.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Card Detail Modal */}
       <AnimatePresence>
