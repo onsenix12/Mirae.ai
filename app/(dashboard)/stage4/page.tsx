@@ -446,32 +446,52 @@ export default function Stage4Page() {
   const totalMatches = roundCandidates.length ? roundCandidates.length / 2 : 0;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-amber-50 to-orange-50 p-8">
-      <div className="max-w-5xl mx-auto">
-        <h1 className="text-3xl font-bold mb-6 text-center">Tournament Bracket</h1>
+    <div
+      className="min-h-screen p-6 sm:p-10"
+      style={{
+        background:
+          'linear-gradient(135deg, #9BCBFF 0%, #C7B9FF 25%, #F4A9C8 50%, #FFD1A8 75%, #BEEDE3 100%)',
+      }}
+    >
+      <div className="relative max-w-6xl mx-auto">
+        <div
+          className="pointer-events-none absolute -top-12 -left-10 h-52 w-52 rounded-full blur-3xl opacity-40"
+          style={{ background: 'radial-gradient(circle, #FFFFFF 0%, #C7B9FF 60%, transparent 70%)' }}
+        />
+        <div
+          className="pointer-events-none absolute -bottom-16 -right-10 h-64 w-64 rounded-full blur-3xl opacity-40"
+          style={{ background: 'radial-gradient(circle, #FFFFFF 0%, #F4A9C8 60%, transparent 70%)' }}
+        />
+
+        <div className="mb-6 text-center">
+          <p className="text-xs uppercase tracking-[0.3em] text-white/80">Stage 4</p>
+          <h1 className="text-3xl sm:text-4xl font-semibold text-white drop-shadow">
+            Tournament Bracket
+          </h1>
+        </div>
 
         {phase === 'intro' && (
-          <div className="bg-white rounded-2xl shadow-xl p-8 text-center">
-            <p className="text-gray-600 mb-6">
+          <div className="bg-white/80 backdrop-blur rounded-3xl shadow-2xl p-8 sm:p-10 text-center border border-white/60">
+            <p className="text-gray-700 mb-6 text-base">
               First, pick the best major. Then compare universities that offer it.
             </p>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-left mb-6">
-              <div className="border border-amber-100 rounded-xl p-4">
-                <h2 className="text-lg font-semibold mb-2">Major Tournament</h2>
-                <p className="text-sm text-gray-600">
+              <div className="border border-white/70 bg-white/70 rounded-2xl p-5 shadow-md">
+                <h2 className="text-lg font-semibold mb-2 text-slate-800">Major Tournament</h2>
+                <p className="text-sm text-slate-600">
                   8 candidates based on your interests, passions, and courses.
                 </p>
               </div>
-              <div className="border border-amber-100 rounded-xl p-4">
-                <h2 className="text-lg font-semibold mb-2">University Tournament</h2>
-                <p className="text-sm text-gray-600">
+              <div className="border border-white/70 bg-white/70 rounded-2xl p-5 shadow-md">
+                <h2 className="text-lg font-semibold mb-2 text-slate-800">University Tournament</h2>
+                <p className="text-sm text-slate-600">
                   8 universities that offer the winning major.
                 </p>
               </div>
             </div>
             <button
               onClick={startMajorTournament}
-              className="px-6 py-3 bg-amber-600 text-white rounded-lg font-medium hover:bg-amber-700 transition"
+              className="px-6 py-3 rounded-full font-medium text-slate-800 bg-white/90 shadow-lg hover:-translate-y-0.5 hover:shadow-xl transition-all duration-300 ease-out"
             >
               Start Tournament
             </button>
@@ -482,77 +502,77 @@ export default function Stage4Page() {
           <div className="space-y-6">
             <div className="flex flex-wrap items-center justify-between gap-4">
               <div>
-                <p className="text-sm text-gray-500 uppercase tracking-wide">
+                <p className="text-xs uppercase tracking-[0.3em] text-white/70">
                   {mode === 'major' ? 'Major Tournament' : 'University Tournament'}
                 </p>
-                <h2 className="text-2xl font-semibold">
+                <h2 className="text-2xl sm:text-3xl font-semibold text-white drop-shadow">
                   Round {round} of {TOTAL_ROUNDS}
                 </h2>
-                <p className="text-sm text-gray-600">
+                <p className="text-sm text-white/80">
                   Match {matchIndex + 1} of {totalMatches}
                 </p>
               </div>
-              <div className="text-sm text-gray-600">
+              <div className="text-sm text-white/80 bg-white/20 border border-white/30 rounded-full px-4 py-1">
                 Winners locked in this round: {nextRoundCandidates.length}
               </div>
             </div>
 
-            <div className="text-center text-gray-500 text-sm">Pick the winner to advance</div>
+            <div className="text-center text-white/80 text-sm">Pick the winner to advance</div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {currentPair.map((candidate) => (
                 <button
                   key={candidate.id}
                   onClick={() => handlePick(candidate)}
-                  className="text-left bg-white rounded-2xl shadow-lg p-6 border-2 border-transparent hover:border-amber-400 transition"
+                  className="text-left bg-white/85 backdrop-blur rounded-3xl shadow-xl p-6 border border-white/70 hover:-translate-y-1 hover:shadow-2xl transition-all duration-300 ease-out"
                 >
                   <div className="flex items-start justify-between mb-4">
-                    <h3 className="text-xl font-bold">{candidate.name}</h3>
-                    <span className="text-xs uppercase tracking-wide text-gray-400">Pick</span>
+                    <h3 className="text-xl font-semibold text-slate-800">{candidate.name}</h3>
+                    <span className="text-xs uppercase tracking-[0.2em] text-slate-400">Pick</span>
                   </div>
                   {mode === 'major' && candidate.matchPercent !== undefined && (
-                    <p className="text-sm text-amber-700 font-medium mb-2">
+                    <p className="text-sm text-slate-700 font-medium mb-2">
                       Match score: {candidate.matchPercent}%
                     </p>
                   )}
                   {mode === 'major' && candidate.careers && (
-                    <p className="text-sm text-gray-600 mb-1">
+                    <p className="text-sm text-slate-600 mb-1">
                       Careers: {candidate.careers.join(', ')}
                     </p>
                   )}
                   {mode === 'major' && candidate.coreCourses && (
-                    <p className="text-sm text-gray-600 mb-1">
+                    <p className="text-sm text-slate-600 mb-1">
                       Core courses: {candidate.coreCourses.join(', ')}
                     </p>
                   )}
                   {mode === 'major' && candidate.workloadStyle && (
-                    <p className="text-sm text-gray-600 mb-1">
+                    <p className="text-sm text-slate-600 mb-1">
                       Workload: {candidate.workloadStyle}
                     </p>
                   )}
                   {mode === 'major' && candidate.portfolio && (
-                    <p className="text-sm text-gray-600 mb-1">
+                    <p className="text-sm text-slate-600 mb-1">
                       Portfolio: {candidate.portfolio}
                     </p>
                   )}
                   {mode === 'major' && candidate.collaboration && (
-                    <p className="text-sm text-gray-600 mb-1">
+                    <p className="text-sm text-slate-600 mb-1">
                       Collaboration: {candidate.collaboration}
                     </p>
                   )}
                   {mode === 'major' && candidate.pace && (
-                    <p className="text-sm text-gray-600 mb-3">Pace: {candidate.pace}</p>
+                    <p className="text-sm text-slate-600 mb-3">Pace: {candidate.pace}</p>
                   )}
                   {mode === 'university' && candidate.location && (
-                    <p className="text-sm text-gray-600 mb-1">Location: {candidate.location}</p>
+                    <p className="text-sm text-slate-600 mb-1">Location: {candidate.location}</p>
                   )}
                   {mode === 'university' && candidate.scholarships?.length && (
-                    <p className="text-sm text-gray-600 mb-3">
+                    <p className="text-sm text-slate-600 mb-3">
                       Scholarships: {candidate.scholarships.join(', ')}
                     </p>
                   )}
                   {mode === 'university' && (
-                    <div className="text-sm text-gray-600 mb-3 space-y-1">
+                    <div className="text-sm text-slate-600 mb-3 space-y-1">
                       {candidate.tuitionRange && <p>Tuition: {candidate.tuitionRange}</p>}
                       {candidate.aidStrength && <p>Financial aid: {candidate.aidStrength}</p>}
                       {candidate.internshipPipeline && (
@@ -564,23 +584,23 @@ export default function Stage4Page() {
                       {candidate.exchange && <p>Exchange: {candidate.exchange}</p>}
                     </div>
                   )}
-                  <p className="text-sm text-gray-600 mb-4">{candidate.summary}</p>
+                  <p className="text-sm text-slate-600 mb-4">{candidate.summary}</p>
                   <div className="mb-4">
-                    <p className="text-xs uppercase tracking-wide text-gray-400 mb-2">
+                    <p className="text-xs uppercase tracking-[0.2em] text-slate-400 mb-2">
                       Why this matchup
                     </p>
                     <div className="flex flex-wrap gap-2">
                       {getMatchReasons(candidate, mode).map((reason) => (
                         <span
                           key={reason}
-                          className="text-xs text-amber-700 bg-amber-50 border border-amber-100 rounded-full px-3 py-1"
+                          className="text-xs text-slate-700 bg-white/70 border border-white/70 rounded-full px-3 py-1 shadow-sm"
                         >
                           {reason}
                         </span>
                       ))}
                     </div>
                   </div>
-                  <ul className="text-sm text-gray-600 space-y-1">
+                  <ul className="text-sm text-slate-600 space-y-1">
                     {candidate.details.map((detail) => (
                       <li key={detail}>- {detail}</li>
                     ))}
@@ -589,28 +609,28 @@ export default function Stage4Page() {
                     src={candidate.imageUrl}
                     alt={candidate.name}
                     loading="lazy"
-                    className="mt-4 h-36 w-full rounded-xl object-cover"
+                    className="mt-4 h-36 w-full rounded-2xl object-cover"
                   />
                 </button>
               ))}
             </div>
 
-            <div className="flex items-center justify-between">
+            <div className="flex flex-wrap items-center justify-between gap-3">
               <button
                 onClick={resetTournament}
-                className="text-sm text-gray-500 hover:text-gray-700"
+                className="text-sm text-white/80 hover:text-white"
               >
                 Restart tournament
               </button>
               <button
                 onClick={handleUndo}
-                className="text-sm text-gray-500 hover:text-gray-700 disabled:text-gray-300"
+                className="text-sm text-white/80 hover:text-white disabled:text-white/40"
                 disabled={history.length === 0}
               >
                 Undo last pick
               </button>
               {majorWinner && mode === 'university' && (
-                <div className="text-sm text-gray-600">
+                <div className="text-sm text-white/90">
                   Current major: <span className="font-semibold">{majorWinner.name}</span>
                 </div>
               )}
@@ -619,33 +639,33 @@ export default function Stage4Page() {
         )}
 
         {phase === 'result' && majorWinner && universityWinner && (
-          <div className="bg-white rounded-2xl shadow-xl p-8 text-center space-y-6">
+          <div className="bg-white/85 backdrop-blur rounded-3xl shadow-2xl p-8 sm:p-10 text-center space-y-6 border border-white/60">
             <div>
-              <p className="text-sm text-gray-500 uppercase tracking-wide">Final Results</p>
-              <h2 className="text-2xl font-semibold">Your winning path</h2>
+              <p className="text-xs uppercase tracking-[0.3em] text-slate-400">Final Results</p>
+              <h2 className="text-2xl sm:text-3xl font-semibold text-slate-800">Your winning path</h2>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="border border-amber-100 rounded-xl p-4 text-left">
-                <p className="text-xs uppercase text-gray-400">Major</p>
-                <h3 className="text-lg font-semibold">{majorWinner.name}</h3>
-                <p className="text-sm text-gray-600 mt-2">{majorWinner.summary}</p>
+              <div className="border border-white/70 bg-white/70 rounded-2xl p-5 text-left shadow-md">
+                <p className="text-xs uppercase tracking-[0.2em] text-slate-400">Major</p>
+                <h3 className="text-lg font-semibold text-slate-800">{majorWinner.name}</h3>
+                <p className="text-sm text-slate-600 mt-2">{majorWinner.summary}</p>
               </div>
-              <div className="border border-amber-100 rounded-xl p-4 text-left">
-                <p className="text-xs uppercase text-gray-400">University</p>
-                <h3 className="text-lg font-semibold">{universityWinner.name}</h3>
-                <p className="text-sm text-gray-600 mt-2">{universityWinner.summary}</p>
+              <div className="border border-white/70 bg-white/70 rounded-2xl p-5 text-left shadow-md">
+                <p className="text-xs uppercase tracking-[0.2em] text-slate-400">University</p>
+                <h3 className="text-lg font-semibold text-slate-800">{universityWinner.name}</h3>
+                <p className="text-sm text-slate-600 mt-2">{universityWinner.summary}</p>
               </div>
             </div>
             <div className="flex flex-col sm:flex-row gap-3 justify-center">
               <button
                 onClick={handleComplete}
-                className="px-6 py-3 bg-amber-600 text-white rounded-lg font-medium hover:bg-amber-700 transition"
+                className="px-6 py-3 rounded-full font-medium text-slate-800 bg-white/90 shadow-lg hover:-translate-y-0.5 hover:shadow-xl transition-all duration-300 ease-out"
               >
                 Save and return to dashboard
               </button>
               <button
                 onClick={resetTournament}
-                className="px-6 py-3 border border-gray-200 rounded-lg text-gray-600 hover:bg-gray-50 transition"
+                className="px-6 py-3 rounded-full border border-white/70 text-slate-700 bg-white/70 hover:bg-white/90 shadow-md transition-all duration-300 ease-out"
               >
                 Run another tournament
               </button>
