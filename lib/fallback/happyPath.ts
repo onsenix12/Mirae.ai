@@ -446,7 +446,7 @@ export const HAPPY_PATH_YEAR3_PRESSURE: ConversationTurn[] = [
   
   {
     turnNumber: 2,
-    phase: 'conflicting_desires',
+    phase: 'pressure_acknowledgment',
     trigger: ['부모님', '대학', '진로'],
     miraeMessage: (ctx: UserContext) => `그 압박 속에서 힘들겠어요.
 
