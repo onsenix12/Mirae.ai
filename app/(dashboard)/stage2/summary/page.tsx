@@ -376,11 +376,8 @@ export default function Stage2SummaryPage() {
   if (!selection) {
     return (
       <div
-        className="min-h-screen px-6 py-12"
-        style={{
-          background:
-            'linear-gradient(135deg, #9BCBFF 0%, #C7B9FF 25%, #F4A9C8 50%, #FFD1A8 75%, #BEEDE3 100%)',
-        }}
+        className="min-h-screen px-6 py-12 bg-cover bg-center bg-no-repeat"
+        style={{ backgroundImage: "url('/asset/Background.png')" }}
       >
         <div className="mx-auto w-full max-w-4xl space-y-6">
           <div className="rounded-3xl border border-white/70 bg-white/85 p-8 shadow-sm backdrop-blur">
@@ -401,11 +398,8 @@ export default function Stage2SummaryPage() {
 
   return (
     <div
-      className="min-h-screen px-6 py-12"
-      style={{
-        background:
-          'linear-gradient(135deg, #9BCBFF 0%, #C7B9FF 25%, #F4A9C8 50%, #FFD1A8 75%, #BEEDE3 100%)',
-      }}
+      className="min-h-screen px-6 py-12 bg-cover bg-center bg-no-repeat"
+      style={{ backgroundImage: "url('/asset/Background.png')" }}
     >
       <div className="mx-auto w-full max-w-6xl space-y-8">
         <div className="rounded-3xl border border-white/70 bg-white/85 p-6 shadow-sm backdrop-blur">
