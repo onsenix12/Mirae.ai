@@ -319,18 +319,18 @@ export default function DashboardPage() {
                           {/* Stage Header */}
                           <div className="flex items-center gap-3">
                             <div className={`w-12 h-12 rounded-full bg-gradient-to-br from-[#9DD5F5] to-[#7EC4F0] flex items-center justify-center text-white text-xl font-bold shadow-lg`}>
-                              {viewingStage.letter}
+                              {viewingStage?.letter}
                             </div>
                             <div>
                               <h2 className="text-2xl font-bold text-slate-800">
-                                {t(viewingStage.nameKey)}
+                                {viewingStage && t(viewingStage.nameKey)}
                               </h2>
                             </div>
                           </div>
 
                           {/* Stage Question */}
                           <p className="text-xl text-slate-700 font-medium">
-                            {t(viewingStage.promptKey)}
+                            {viewingStage && t(viewingStage.promptKey)}
                           </p>
 
                           {/* Subtitle */}
@@ -343,16 +343,20 @@ export default function DashboardPage() {
                         <div className="flex items-center justify-center flex-1">
                           <button
                             onClick={() => {
-                              if (!isViewingStageLocked && viewingStage) {
+                              if (viewingStage && !isViewingStageLocked) {
+                                console.log('Navigating to stage:', viewingStage.path);
                                 router.push(viewingStage.path);
+                              } else {
+                                console.log('Cannot navigate - locked or no stage:', { isViewingStageLocked, viewingStage });
                               }
                             }}
                             disabled={isViewingStageLocked}
-                            className={`py-4 px-12 rounded-full text-lg font-semibold ${
+                            className={`py-4 px-12 rounded-full text-lg font-semibold transition-all ${
                               isViewingStageLocked
                                 ? 'bg-slate-300 text-slate-500 cursor-not-allowed'
-                                : 'soft-button'
+                                : 'soft-button hover:scale-105 active:scale-95'
                             }`}
+                            type="button"
                           >
                             Start exploring
                           </button>
@@ -386,18 +390,18 @@ export default function DashboardPage() {
                               viewingStageId === 4 ? 'from-[#B19CD9] to-[#A78BCA]' :
                               'from-[#FFB6D9] to-[#FF9EC7]'
                             } flex items-center justify-center text-white text-xl font-bold shadow-lg`}>
-                              {viewingStage.letter}
+                              {viewingStage?.letter}
                             </div>
                             <div>
                               <h2 className="text-2xl font-bold text-slate-800">
-                                {t(viewingStage.nameKey)}
+                                {viewingStage && t(viewingStage.nameKey)}
                               </h2>
                             </div>
                           </div>
 
                           {/* Stage Question */}
                           <p className="text-xl text-slate-700 font-medium">
-                            {t(viewingStage.promptKey)}
+                            {viewingStage && t(viewingStage.promptKey)}
                           </p>
 
                           {/* Subtitle */}
@@ -410,16 +414,20 @@ export default function DashboardPage() {
                         <div className="flex items-center justify-center flex-1">
                           <button
                             onClick={() => {
-                              if (!isViewingStageLocked && viewingStage) {
+                              if (viewingStage && !isViewingStageLocked) {
+                                console.log('Navigating to stage:', viewingStage.path);
                                 router.push(viewingStage.path);
+                              } else {
+                                console.log('Cannot navigate - locked or no stage:', { isViewingStageLocked, viewingStage });
                               }
                             }}
                             disabled={isViewingStageLocked}
-                            className={`py-4 px-12 rounded-full text-lg font-semibold ${
+                            className={`py-4 px-12 rounded-full text-lg font-semibold transition-all ${
                               isViewingStageLocked
                                 ? 'bg-slate-300 text-slate-500 cursor-not-allowed'
-                                : 'soft-button'
+                                : 'soft-button hover:scale-105 active:scale-95'
                             }`}
+                            type="button"
                           >
                             Start exploring
                           </button>

@@ -5,7 +5,11 @@ import { useRouter } from 'next/navigation';
 import { Lock, Sparkles, Pencil, Edit2, Check, X as XIcon } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Image from 'next/image';
+import { getUser } from '@/lib/auth';
 import { useUserStore } from '@/lib/stores/userStore';
+import ActivityCalendar from '@/components/ActivityCalendar';
+import JourneyReportView from '@/components/JourneyReportView';
+import { loadActivityLogs, saveActivityLogs, type ActivityLog } from '@/lib/activityLogs';
 import {
   MiraeCharacter,
   getEvolutionMessage,
@@ -1262,10 +1266,20 @@ export default function MiraePlusStatement() {
   const [equippedAccessories, setEquippedAccessories] = useState<EquippedAccessories>({});
   const [activeCategory, setActiveCategory] = useState<CollectionSection | null>(null);
   const [adventureOpen, setAdventureOpen] = useState(false);
+  const [adventureView, setAdventureView] = useState<'archive' | 'report'>('archive');
+  const [activityLogs, setActivityLogs] = useState<ActivityLog[]>([]);
+  const [studentName, setStudentName] = useState('Student');
   const collectionScrollRef = useRef<HTMLDivElement | null>(null);
 
   // Load from localStorage
   useEffect(() => {
+    const user = getUser();
+    if (user?.name) {
+      setStudentName(user.name);
+    } else if (user?.email) {
+      setStudentName(user.email.split('@')[0]);
+    }
+
     const savedReflections = localStorage.getItem('miraePlus_reflections');
     const savedViewMode = localStorage.getItem('miraePlus_viewMode');
     const savedAccessories = localStorage.getItem('miraePlus_accessories');
@@ -1278,6 +1292,7 @@ export default function MiraePlusStatement() {
       const parsedCards = JSON.parse(savedCards);
       setCards(parsedCards);
     }
+    setActivityLogs(loadActivityLogs());
   }, []);
 
   const handleCardClick = (card: IdentityCard) => {
@@ -1312,6 +1327,12 @@ export default function MiraePlusStatement() {
     }
   };
 
+  useEffect(() => {
+    if (activityLogs.length > 0) {
+      saveActivityLogs(activityLogs);
+    }
+  }, [activityLogs]);
+
   const handleUpdateCard = (cardId: string, updates: { title?: string; description?: string }) => {
     const updatedCards = cards.map((card) =>
       card.id === cardId ? { ...card, ...updates } : card
@@ -1327,6 +1348,12 @@ export default function MiraePlusStatement() {
     });
   };
 
+  const handleAddLog = (log: ActivityLog) => {
+    setActivityLogs((prev) =>
+      [...prev, log].sort((a, b) => a.date.localeCompare(b.date))
+    );
+  };
+
   const handleOpenCategory = (section: CollectionSection) => {
     setActiveCategory(section);
   };
@@ -1336,6 +1363,7 @@ export default function MiraePlusStatement() {
   };
 
   const handleOpenAdventure = () => {
+    setAdventureView('archive');
     setAdventureOpen(true);
   };
 
