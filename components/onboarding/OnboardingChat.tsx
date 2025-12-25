@@ -66,7 +66,7 @@ export const OnboardingChat: React.FC<OnboardingChatProps> = ({ onComplete }) =>
   };
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-4">
       {state.currentPhase === 'welcome' && (
         <WelcomePhase
           onContinue={() => advancePhase('context')}
