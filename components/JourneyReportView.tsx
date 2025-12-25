@@ -197,7 +197,7 @@ const buildWeeklyCounts = (logs: ActivityLog[]) => {
 
 const buildRadarMetrics = (logs: ActivityLog[]) => {
   const total = logs.length || 1;
-  const countByType = logs.reduce<Record<ActivityLog['activityType'], number>>((acc, log) => {
+  const countByType = logs.reduce<Partial<Record<ActivityLog['activityType'], number>>>((acc, log) => {
     acc[log.activityType] = (acc[log.activityType] || 0) + 1;
     return acc;
   }, {});

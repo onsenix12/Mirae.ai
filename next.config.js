@@ -11,9 +11,7 @@ const nextConfig = {
         // Ensure public folder assets are copied
         trailingSlash: true,
       }
-    : {
-        output: 'export',
-      }),
+    : {}),
   images: {
     unoptimized: true,
   },

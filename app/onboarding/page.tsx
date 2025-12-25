@@ -14,7 +14,7 @@ export default function OnboardingPage() {
   const router = useRouter();
   const { setUserId } = useUserStore();
   const { t } = useI18n();
-  const { state } = useOnboarding();
+  const { state, advancePhase, setStudentContextData, setKeywords } = useOnboarding();
   const [userName, setUserName] = useState('');
   const [inputValue, setInputValue] = useState('');
 
@@ -80,7 +80,9 @@ export default function OnboardingPage() {
             {/* Chat Messages Area - Scrollable */}
             <div className="relative flex-1 min-h-0 overflow-y-auto space-y-4 mb-4 pr-2 scrollbar-thin scrollbar-thumb-slate-300 scrollbar-track-transparent">
               <SmartOnboardingChat
-                onComplete={handleFinish}
+                onComplete={() => advancePhase('start')}
+                onContextUpdate={setStudentContextData}
+                onKeywordsExtracted={setKeywords}
                 onInputChange={setInputValue}
                 inputValue={inputValue}
                 onSend={() => window.dispatchEvent(new Event('onboardingSmartSend'))}

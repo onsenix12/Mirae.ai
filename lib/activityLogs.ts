@@ -24,10 +24,10 @@ const formatDate = (date: Date) => date.toISOString().slice(0, 10);
 const buildSeedActivityLogs = (): ActivityLog[] => {
   const today = new Date();
   const offsets = [0, 1, 3, 5, 8, 11, 14, 18, 21, 24, 27];
-  const entries = [
+  const entries: Omit<ActivityLog, 'id' | 'date'>[] = [
     {
       title: 'Reflected on strengths after Stage 0',
-      scopeStage: 'S',
+      scopeStage: 'S' as ScopeStage,
       activityType: 'MiraeActivity',
       source: 'Mirae',
       linkedCardId: 'card-1',
@@ -35,62 +35,62 @@ const buildSeedActivityLogs = (): ActivityLog[] => {
     },
     {
       title: 'Saved role ideas from Role Roulette',
-      scopeStage: 'C',
+      scopeStage: 'C' as ScopeStage,
       activityType: 'MiraeActivity',
       source: 'Mirae',
     },
     {
       title: 'Reviewed statistics notes',
-      scopeStage: 'O',
+      scopeStage: 'O' as ScopeStage,
       activityType: 'Study',
       source: 'SimulatedTodo',
     },
     {
       title: 'Drafted a design club proposal',
-      scopeStage: 'P',
+      scopeStage: 'P' as ScopeStage,
       activityType: 'Club',
       source: 'Manual',
     },
     {
       title: 'Wrote a short reflection on community impact',
-      scopeStage: 'E',
+      scopeStage: 'E' as ScopeStage,
       activityType: 'Reflection',
       source: 'Manual',
       shortReflection: 'I want my work to feel useful and grounded.',
     },
     {
       title: 'Uploaded project outline to Drive',
-      scopeStage: 'P',
+      scopeStage: 'P' as ScopeStage,
       activityType: 'Project',
       source: 'SimulatedDrive',
     },
     {
       title: 'Sketched a future day storyboard',
-      scopeStage: 'E',
+      scopeStage: 'E' as ScopeStage,
       activityType: 'MiraeActivity',
       source: 'Mirae',
     },
     {
       title: 'Explored a new course roadmap',
-      scopeStage: 'O',
+      scopeStage: 'O' as ScopeStage,
       activityType: 'MiraeActivity',
       source: 'Mirae',
     },
     {
       title: 'Read a human-centered design article',
-      scopeStage: 'C',
+      scopeStage: 'C' as ScopeStage,
       activityType: 'ExternalWork',
       source: 'Manual',
     },
     {
       title: 'Mapped questions for a mentor chat',
-      scopeStage: 'S',
+      scopeStage: 'S' as ScopeStage,
       activityType: 'Reflection',
       source: 'Manual',
     },
     {
       title: 'Added notes from a campus visit',
-      scopeStage: 'E',
+      scopeStage: 'E' as ScopeStage,
       activityType: 'ExternalWork',
       source: 'Manual',
     },

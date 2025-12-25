@@ -29,6 +29,13 @@ export function useOnboarding() {
     advancePhase('upload');
   }, [advancePhase]);
 
+  const setStudentContextData = useCallback((data: Partial<StudentContextData>) => {
+    setState(prev => ({
+      ...prev,
+      studentData: { ...prev.studentData, ...data }
+    }));
+  }, []);
+
   const setUploadedFiles = useCallback((files: File[]) => {
     setState(prev => ({ ...prev, uploadedFiles: files }));
   }, []);
@@ -69,10 +76,10 @@ export function useOnboarding() {
     state,
     advancePhase,
     setStudentContext,
+    setStudentContextData,
     setUploadedFiles,
     skipUpload,
     setKeywords,
     completeOnboarding
   };
 }
-
