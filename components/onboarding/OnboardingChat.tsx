@@ -11,7 +11,7 @@ import { KeywordReviewPhase } from './KeywordReviewPhase';
 import { JourneyStartPhase } from './JourneyStartPhase';
 
 // Placeholder for AI keyword extraction - to be implemented with actual API
-async function extractKeywordsFromDocuments(files: File[]): Promise<{ keywords: string[]; confidence: number }> {
+async function extractKeywordsFromDocuments(): Promise<{ keywords: string[]; confidence: number }> {
   // TODO: Implement actual AI keyword extraction
   // For now, return placeholder keywords
   return {
@@ -113,4 +113,3 @@ export const OnboardingChat: React.FC<OnboardingChatProps> = ({ onComplete }) =>
     </div>
   );
 };
-

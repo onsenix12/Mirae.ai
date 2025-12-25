@@ -9,9 +9,10 @@ import { ContextCollectionPhase } from './ContextCollectionPhase';
 import { DocumentUploadPhase } from './DocumentUploadPhase';
 import { KeywordReviewPhase } from './KeywordReviewPhase';
 import { JourneyStartPhase } from './JourneyStartPhase';
+import { updateUserProfile } from '@/lib/userProfile';
 
 // Placeholder for AI keyword extraction - to be implemented with actual API
-async function extractKeywordsFromDocuments(files: File[]): Promise<{ keywords: string[]; confidence: number }> {
+async function extractKeywordsFromDocuments(): Promise<{ keywords: string[]; confidence: number }> {
   // TODO: Implement actual AI keyword extraction
   // For now, return placeholder keywords
   return {
@@ -58,9 +59,7 @@ export const OnboardingContainer: React.FC = () => {
       return;
     }
     completeOnboarding();
-    // Mark onboarding as done
-    const onboardingDoneKey = (userId: string) => `user_${userId}_onboardingDone`;
-    localStorage.setItem(onboardingDoneKey(user.id), 'true');
+    updateUserProfile({ onboardingCompleted: true });
     router.push('/dashboard');
   };
 
@@ -114,4 +113,3 @@ export const OnboardingContainer: React.FC = () => {
     </div>
   );
 };
-

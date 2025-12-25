@@ -1,15 +1,14 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { getUser, signOut } from '@/lib/auth';
+import { getUser } from '@/lib/auth';
 import { useUserStore } from '@/lib/stores/userStore';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { CheckCircle, Lock, Circle, ChevronLeft, ChevronRight, Sprout } from 'lucide-react';
+import { Lock, ChevronLeft, ChevronRight, Sprout } from 'lucide-react';
 import { useI18n } from '@/lib/i18n';
 import Image from 'next/image';
 import { MiraeCharacter, type EquippedAccessories } from '@/components/MiraeCharacterEvolution';
-import { storage } from '@/lib/utils/storage';
-import { getUserProfile, updateUserProfile } from '@/lib/userProfile';
+import { getUserProfile } from '@/lib/userProfile';
 
 const stages = [
   { id: 0, nameKey: 'stage0Name', descriptionKey: 'stage0Description', path: '/stage0', letter: 'S', promptKey: 'journeyPromptStrengths' },
@@ -31,8 +30,7 @@ const academicStages = [
 export default function DashboardPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { progress, userId, setUserId, reset } = useUserStore();
-  const [userName, setUserName] = useState('');
+  const { progress, userId, setUserId } = useUserStore();
   const [equippedAccessories, setEquippedAccessories] = useState<EquippedAccessories>({});
   const [cardCount, setCardCount] = useState(0);
   const [academicStage, setAcademicStage] = useState<string | null>(null);
@@ -50,40 +48,24 @@ export default function DashboardPage() {
     }
 
     const profile = getUserProfile();
-    const displayName = profile.name || user.name || user.email?.split('@')[0] || t('studentFallback');
-    setUserName(displayName);
 
-    if (typeof window !== 'undefined') {
-      const onboardingKey = `user_${user.id}_onboardingDone`;
-      if (localStorage.getItem(onboardingKey) !== 'true') {
-        router.push('/onboarding');
-      }
+    if (!profile.onboardingCompleted) {
+      router.push('/onboarding');
+    }
 
-      // Load accessories and card count from localStorage
-      const savedAccessories = localStorage.getItem('miraePlus_accessories');
-      const savedCards = localStorage.getItem('miraePlus_cards');
-      
-      if (savedAccessories) {
-        const parsed = JSON.parse(savedAccessories);
-        setEquippedAccessories(parsed);
-        updateUserProfile({ avatar: { ...profile.avatar, equippedAccessories: parsed } });
-      } else if (profile.avatar?.equippedAccessories) {
-        setEquippedAccessories(profile.avatar.equippedAccessories);
-      }
-      
-      if (savedCards) {
-        const cards = JSON.parse(savedCards);
-        const unlockedCount = cards.filter((c: any) => c.unlocked).length;
-        setCardCount(unlockedCount);
-        updateUserProfile({ collection: { ...profile.collection, cards } });
-      } else if (profile.collection?.cards) {
-        const unlockedCount = profile.collection.cards.filter((c: any) => c.unlocked).length;
-        setCardCount(unlockedCount);
-      }
+    if (profile.avatar?.equippedAccessories) {
+      setEquippedAccessories(profile.avatar.equippedAccessories);
+    }
 
-      if (typeof profile.academicStage === 'string') {
-        setAcademicStage(profile.academicStage);
-      }
+    if (profile.collection?.cards) {
+      const unlockedCount = profile.collection.cards.filter((card) =>
+        Boolean((card as { unlocked?: boolean }).unlocked)
+      ).length;
+      setCardCount(unlockedCount);
+    }
+
+    if (typeof profile.academicStage === 'string') {
+      setAcademicStage(profile.academicStage);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [router, setUserId, userId]);
@@ -91,25 +73,15 @@ export default function DashboardPage() {
   // Listen for storage changes to update accessories in real-time
   useEffect(() => {
     const handleStorageChange = () => {
-      const savedAccessories = localStorage.getItem('miraePlus_accessories');
-      const savedCards = localStorage.getItem('miraePlus_cards');
-      
       const storedProfile = getUserProfile();
-      if (savedAccessories) {
-        const parsed = JSON.parse(savedAccessories);
-        setEquippedAccessories(parsed);
-        updateUserProfile({ avatar: { ...storedProfile.avatar, equippedAccessories: parsed } });
-      } else if (storedProfile.avatar?.equippedAccessories) {
+      if (storedProfile.avatar?.equippedAccessories) {
         setEquippedAccessories(storedProfile.avatar.equippedAccessories);
       }
-      
-      if (savedCards) {
-        const cards = JSON.parse(savedCards);
-        const unlockedCount = cards.filter((c: any) => c.unlocked).length;
-        setCardCount(unlockedCount);
-        updateUserProfile({ collection: { ...storedProfile.collection, cards } });
-      } else if (storedProfile.collection?.cards) {
-        const unlockedCount = storedProfile.collection.cards.filter((c: any) => c.unlocked).length;
+
+      if (storedProfile.collection?.cards) {
+        const unlockedCount = storedProfile.collection.cards.filter((card) =>
+          Boolean((card as { unlocked?: boolean }).unlocked)
+        ).length;
         setCardCount(unlockedCount);
       }
 
@@ -130,13 +102,6 @@ export default function DashboardPage() {
     };
   }, []);
 
-  const handleSignOut = () => {
-    signOut();
-    reset();
-    router.push('/login');
-    router.refresh();
-  };
-
   const getStageStatus = (stageId: number) => {
     if (progress[`stage${stageId}Complete` as keyof typeof progress]) return 'complete';
     if (stageId === progress.currentStage) return 'current';
@@ -144,25 +109,7 @@ export default function DashboardPage() {
     return 'locked';
   };
 
-  const getStageIcon = (status: string) => {
-    switch (status) {
-      case 'complete':
-        return <CheckCircle className="w-6 h-6 text-[#73c8a9]" />;
-      case 'current':
-        return <Circle className="w-6 h-6 text-[#9BCBFF] fill-[#9BCBFF]" />;
-      case 'locked':
-        return <Lock className="w-6 h-6 text-gray-400" />;
-      default:
-        return <Circle className="w-6 h-6 text-gray-400" />;
-    }
-  };
-
-  const completedStages = Object.values(progress).filter(
-    (v) => typeof v === 'boolean' && v === true
-  ).length;
-  const totalProgress = (completedStages / 6) * 100;
-
-  const currentStage = stages.find((stage) => stage.id === progress.currentStage);
+  void Object.values(progress).filter((v) => typeof v === 'boolean' && v === true).length;
   const [viewingStageId, setViewingStageId] = useState(progress.currentStage);
   const [slideDirection, setSlideDirection] = useState<'left' | 'right' | null>(null);
   const viewingStage = stages.find((stage) => stage.id === viewingStageId);
@@ -251,7 +198,7 @@ export default function DashboardPage() {
 
             {/* Stage Nodes */}
             <div className="relative flex justify-between items-center">
-              {stages.map((stage, index) => {
+              {stages.map((stage) => {
                 const status = getStageStatus(stage.id);
                 const isCurrent = stage.id === progress.currentStage;
                 const isViewing = stage.id === viewingStageId;
@@ -445,7 +392,7 @@ export default function DashboardPage() {
 
                           {/* Subtitle */}
                           <p className="text-base text-slate-600">
-                            Let's explore safely. No commitments needed.
+                            Let&apos;s explore safely. No commitments needed.
                           </p>
                         </div>
 

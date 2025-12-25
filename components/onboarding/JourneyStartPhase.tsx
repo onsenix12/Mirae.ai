@@ -16,11 +16,11 @@ export const JourneyStartPhase: React.FC<JourneyStartPhaseProps> = ({
       <ChatBubble sender="mirae">
         <div className="space-y-3">
           <p className="text-lg">
-            Perfect! We're all set. 🌟
+            Perfect! We&apos;re all set. 🌟
           </p>
           <p>
-            You're about to start an exciting journey of self-discovery. 
-            We'll explore together, step by step, and I'll be here to guide you.
+            You&apos;re about to start an exciting journey of self-discovery. 
+            We&apos;ll explore together, step by step, and I&apos;ll be here to guide you.
           </p>
           <p className="text-gray-600">
             Ready to begin?
@@ -36,4 +36,3 @@ export const JourneyStartPhase: React.FC<JourneyStartPhaseProps> = ({
     </div>
   );
 };
-

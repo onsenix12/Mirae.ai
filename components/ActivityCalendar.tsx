@@ -313,7 +313,9 @@ export default function ActivityCalendar({ logs, onAddLog }: ActivityCalendarPro
                   <p className="text-xs text-slate-500">Source: {sourceLabels[log.source]}</p>
                 )}
                 {log.shortReflection && (
-                  <p className="text-xs text-slate-500 mt-2">"{log.shortReflection}"</p>
+                  <p className="text-xs text-slate-500 mt-2">
+                    &quot;{log.shortReflection}&quot;
+                  </p>
                 )}
               </div>
             ))

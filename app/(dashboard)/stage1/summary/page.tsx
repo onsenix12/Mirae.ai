@@ -3,8 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useI18n } from '@/lib/i18n';
-import { storage } from '@/lib/utils/storage';
-import { getUserProfile } from '@/lib/userProfile';
+import { getUserProfile, updateUserProfile } from '@/lib/userProfile';
 import rolesData from '@/lib/data/roles.json';
 
 type RoleLocale = { en: string; ko: string };
@@ -21,11 +20,6 @@ interface RoleData {
   resources: RoleListLocale;
 }
 
-interface RoleSwipe {
-  roleId: string;
-  swipeDirection: 'left' | 'right' | 'up';
-}
-
 const roles = rolesData as RoleData[];
 
 export default function Stage1SummaryPage() {
@@ -36,18 +30,21 @@ export default function Stage1SummaryPage() {
   const carouselRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
-    const swipes = storage.get<RoleSwipe[]>('roleSwipes', []) ?? [];
-    const liked = swipes
-      .filter((swipe) => swipe.swipeDirection === 'right')
-      .map((swipe) => swipe.roleId);
+    const profile = getUserProfile();
+    const swipes = profile.roleSwipes ?? [];
+    const storedLiked = profile.likedRoles ?? [];
+    const liked =
+      storedLiked.length > 0
+        ? storedLiked
+        : swipes
+            .filter((swipe) => swipe.swipeDirection === 'right')
+            .map((swipe) => swipe.roleId);
     const uniqueLiked = Array.from(new Set(liked));
     setLikedRoleIds(uniqueLiked);
 
-  const profile = getUserProfile();
-    storage.set('userProfile', {
-      ...profile,
-      likedRoles: uniqueLiked,
-    });
+    if (uniqueLiked.length > 0 && storedLiked.length === 0) {
+      updateUserProfile({ likedRoles: uniqueLiked });
+    }
   }, []);
 
   const likedRoles = useMemo(
@@ -74,12 +71,7 @@ export default function Stage1SummaryPage() {
   };
 
   const handleRedo = () => {
-    storage.remove('roleSwipes');
-  const profile = getUserProfile();
-    storage.set('userProfile', {
-      ...profile,
-      likedRoles: [],
-    });
+    updateUserProfile({ roleSwipes: [], likedRoles: [] });
     router.push('/stage1');
   };
 

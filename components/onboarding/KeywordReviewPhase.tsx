@@ -67,7 +67,7 @@ export const KeywordReviewPhase: React.FC<KeywordReviewPhaseProps> = ({
         </div>
         <p className="text-xs text-gray-500 mt-4">
           These are just things that caught my eye—feel free to remove 
-          anything that doesn't feel right!
+          anything that doesn&apos;t feel right!
         </p>
       </div>
 
@@ -83,10 +83,9 @@ export const KeywordReviewPhase: React.FC<KeywordReviewPhaseProps> = ({
 
       <div className="flex justify-end">
         <OptionButton onClick={handleConfirm} variant="primary">
-          Let's go! ✨
+          Let&apos;s go! ✨
         </OptionButton>
       </div>
     </div>
   );
 };
-

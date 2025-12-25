@@ -64,6 +64,26 @@ export type UserProfile = {
     viewMode?: 'collection' | 'statement';
     cards?: Record<string, unknown>[];
   };
+  roleSwipes?: {
+    roleId: string;
+    swipeDirection: 'left' | 'right' | 'up';
+    swipeSpeed?: number;
+    cardTapCount?: number;
+  }[];
+  stage2Selection?: {
+    anchor: string[];
+    signal: string[];
+    savedAt: string;
+  };
+  stage2Slots?: ({ anchor: string[]; signal: string[]; savedAt: string } | null)[];
+  stage4Result?: {
+    major: { id: string; name: string };
+    university: { id: string; name: string };
+    confidence: number;
+    insightStrengths: string[];
+    insightRoles: string[];
+    completedAt: string;
+  };
   stage5?: {
     timeline?: string;
     storyboard?: {

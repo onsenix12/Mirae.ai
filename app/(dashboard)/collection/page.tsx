@@ -1215,7 +1215,7 @@ const StatementView = ({ cards, onUpdateCard }: StatementViewProps) => {
     <div className="space-y-6">
       <div className="rounded-2xl border border-white/40 bg-white/85 p-6 backdrop-blur-lg">
         <h3 className="text-lg font-semibold text-slate-800 mb-3">
-          What I'm drawn to
+          What I&apos;m drawn to
         </h3>
         {drawnTo.length > 0 ? (
           <ul className="space-y-2 mb-3">
@@ -1225,13 +1225,13 @@ const StatementView = ({ cards, onUpdateCard }: StatementViewProps) => {
           <p className="text-sm text-slate-400 mb-3">Nothing here yet.</p>
         )}
         <p className="text-xs text-slate-400 italic">
-          This is a draft shape — you're always allowed to change.
+          This is a draft shape — you&apos;re always allowed to change.
         </p>
       </div>
 
       <div className="rounded-2xl border border-white/40 bg-white/85 p-6 backdrop-blur-lg">
         <h3 className="text-lg font-semibold text-slate-800 mb-3">
-          What I've done
+          What I&apos;ve done
         </h3>
         {done.length > 0 ? (
           <ul className="space-y-2 mb-3">
@@ -1241,13 +1241,13 @@ const StatementView = ({ cards, onUpdateCard }: StatementViewProps) => {
           <p className="text-sm text-slate-400 mb-3">Nothing here yet.</p>
         )}
         <p className="text-xs text-slate-400 italic">
-          This is a draft shape — you're always allowed to change.
+          This is a draft shape — you&apos;re always allowed to change.
         </p>
       </div>
 
       <div className="rounded-2xl border border-white/40 bg-white/85 p-6 backdrop-blur-lg">
         <h3 className="text-lg font-semibold text-slate-800 mb-3">
-          How I've changed
+          How I&apos;ve changed
         </h3>
         {changed.length > 0 ? (
           <ul className="space-y-2 mb-3">
@@ -1257,7 +1257,7 @@ const StatementView = ({ cards, onUpdateCard }: StatementViewProps) => {
           <p className="text-sm text-slate-400 mb-3">Nothing here yet.</p>
         )}
         <p className="text-xs text-slate-400 italic">
-          This is a draft shape — you're always allowed to change.
+          This is a draft shape — you&apos;re always allowed to change.
         </p>
       </div>
     </div>
@@ -1357,7 +1357,7 @@ export default function MiraePlusStatement() {
   const handleAccessoryChange = (newAccessories: EquippedAccessories) => {
     console.log('Collection page: handleAccessoryChange called with:', newAccessories);
     setEquippedAccessories(newAccessories);
-    console.log('Collection page: State updated, localStorage saved');
+    console.log('Collection page: State updated, profile saved');
     updateUserProfile({
       avatar: { ...getUserProfile().avatar, equippedAccessories: newAccessories },
     });
@@ -1472,7 +1472,7 @@ export default function MiraePlusStatement() {
                 Your story, so far
               </h1>
               <p className="text-sm text-slate-600 mb-4">
-                This isn't something you write once. It grows as you explore.
+                This isn&apos;t something you write once. It grows as you explore.
               </p>
             </div>
             <AvatarPanel

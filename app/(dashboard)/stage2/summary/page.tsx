@@ -2,10 +2,8 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { useUserStore } from '@/lib/stores/userStore';
 import { useI18n } from '@/lib/i18n';
-import { storage } from '@/lib/utils/storage';
-import { getUserProfile } from '@/lib/userProfile';
+import { getUserProfile, updateUserProfile } from '@/lib/userProfile';
 import coursesData from '@/lib/data/courses-descriptions.json';
 import rolesData from '@/lib/data/roles.json';
 
@@ -146,7 +144,6 @@ const roleSignals: Record<string, { keywords: string[]; label: string }> = {
 
 export default function Stage2SummaryPage() {
   const router = useRouter();
-  const { userId } = useUserStore();
   const { language } = useI18n();
   const [selection, setSelection] = useState<SavedSelection>(null);
   const [strengths, setStrengths] = useState<string[]>([]);
@@ -154,16 +151,9 @@ export default function Stage2SummaryPage() {
   const [docKeywords, setDocKeywords] = useState<string[]>([]);
   const [showConfirm, setShowConfirm] = useState(false);
 
-  const currentSelectionKey = useMemo(
-    () => `stage2Selection_${userId ?? 'guest'}`,
-    [userId]
-  );
-
   useEffect(() => {
-    const saved = storage.get<SavedSelection>(currentSelectionKey, null);
-    setSelection(saved);
-
     const profile = getUserProfile();
+    setSelection(profile.stage2Selection ?? null);
     const rawStrengths = (profile as unknown as { strengths?: string[] }).strengths;
     const strengthTags = Array.isArray(rawStrengths)
       ? rawStrengths
@@ -171,7 +161,7 @@ export default function Stage2SummaryPage() {
     setStrengths(strengthTags);
     setLikedRoles(profile?.likedRoles ?? []);
     setDocKeywords(profile?.onboarding?.docKeywords ?? []);
-  }, [currentSelectionKey]);
+  }, []);
 
   const courseLookup = useMemo(() => {
     const lookup = new Map<string, CourseLookupItem>();
@@ -273,7 +263,7 @@ export default function Stage2SummaryPage() {
   const confirmConfirm = language === 'ko' ? 'Yes, clear' : 'Yes, clear';
 
   const handleRedo = () => {
-    storage.remove(currentSelectionKey);
+    updateUserProfile({ stage2Selection: undefined });
     setSelection(null);
     router.push('/stage2');
   };

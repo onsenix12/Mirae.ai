@@ -312,14 +312,14 @@ goes much deeper than learning something just because you have to.
 
 How confident do you feel about this choice? (Think of it as 1-10 in your mind)`,
 
-  fear: (ctx: UserContext) => `Thanks for being honest. Many students feel the same way. 🤍
+  fear: () => `Thanks for being honest. Many students feel the same way. 🤍
 
 But let me ask you one question:
 If there was no worry or anxiety, would you still want to learn these skills?
 
 Or would you have chosen something completely different?`,
 
-  both: (ctx: UserContext) => `It's natural to have both! 💜
+  both: () => `It's natural to have both! 💜
 
 You're interested, and you also feel the need.
 So what if you think about it this way:
@@ -336,4 +336,3 @@ export const GENERIC_FALLBACKS_EN = [
   "I see. Why does that feel important to you?",
   "That's a good perspective. Want to think about it from another angle?",
 ];
-

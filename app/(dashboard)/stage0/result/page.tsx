@@ -4,8 +4,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useI18n } from '@/lib/i18n';
 import { useUserStore } from '@/lib/stores/userStore';
-import { storage } from '@/lib/utils/storage';
-import { getUserProfile } from '@/lib/userProfile';
+import { getUserProfile, updateUserProfile } from '@/lib/userProfile';
 import questionnaire from '@/lib/data/questionnaire.json';
 import rolesData from '@/lib/data/roles.json';
 
@@ -325,15 +324,13 @@ export default function Stage0ResultPage() {
   };
 
   const handleFinish = () => {
-    storage.set('userProfile', {
-      ...profile,
-      userId,
+    updateUserProfile({
+      id: userId ?? 'demo-user',
       questionnaireAnswers: answers,
       stage0Summary: {
         tagCounts,
         recommendedRoles: recommendedRoles.map((entry) => entry.role.id),
       },
-      completedAt: new Date().toISOString(),
     });
 
     completeStage(0);

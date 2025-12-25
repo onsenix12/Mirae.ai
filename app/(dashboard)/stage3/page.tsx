@@ -47,7 +47,6 @@ export default function SkillTranslationPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [currentTurn, setCurrentTurn] = useState(0);
   const [currentPhase, setCurrentPhase] = useState<ConversationPhase>('recap');
-  const [source, setSource] = useState<'openai' | 'fallback' | 'mock'>('openai');
   const [useMockMode, setUseMockMode] = useState(false);
   
   const t = translations[language];
@@ -155,7 +154,6 @@ export default function SkillTranslationPage() {
         setMessages([assistantMessage]);
         setCurrentTurn(data.currentTurn || 1);
         setCurrentPhase(data.phase || 'recap');
-        setSource(data.source);
       } catch (error) {
         console.error('💥 Chat initialization error:', error);
         const emergencyMessage: ChatMessage = {
@@ -246,7 +244,6 @@ export default function SkillTranslationPage() {
       setMessages(prev => [...prev, assistantMessage]);
       setCurrentTurn(data.currentTurn || currentTurn + 1);
       setCurrentPhase(data.phase || currentPhase);
-      setSource(data.source);
       
       // Log conversation type for debugging
       if (data.conversationType) {

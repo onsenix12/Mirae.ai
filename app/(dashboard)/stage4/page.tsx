@@ -4,8 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useUserStore } from '@/lib/stores/userStore';
 import { useI18n } from '@/lib/i18n';
-import { storage } from '@/lib/utils/storage';
-import { getUserProfile } from '@/lib/userProfile';
+import { getUserProfile, updateUserProfile } from '@/lib/userProfile';
 import rolesData from '@/lib/data/roles.json';
 
 type Candidate = {
@@ -365,7 +364,7 @@ export default function Stage4Page() {
   const [insightStrengths, setInsightStrengths] = useState<string[]>([]);
   const [insightRoles, setInsightRoles] = useState<string[]>([]);
   const router = useRouter();
-  const { completeStage, userId } = useUserStore();
+  const { completeStage } = useUserStore();
   const { t, language } = useI18n();
 
   const startMajorTournament = () => {
@@ -401,11 +400,7 @@ export default function Stage4Page() {
 
   useEffect(() => {
     const profile = getUserProfile();
-    const selectionKey = `stage2Selection_${userId ?? 'guest'}`;
-    const selection = storage.get<{
-      anchor?: string[];
-      signal?: string[];
-    }>(selectionKey);
+    const selection = profile.stage2Selection;
 
     const strengthMap: Record<string, string[]> = {
       analytical: ['analysis', 'data', 'logic', 'economics', 'statistics'],
@@ -510,7 +505,7 @@ export default function Stage4Page() {
       .map((entry) => entry.candidate);
 
     setPersonalizedMajors(sorted);
-  }, [language, t, userId]);
+  }, [language, t]);
 
   const handlePick = (winner: Candidate) => {
     setHistory((prev) => [
@@ -586,12 +581,7 @@ export default function Stage4Page() {
       completedAt: new Date().toISOString(),
     };
 
-    const profile = storage.get<Record<string, unknown>>('userProfile', {}) ?? {};
-    storage.set('userProfile', {
-      ...profile,
-      stage4Result: result,
-    });
-    storage.set(`stage4Result_${userId ?? 'guest'}`, result);
+    updateUserProfile({ stage4Result: result });
 
     completeStage(4);
     const dashboardPath = `${BASE_PATH}/dashboard`;

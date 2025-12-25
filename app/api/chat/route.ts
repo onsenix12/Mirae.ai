@@ -4,7 +4,7 @@ import { generateFollowUp } from '@/lib/openai';
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { message, history } = body;
+    const { message } = body;
 
     // Input validation
     if (!message || typeof message !== 'string' || message.trim().length === 0) {
@@ -48,4 +48,3 @@ export async function POST(req: NextRequest) {
     );
   }
 }
-

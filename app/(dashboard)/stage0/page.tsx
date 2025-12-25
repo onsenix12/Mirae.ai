@@ -3,10 +3,9 @@
 import { useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useUserStore } from '@/lib/stores/userStore';
-import { storage } from '@/lib/utils/storage';
 import { useI18n } from '@/lib/i18n';
 import questionnaire from '@/lib/data/questionnaire.json';
-import { getUserProfile } from '@/lib/userProfile';
+import { updateUserProfile } from '@/lib/userProfile';
 
 type Language = 'ko' | 'en';
 type QuestionnaireOption = {
@@ -73,12 +72,9 @@ export default function Stage0Page() {
     const qId = question.id;
     const updatedAnswers = { ...answers, [qId]: [optionId] };
     setAnswers(updatedAnswers);
-    const profile = getUserProfile();
-    storage.set('userProfile', {
-      ...profile,
-      userId,
+    updateUserProfile({
+      id: userId ?? 'demo-user',
       questionnaireAnswers: updatedAnswers,
-      updatedAt: new Date().toISOString(),
     });
 
     if (currentQ < questions.length - 1) {

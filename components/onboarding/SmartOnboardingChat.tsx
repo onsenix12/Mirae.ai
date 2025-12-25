@@ -19,7 +19,6 @@ interface SmartOnboardingChatProps {
   onKeywordsExtracted?: (keywords: string[]) => void;
   onInputChange: (value: string) => void;
   inputValue: string;
-  onSend: () => void;
 }
 
 export const SmartOnboardingChat: React.FC<SmartOnboardingChatProps> = ({
@@ -28,7 +27,6 @@ export const SmartOnboardingChat: React.FC<SmartOnboardingChatProps> = ({
   onKeywordsExtracted,
   onInputChange,
   inputValue,
-  onSend,
 }) => {
   const { t, language } = useI18n();
   const [messages, setMessages] = useState<Message[]>([

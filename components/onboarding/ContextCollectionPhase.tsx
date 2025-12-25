@@ -110,7 +110,7 @@ export const ContextCollectionPhase: React.FC<ContextCollectionPhaseProps> = ({
               <p className="text-xs font-semibold text-[#9BCBFF] mb-1">Mirae</p>
               <p className="text-sm sm:text-base leading-relaxed">
                 Got it—Year {data.yearLevel === 'year1' ? '1' : data.yearLevel === 'year2' ? '2' : '3'}. 
-                That's when a lot starts to feel real, huh?
+                That&apos;s when a lot starts to feel real, huh?
                 <br/><br/>
                 Have you already picked your courses for this year, 
                 or are you still thinking about it?

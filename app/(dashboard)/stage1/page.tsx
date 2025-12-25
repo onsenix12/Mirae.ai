@@ -5,8 +5,7 @@ import type { PointerEvent as ReactPointerEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import { useUserStore } from '@/lib/stores/userStore';
 import { useI18n } from '@/lib/i18n';
-import { storage } from '@/lib/utils/storage';
-import { getUserProfile } from '@/lib/userProfile';
+import { getUserProfile, updateUserProfile } from '@/lib/userProfile';
 import rolesData from '@/lib/data/roles.json';
 
 type RoleLocale = { en: string; ko: string };
@@ -193,9 +192,6 @@ export default function Stage1Page() {
     language === 'ko'
       ? '\uC774 5\uAC1C \uC5ED\uD560 \uCE74\uB4DC\uB294 Stage 0 \uC9C4\uB2E8\uACFC \uC628\uBCF4\uB529 \uB3C4\uD0AC\uC744 \uBC14\uD0D5\uC73C\uB85C \uCD94\uCC9C\uB41C \uACB0\uACFC\uC5D0\uC694.'
       : 'These 5 role cards are suggested based on your Stage 0 answers and onboarding documents.';
-  const hintLeft = language === 'ko' ? '왼쪽: 패스' : 'Swipe left to pass';
-  const hintRight = language === 'ko' ? '오른쪽: 좋아요' : 'Swipe right to like';
-  const hintFlip = language === 'ko' ? '가운데: 뒤집기' : 'Flip for details';
   const hintTap =
     language === 'ko'
       ? '버튼을 누르거나 카드에서 스와이프해 보세요. 더 알고 싶다면 뒤집기.'
@@ -238,29 +234,25 @@ export default function Stage1Page() {
       cardTapCount: 0,
     };
 
-    const persistLikedRoles = () => {
-      const swipes = storage.get<typeof swipeData[]>('roleSwipes', []) || [];
-      const liked = swipes
+    const persistSwipe = () => {
+      const profile = getUserProfile();
+      const nextSwipes = [...(profile.roleSwipes ?? []), swipeData];
+      const liked = nextSwipes
         .filter((swipe) => swipe.swipeDirection === 'right')
         .map((swipe) => swipe.roleId);
-      const profile = getUserProfile();
-      storage.set('userProfile', {
-        ...profile,
+      updateUserProfile({
+        roleSwipes: nextSwipes,
         likedRoles: Array.from(new Set(liked)),
       });
     };
 
     const finalizeSwipe = () => {
-      // Store swipes in localStorage
-      const existingSwipes = storage.get<typeof swipeData[]>('roleSwipes', []) || [];
-      existingSwipes.push(swipeData);
-      storage.set('roleSwipes', existingSwipes);
+      persistSwipe();
 
       if (currentIndex < rolesToShow.length - 1) {
         setCurrentIndex(currentIndex + 1);
       } else {
         completeStage(1);
-        persistLikedRoles();
         router.push('/stage1/summary');
       }
 

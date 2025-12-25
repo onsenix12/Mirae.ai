@@ -4,7 +4,6 @@ import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useUserStore } from '@/lib/stores/userStore';
 import { useI18n } from '@/lib/i18n';
-import { storage } from '@/lib/utils/storage';
 import coursesData from '@/lib/data/courses-descriptions.json';
 import { getUserProfile, updateUserProfile } from '@/lib/userProfile';
 
@@ -32,11 +31,6 @@ interface CourseLookupItem extends CourseLabel {
   subjectEn: string;
   subjectKr: string;
   category: CourseCategory;
-}
-
-interface RoleSwipe {
-  roleId: string;
-  swipeDirection: 'left' | 'right' | 'up';
 }
 
 type SelectionSlot = {
@@ -196,7 +190,7 @@ export default function Stage2Page() {
   const [showSuggestions, setShowSuggestions] = useState(true);
   const [savedSlots, setSavedSlots] = useState<SelectionSlot[]>([null, null, null]);
   const router = useRouter();
-  const { completeStage, userId, progress } = useUserStore();
+  const { completeStage, progress } = useUserStore();
   const { language, t } = useI18n();
   const selectedKeys = useMemo(() => new Set([...anchor, ...signal]), [anchor, signal]);
   const normalizedSearch = useMemo(() => searchTerm.trim().toLowerCase(), [searchTerm]);
@@ -247,24 +241,12 @@ export default function Stage2Page() {
     return lookup;
   }, []);
 
-  const slotsStorageKey = useMemo(
-    () => `courseSelections_${userId ?? 'guest'}`,
-    [userId]
-  );
-  const currentSelectionKey = useMemo(
-    () => `stage2Selection_${userId ?? 'guest'}`,
-    [userId]
-  );
-
   useEffect(() => {
-    const stored = storage.get<SelectionSlot[]>(slotsStorageKey, [null, null, null]) ?? [
-      null,
-      null,
-      null,
-    ];
+    const profile = getUserProfile();
+    const stored = profile.stage2Slots ?? [null, null, null];
     const normalized = Array.from({ length: 3 }, (_, index) => stored[index] ?? null);
     setSavedSlots(normalized);
-  }, [slotsStorageKey]);
+  }, []);
 
   useEffect(() => {
     const profile = getUserProfile();
@@ -325,23 +307,16 @@ export default function Stage2Page() {
     }
 
     const storedLiked = profile?.likedRoles ?? [];
-    if (storedLiked.length > 0) {
-      setLikedRoles(Array.from(new Set(storedLiked)));
-      return;
-    }
-
-    const swipes = storage.get<RoleSwipe[]>('roleSwipes', []) ?? [];
-    const liked = swipes
-      .filter((swipe) => swipe.swipeDirection === 'right')
-      .map((swipe) => swipe.roleId);
+    const swipes = profile?.roleSwipes ?? [];
+    const liked =
+      storedLiked.length > 0
+        ? storedLiked
+        : swipes.filter((swipe) => swipe.swipeDirection === 'right').map((swipe) => swipe.roleId);
     const uniqueLiked = Array.from(new Set(liked));
     setLikedRoles(uniqueLiked);
 
-    if (uniqueLiked.length > 0) {
-      storage.set('userProfile', {
-        ...(profile ?? {}),
-        likedRoles: uniqueLiked,
-      });
+    if (uniqueLiked.length > 0 && storedLiked.length === 0) {
+      updateUserProfile({ likedRoles: uniqueLiked });
     }
   }, []);
 
@@ -512,19 +487,23 @@ export default function Stage2Page() {
   };
 
   const handleSave = () => {
-    // Save to database
-    storage.set(currentSelectionKey, {
+    const stage2Selection = {
       anchor,
       signal,
       savedAt: new Date().toISOString(),
-    });
+    };
     const selectedCourseLabels = Array.from(new Set([...anchor, ...signal]))
       .map((key) => courseLookup.get(key))
       .filter((course): course is CourseLookupItem => !!course)
       .map((course) => (language === 'ko' ? course.kr : course.en));
+    const profileUpdates: Parameters<typeof updateUserProfile>[0] = {
+      stage2Selection,
+      selectionStatus: 'completed',
+    };
     if (selectedCourseLabels.length > 0) {
-      updateUserProfile({ courses: selectedCourseLabels, selectionStatus: 'completed' });
+      profileUpdates.courses = selectedCourseLabels;
     }
+    updateUserProfile(profileUpdates);
     completeStage(2);
     router.push('/stage2/summary');
   };
@@ -537,7 +516,7 @@ export default function Stage2Page() {
         signal,
         savedAt: new Date().toISOString(),
       };
-      storage.set(slotsStorageKey, next);
+      updateUserProfile({ stage2Slots: next });
       return next;
     });
   };
@@ -553,7 +532,7 @@ export default function Stage2Page() {
     setSavedSlots((prev) => {
       const next = [...prev];
       next[index] = null;
-      storage.set(slotsStorageKey, next);
+      updateUserProfile({ stage2Slots: next });
       return next;
     });
   };

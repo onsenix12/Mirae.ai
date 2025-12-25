@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Lock, Check, X } from 'lucide-react';
 import {
@@ -35,7 +35,6 @@ export const AccessoryPanel: React.FC<AccessoryPanelProps> = ({
   const [internalIsOpen, setInternalIsOpen] = useState(false);
 
   const isOpen = externalIsOpen !== undefined ? externalIsOpen : internalIsOpen;
-  const setIsOpen = externalOnClose ? (value: boolean) => !value && externalOnClose() : setInternalIsOpen;
 
   const tabs: { type: AccessoryType; label: string; emoji: string }[] = [
     { type: 'hat', label: 'Hats', emoji: '👑' },

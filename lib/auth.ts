@@ -96,7 +96,10 @@ export function signIn(email: string, password: string): { user: User } | { erro
 }
 
 // Sign up (disabled - using hardcoded users only)
-export function signUp(email: string, password: string, name: string): { error: string } {
+export function signUp(_email: string, _password: string, _name: string): { error: string } {
+  void _email;
+  void _password;
+  void _name;
   return { error: 'signupDisabledError' };
 }
 

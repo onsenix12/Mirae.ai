@@ -304,40 +304,21 @@ export default function JourneyReportView({ logs, cards, studentName }: JourneyR
   const rationale = useMemo(() => buildDirectionRationale(logs), [logs]);
   const executive = useMemo(() => buildExecutiveReflection(logs), [logs]);
 
-  // Load equipped accessories from localStorage
+  // Load equipped accessories from profile
   const [equippedAccessories, setEquippedAccessories] = useState<EquippedAccessories>({});
   
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      const stored = localStorage.getItem('miraePlus_accessories');
       const profileState = getUserProfile();
-      if (stored) {
-        try {
-          const parsed = JSON.parse(stored);
-          setEquippedAccessories(parsed);
-          updateUserProfile({
-            avatar: { ...profileState.avatar, equippedAccessories: parsed },
-          });
-        } catch (e) {
-          console.error('Failed to parse accessories:', e);
-        }
-      } else if (profileState.avatar?.equippedAccessories) {
+      if (profileState.avatar?.equippedAccessories) {
         setEquippedAccessories(profileState.avatar.equippedAccessories);
       }
       
       // Listen for accessory updates
       const handleAccessoryUpdate = () => {
-        const updated = localStorage.getItem('miraePlus_accessories');
-        if (updated) {
-          try {
-            const parsed = JSON.parse(updated);
-            setEquippedAccessories(parsed);
-            updateUserProfile({
-              avatar: { ...getUserProfile().avatar, equippedAccessories: parsed },
-            });
-          } catch (e) {
-            console.error('Failed to parse updated accessories:', e);
-          }
+        const latestProfile = getUserProfile();
+        if (latestProfile.avatar?.equippedAccessories) {
+          setEquippedAccessories(latestProfile.avatar.equippedAccessories);
         }
       };
       
@@ -798,7 +779,7 @@ export default function JourneyReportView({ logs, cards, studentName }: JourneyR
                   {reflections.map((log) => (
                     <li key={log.id}>
                       <span className="text-slate-500">{log.date}: </span>
-                      "{log.shortReflection}"
+                      &quot;{log.shortReflection}&quot;
                     </li>
                   ))}
                 </ul>
@@ -916,7 +897,7 @@ export default function JourneyReportView({ logs, cards, studentName }: JourneyR
                 {reflections.length > 0 ? (
                   reflections.map((log) => (
                     <li key={log.id}>
-                      {log.date}: "{log.shortReflection}"
+                      {log.date}: &quot;{log.shortReflection}&quot;
                     </li>
                   ))
                 ) : (

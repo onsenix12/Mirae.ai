@@ -13,6 +13,19 @@ import { UserContext, detectConversationType, ConversationType, ConversationPhas
 
 let openai: OpenAI | null = null;
 
+type ChatMessageInput = {
+  role: string;
+  content: string;
+};
+
+type ChatCompletionResponse = {
+  choices: { message?: { content?: string } }[];
+  usage?: unknown;
+};
+
+const getErrorMessage = (error: unknown) =>
+  error instanceof Error ? error.message : String(error);
+
 function getOpenAIClient(): OpenAI | null {
   if (!process.env.OPENAI_API_KEY) {
     console.warn('⚠️ OPENAI_API_KEY not configured, using fallback mode');
@@ -459,12 +472,12 @@ export async function POST(req: NextRequest) {
         // BUILD ADAPTIVE SYSTEM PROMPT (with language)
         const systemPrompt = buildAdaptiveSystemPrompt(userContext, conversationType, lang);
         
-        const completion = await Promise.race([
+        const completion = (await Promise.race([
           client.chat.completions.create({
             model: 'gpt-4-turbo-preview',
             messages: [
               { role: 'system', content: systemPrompt },
-              ...messages.map((msg: any) => ({
+              ...messages.map((msg: ChatMessageInput) => ({
                 role: msg.role,
                 content: msg.content,
               })),
@@ -477,11 +490,11 @@ export async function POST(req: NextRequest) {
           new Promise((_, reject) =>
             setTimeout(() => reject(new Error('Timeout')), 5000)
           ),
-        ]);
+        ])) as ChatCompletionResponse;
         
         clearTimeout(timeoutId);
         
-        const aiMessage = (completion as any).choices[0].message.content;
+        const aiMessage = completion.choices[0]?.message?.content ?? '';
         
         console.log('✅ OpenAI API success');
         
@@ -502,11 +515,11 @@ export async function POST(req: NextRequest) {
           conversationType,
           currentTurn: newTurn,
           phase: calculatedPhase,
-          usage: (completion as any).usage,
+          usage: completion.usage,
         });
         
-      } catch (apiError: any) {
-        console.warn('⚠️ OpenAI API failed:', apiError.message);
+      } catch (apiError: unknown) {
+        console.warn('⚠️ OpenAI API failed:', getErrorMessage(apiError));
       }
     }
     
@@ -538,7 +551,7 @@ export async function POST(req: NextRequest) {
         : '사전 작성된 응답 사용 중 (OpenAI 사용 불가)',
     });
     
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('❌ Complete API failure:', error);
     
     const errorMessage = lang === 'en'
@@ -548,7 +561,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({
       message: errorMessage,
       source: 'emergency',
-      error: error.message,
+      error: getErrorMessage(error),
     });
   }
 }

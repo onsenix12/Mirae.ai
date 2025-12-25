@@ -1,7 +1,7 @@
 import React, { forwardRef } from 'react';
 import Image from 'next/image';
 import type { AccessoryId, ProgressState } from './avatarTypes';
-import { getAccessoryById, isAccessoryUnlocked, getAccessoriesByLayer } from './avatarRegistry';
+import { isAccessoryUnlocked, getAccessoriesByLayer } from './avatarRegistry';
 
 type AvatarComposerProps = {
   baseSrc: string; // "/asset/Mirae_Icon1.png"

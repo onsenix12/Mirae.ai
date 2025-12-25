@@ -23,7 +23,7 @@ export const HAPPY_PATH_YEAR1_PRE: ConversationTurn[] = [
     turnNumber: 2,
     phase: 'exploration',
     trigger: ['디자인', '데이터', '과목'],
-    miraeMessage: (ctx: UserContext) => `그 과목들에 대해 생각해보고 있군요!
+    miraeMessage: () => `그 과목들에 대해 생각해보고 있군요!
 
 그 중에서 가장 궁금한 게 뭐예요? 어떤 이유로 그 과목이 끌리는 것 같아요?`,
     expectedUserPatterns: ['흥미', '재미', '필요', '도움', '궁금'],
@@ -33,7 +33,7 @@ export const HAPPY_PATH_YEAR1_PRE: ConversationTurn[] = [
     turnNumber: 3,
     phase: 'possibility_mapping',
     trigger: ['흥미', '궁금', '배우고 싶'],
-    miraeMessage: (ctx: UserContext) => `좋아요! 그 과목을 상상해볼까요?
+    miraeMessage: () => `좋아요! 그 과목을 상상해볼까요?
 
 만약 그 수업을 듣는다면, 어떤 걸 배우게 될 것 같아요? 
 어떤 역량을 키울 수 있을 것 같은가요?`,
@@ -44,7 +44,7 @@ export const HAPPY_PATH_YEAR1_PRE: ConversationTurn[] = [
     turnNumber: 4,
     phase: 'fit-fear',
     trigger: ['문제', '창의', '분석'],
-    miraeMessage: (ctx: UserContext) => `그런 역량을 키우고 싶다는 거네요!
+    miraeMessage: () => `그런 역량을 키우고 싶다는 거네요!
 
 솔직하게 물어볼게요:
 이 과목이 궁금하고 배우고 싶어서예요, 아니면 필요할 것 같아서예요?
@@ -57,7 +57,7 @@ export const HAPPY_PATH_YEAR1_PRE: ConversationTurn[] = [
     turnNumber: 5,
     phase: 'closing',
     trigger: ['흥미', '필요'],
-    miraeMessage: (ctx: UserContext) => `그 마음을 알아주셔서 좋네요. 
+    miraeMessage: () => `그 마음을 알아주셔서 좋네요. 
 
 기억해주세요:
 - 과목 선택은 "실험"이에요. 완벽한 정답은 없어요
@@ -250,8 +250,6 @@ ${ctx.name}님은 이 둘이 서로를 강화한다는 걸 본 거예요. ⭐`;
     phase: 'patterns',
     trigger: ['표현', '시각', '아름'],
     miraeMessage: (ctx: UserContext) => {
-      const courses = ctx.courses.join(', ');
-      
       return `시각적 표현과 심미성! 
 
 이 세 과목을 다 합치면 어떤 그림이 그려져요?
@@ -381,7 +379,7 @@ ${ctx.yearLevel}학년이 되었네요.
     turnNumber: 2,
     phase: 'expectation_vs_reality',
     trigger: ['별로', '어려웠', '달랐'],
-    miraeMessage: (ctx: UserContext) => `그랬구나. 생각했던 것과 달랐다는 거네요.
+    miraeMessage: () => `그랬구나. 생각했던 것과 달랐다는 거네요.
 
 구체적으로 어떤 부분이 기대와 달랐어요? 
 무엇을 기대했고, 실제로는 어땠나요?`,
@@ -392,7 +390,7 @@ ${ctx.yearLevel}학년이 되었네요.
     turnNumber: 3,
     phase: 'expectation_vs_reality',
     trigger: ['생각보다', '예상', '기대'],
-    miraeMessage: (ctx: UserContext) => `그 경험을 통해 자신에 대해 뭘 알게 된 것 같아요?
+    miraeMessage: () => `그 경험을 통해 자신에 대해 뭘 알게 된 것 같아요?
 
 예를 들어, "나는 이런 걸 좋아하는구나" 또는 "이런 건 잘 안 맞는구나" 같은 거요.`,
     expectedUserPatterns: ['좋아하는', '맞지 않는', '힘든', '재미없는', '흥미'],
@@ -402,7 +400,7 @@ ${ctx.yearLevel}학년이 되었네요.
     turnNumber: 4,
     phase: 'expectation_vs_reality',
     trigger: ['좋아하는', '맞지 않는'],
-    miraeMessage: (ctx: UserContext) => `자신을 더 알아가는 과정이네요. 그게 정말 중요해요.
+    miraeMessage: () => `자신을 더 알아가는 과정이네요. 그게 정말 중요해요.
 
 지금 다시 선택할 수 있다면, 어떤 선택을 할 것 같아요?
 같은 과목을 선택할까요, 아니면 다른 방향을 탐색하고 싶나요?`,
@@ -508,14 +506,14 @@ export const FIT_FEAR_RESPONSES = {
 그리고 ${ctx.name}님이 좋아하는 걸 하면서 배우는 건 
 억지로 필요해서 배우는 것보다 훨씬 깊이 배우게 돼요.`,
 
-  fear: (ctx: UserContext) => `솔직하게 말해줘서 고마워요. 많은 학생들이 비슷한 마음이에요. 🤍
+  fear: () => `솔직하게 말해줘서 고마워요. 많은 학생들이 비슷한 마음이에요. 🤍
 
 그런데 질문 하나만 해볼게요:
 만약 걱정이나 불안이 없다면, 이 역량들을 배우고 싶으세요?
 
 아니면 전혀 다른 걸 선택했을 것 같아요?`,
 
-  both: (ctx: UserContext) => `둘 다 있는 게 자연스러워요! 💜
+  both: () => `둘 다 있는 게 자연스러워요! 💜
 
 흥미도 있고, 필요성도 느끼는 거죠.
 그럼 이렇게 생각해보면 어떨까요:

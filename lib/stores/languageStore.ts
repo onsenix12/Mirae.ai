@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { persist, createJSONStorage } from 'zustand/middleware';
+import { persist, createJSONStorage, type StateStorage } from 'zustand/middleware';
 
 type Language = 'ko' | 'en';
 
@@ -17,16 +17,17 @@ export const useLanguageStore = create<LanguageStore>()(
       toggleLanguage: () =>
         set((state) => ({ language: state.language === 'ko' ? 'en' : 'ko' })),
     }),
-    { 
+    {
       name: 'scope-language',
       storage: createJSONStorage(() => {
         if (typeof window === 'undefined') {
           // Return a no-op storage for SSR
-          return {
+          const noopStorage: StateStorage = {
             getItem: () => null,
             setItem: () => {},
             removeItem: () => {},
-          } as any;
+          };
+          return noopStorage;
         }
         return localStorage;
       }),

@@ -1,4 +1,4 @@
-import type { AccessoryAsset, AccessoryId, CardId, ProgressState } from './avatarTypes';
+import type { AccessoryAsset, AccessoryId, ProgressState } from './avatarTypes';
 
 export const ACCESSORIES: AccessoryAsset[] = [
   {

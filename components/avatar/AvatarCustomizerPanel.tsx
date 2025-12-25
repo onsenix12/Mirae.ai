@@ -5,10 +5,8 @@ import { Lock, Download, RotateCcw, Sparkles } from 'lucide-react';
 import { toPng } from 'html-to-image';
 import { AvatarComposer } from './AvatarComposer';
 import type { AccessoryId, ProgressState, AvatarConfig } from './avatarTypes';
-import { ACCESSORIES, getUnlockedAccessories, isAccessoryUnlocked, getAutoStylePreset } from './avatarRegistry';
+import { ACCESSORIES, getUnlockedAccessories, getAutoStylePreset } from './avatarRegistry';
 import { getUserProfile, updateUserProfile } from '@/lib/userProfile';
-
-const STORAGE_KEY = 'mirae_avatar_config_v1';
 
 interface AvatarCustomizerPanelProps {
   baseSrc: string;
@@ -25,7 +23,7 @@ export const AvatarCustomizerPanel: React.FC<AvatarCustomizerPanelProps> = ({
   const [isExporting, setIsExporting] = useState(false);
   const avatarRef = useRef<HTMLDivElement>(null);
 
-  // Load from profile or localStorage on mount
+  // Load from profile on mount
   useEffect(() => {
     const profile = getUserProfile();
     const profileSelection = profile.avatar?.customizerSelectedAccessories ?? null;
@@ -33,31 +31,12 @@ export const AvatarCustomizerPanel: React.FC<AvatarCustomizerPanelProps> = ({
       const unlocked = getUnlockedAccessories(progress);
       const validSelection = profileSelection.filter((id) => unlocked.has(id));
       setSelectedAccessories(validSelection);
-      return;
-    }
-
-    const saved = localStorage.getItem(STORAGE_KEY);
-    if (!saved) return;
-    try {
-      const config: AvatarConfig = JSON.parse(saved);
-      const unlocked = getUnlockedAccessories(progress);
-      const validSelection = config.selectedAccessories.filter((id) => unlocked.has(id));
-      setSelectedAccessories(validSelection);
-      updateUserProfile({
-        avatar: {
-          ...profile.avatar,
-          customizerSelectedAccessories: validSelection,
-        },
-      });
-    } catch (e) {
-      console.error('Failed to load avatar config:', e);
     }
   }, [progress]);
 
-  // Save to localStorage whenever selection changes
+  // Save to profile whenever selection changes
   useEffect(() => {
     const config: AvatarConfig = { selectedAccessories };
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(config));
     onConfigChange?.(config);
     updateUserProfile({
       avatar: {

@@ -25,7 +25,7 @@ export const WelcomePhase: React.FC<WelcomePhaseProps> = ({
               not parents, not friends. Just you and me.
             </p>
             <p>
-              Before we start, I'd love to know a little about where you're at 
+              Before we start, I&apos;d love to know a little about where you&apos;re at 
               right now. Cool if I ask a few quick questions?
             </p>
           </div>
@@ -38,7 +38,7 @@ export const WelcomePhase: React.FC<WelcomePhaseProps> = ({
           onClick={onContinue}
           className="rounded-full px-4 py-2 text-sm bg-gradient-to-r from-[#E5E0FF] to-[#F4E4FF] text-slate-800 font-medium shadow-md hover:-translate-y-0.5 hover:from-[#D4CEFF] hover:to-[#E8D4FF] transition-all"
         >
-          Sure, let's go
+          Sure, let&apos;s go
         </button>
         <button
           onClick={() => setShowDetails(true)}
@@ -57,8 +57,8 @@ export const WelcomePhase: React.FC<WelcomePhaseProps> = ({
               <div className="text-sm sm:text-base leading-relaxed space-y-2">
                 <p>Nothing scary! Just things like:</p>
                 <ul className="list-none space-y-1 ml-2">
-                  <li>• What year you're in</li>
-                  <li>• What you're thinking about lately</li>
+                  <li>• What year you&apos;re in</li>
+                  <li>• What you&apos;re thinking about lately</li>
                   <li>• If you have any test results or notes you want to share (totally optional!)</li>
                 </ul>
                 <p className="mt-3">
@@ -79,7 +79,7 @@ export const WelcomePhase: React.FC<WelcomePhaseProps> = ({
               onClick={onSkipToChat}
               className="rounded-full px-4 py-2 text-sm bg-transparent border-2 border-gray-300 text-gray-600 font-medium shadow-md hover:border-gray-400 transition-all"
             >
-              I'll just talk instead
+              I&apos;ll just talk instead
             </button>
           </div>
         </>
@@ -87,4 +87,3 @@ export const WelcomePhase: React.FC<WelcomePhaseProps> = ({
     </>
   );
 };
-

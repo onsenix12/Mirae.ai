@@ -119,7 +119,7 @@ export async function POST(req: NextRequest) {
         try {
           const context = JSON.parse(call.function.arguments || '{}');
           Object.assign(mergedContext, context);
-        } catch (error) {
+        } catch {
           // Ignore malformed tool arguments
         }
       } else if (call.function?.name === 'extract_keywords') {
@@ -128,7 +128,7 @@ export async function POST(req: NextRequest) {
           if (Array.isArray(data.keywords)) {
             extractedKeywords.push(...data.keywords);
           }
-        } catch (error) {
+        } catch {
           // Ignore malformed tool arguments
         }
       }

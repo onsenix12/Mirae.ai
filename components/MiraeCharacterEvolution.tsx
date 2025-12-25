@@ -285,7 +285,7 @@ export const ACCESSORIES: Accessory[] = [
     description: 'Shine bright like a star',
     unlockCondition: { type: 'cardCount', value: 1 },
     component: <StarCrownSVG />,
-    renderComponent: (size) => <StarCrownSVG key="star-crown-render" />,
+    renderComponent: () => <StarCrownSVG key="star-crown-render" />,
   },
   {
     id: 'flower-crown',
@@ -294,7 +294,7 @@ export const ACCESSORIES: Accessory[] = [
     description: 'Bloom with creativity',
     unlockCondition: { type: 'cardCount', value: 3 },
     component: <FlowerCrownSVG />,
-    renderComponent: (size) => <FlowerCrownSVG key="flower-crown-render" />,
+    renderComponent: () => <FlowerCrownSVG key="flower-crown-render" />,
   },
   {
     id: 'glow-halo',
@@ -303,7 +303,7 @@ export const ACCESSORIES: Accessory[] = [
     description: 'Radiate wisdom',
     unlockCondition: { type: 'cardCount', value: 5 },
     component: <GlowHaloSVG />,
-    renderComponent: (size) => <GlowHaloSVG key="glow-halo-render" />,
+    renderComponent: () => <GlowHaloSVG key="glow-halo-render" />,
   },
   // Capes
   {
@@ -313,7 +313,7 @@ export const ACCESSORIES: Accessory[] = [
     description: 'Ready for action',
     unlockCondition: { type: 'cardCount', value: 2 },
     component: <HeroCapeSVG />,
-    renderComponent: (size) => <HeroCapeSVG key="hero-cape-render" />,
+    renderComponent: () => <HeroCapeSVG key="hero-cape-render" />,
   },
   {
     id: 'magic-cape',
@@ -322,7 +322,7 @@ export const ACCESSORIES: Accessory[] = [
     description: 'Flows with possibility',
     unlockCondition: { type: 'cardCount', value: 4 },
     component: <MagicCapeSVG />,
-    renderComponent: (size) => <MagicCapeSVG key="magic-cape-render" />,
+    renderComponent: () => <MagicCapeSVG key="magic-cape-render" />,
   },
   // Accessories
   {
@@ -332,7 +332,7 @@ export const ACCESSORIES: Accessory[] = [
     description: 'Always learning',
     unlockCondition: { type: 'stage', value: 'O' },
     component: <BookAccessorySVG />,
-    renderComponent: (size) => <BookAccessorySVG key="book-render" />,
+    renderComponent: () => <BookAccessorySVG key="book-render" />,
   },
   {
     id: 'butterfly',
@@ -341,7 +341,7 @@ export const ACCESSORIES: Accessory[] = [
     description: 'Transformation companion',
     unlockCondition: { type: 'stage', value: 'E' },
     component: <ButterflyAccessorySVG />,
-    renderComponent: (size) => <ButterflyAccessorySVG key="butterfly-render" />,
+    renderComponent: () => <ButterflyAccessorySVG key="butterfly-render" />,
   },
   // Effects
   {
@@ -351,7 +351,7 @@ export const ACCESSORIES: Accessory[] = [
     description: 'Extra magical vibes',
     unlockCondition: { type: 'cardCount', value: 6 },
     component: <SparkleEffectSVG />,
-    renderComponent: (size) => <SparkleEffectSVG key="sparkles-render" />,
+    renderComponent: () => <SparkleEffectSVG key="sparkles-render" />,
   },
   {
     id: 'rainbow-aura',
@@ -360,7 +360,7 @@ export const ACCESSORIES: Accessory[] = [
     description: 'Full spectrum energy',
     unlockCondition: { type: 'cardCount', value: 8 },
     component: <RainbowAuraSVG />,
-    renderComponent: (size) => <RainbowAuraSVG key="rainbow-aura-render" />,
+    renderComponent: () => <RainbowAuraSVG key="rainbow-aura-render" />,
   },
 ];
 
@@ -394,14 +394,11 @@ interface MiraeCharacterProps {
 
 export const MiraeCharacter: React.FC<MiraeCharacterProps> = ({
   cardCount,
-  recentCardTypes = [],
   size = 240,
   className = '',
   equippedAccessories = {},
 }) => {
   const state = getCharacterState(cardCount);
-  const expression = getCharacterExpression(recentCardTypes);
-
   // Debug logging
   console.log('MiraeCharacter render:', { equippedAccessories, cardCount, state });
 
