@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, type CSSProperties } from 'react';
 import { useRouter } from 'next/navigation';
 import { useUserStore } from '@/lib/stores/userStore';
 import { useI18n } from '@/lib/i18n';
@@ -74,6 +74,17 @@ const subjectMatches = (subject: CourseSubject, term: string) => {
     subject.subject_en.toLowerCase().includes(normalizedTerm) ||
     subject.subject_kr.toLowerCase().includes(normalizedTerm)
   );
+};
+
+const clamp = (value: number, min: number, max: number) =>
+  Math.min(Math.max(value, min), max);
+
+const hashToUnit = (value: string) => {
+  let hash = 0;
+  for (let i = 0; i < value.length; i += 1) {
+    hash = (hash * 31 + value.charCodeAt(i)) % 100000;
+  }
+  return (hash % 1000) / 1000;
 };
 
 const strengthSignals: Record<
@@ -194,6 +205,7 @@ export default function Stage2Page() {
   const [docKeywords, setDocKeywords] = useState<string[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(true);
   const [savedSlots, setSavedSlots] = useState<SelectionSlot[]>([null, null, null]);
+  const [focusedCourseKey, setFocusedCourseKey] = useState<string | null>(null);
   const router = useRouter();
   const { completeStage, userId, progress } = useUserStore();
   const { language, t } = useI18n();
@@ -435,6 +447,96 @@ export default function Stage2Page() {
       }));
   }, [likedRoles, strengths, selectedKeys, language, docKeywords]);
 
+  const radarItems = useMemo(() => {
+    if (!selectedSubject) return [];
+
+    const items = categories.flatMap((category) => {
+      if (selectedCategory !== 'all' && selectedCategory !== category) return [];
+      return selectedSubject.electives[category].map((course) => {
+        const key = createCourseKey(selectedSubject.subject_en, category, course.en);
+        let score = 0;
+        const reasons = new Set<string>();
+        const courseLabelLower = course.en.toLowerCase();
+        const courseLabelLowerKr = course.kr.toLowerCase();
+
+        strengths.forEach((strength) => {
+          const signal = strengthSignals[strength];
+          if (!signal) return;
+          if (signal.keywords.some((keyword) => courseLabelLower.includes(keyword))) {
+            score += 2;
+            reasons.add(language === 'ko' ? signal.reasonKo : signal.reasonEn);
+          }
+        });
+
+        if (docKeywords.length > 0) {
+          const matches = docKeywords.filter(
+            (keyword) =>
+              courseLabelLower.includes(keyword) || courseLabelLowerKr.includes(keyword)
+          );
+          if (matches.length > 0) {
+            score += Math.min(2, matches.length);
+            reasons.add(
+              language === 'ko'
+                ? 'Based on your uploaded docs'
+                : 'Based on your uploaded docs'
+            );
+          }
+        }
+
+        likedRoles.forEach((roleId) => {
+          const signal = roleSignals[roleId];
+          if (!signal) return;
+          if (signal.keywords.some((keyword) => courseLabelLower.includes(keyword))) {
+            score += 3;
+            reasons.add(language === 'ko' ? signal.reasonKo : signal.reasonEn);
+          }
+        });
+
+        return {
+          key,
+          course,
+          category,
+          score,
+          reasons: Array.from(reasons),
+        };
+      });
+    });
+
+    if (items.length === 0) return [];
+
+    const maxScore = Math.max(1, ...items.map((item) => item.score));
+
+    return items.map((item, index) => {
+      const normalized = item.score / maxScore;
+      const angle = hashToUnit(item.key) * Math.PI * 2;
+      const baseRadius = 8 + (1 - normalized) * 104;
+      const jitter = (hashToUnit(`${item.key}-j`) - 0.5) * 20;
+      const radius = clamp(baseRadius + jitter, 8, 110);
+      const x = Math.cos(angle) * radius;
+      const y = Math.sin(angle) * radius;
+
+      return {
+        ...item,
+        index,
+        normalized,
+        x,
+        y,
+        isRecommended: item.score > 0,
+      };
+    });
+  }, [selectedSubject, selectedCategory, strengths, docKeywords, likedRoles, language]);
+
+  const focusedCourse = useMemo(
+    () => radarItems.find((item) => item.key === focusedCourseKey) ?? null,
+    [radarItems, focusedCourseKey]
+  );
+
+  useEffect(() => {
+    if (focusedCourseKey && !focusedCourse) {
+      setFocusedCourseKey(null);
+    }
+  }, [focusedCourseKey, focusedCourse]);
+
   const getRecommendedBucket = (category: CourseCategory, score: number) => {
     if (category === 'general' || score >= 4) return 'anchor';
     return 'signal';
@@ -479,6 +581,17 @@ export default function Stage2Page() {
   const suggestionSubtitle = language === 'ko'
     ? '추천은 Stage 0/1, 업로드, 현재 선택을 기반으로 해요.'
     : 'Suggestions are based on Stages 0/1, your uploads, and your current selections.';
+  const radarTitle = language === 'ko' ? 'Course radar' : 'Course radar';
+  const radarSubtitle =
+    language === 'ko'
+      ? 'Stars are tailored picks; candy orbs are more to explore.'
+      : 'Stars are tailored picks; candy orbs are more to explore.';
+  const radarFocusHint =
+    language === 'ko' ? 'Pick a star or orb to see details.' : 'Pick a star or orb to see details.';
+  const radarLegendRecommended = language === 'ko' ? 'Recommended' : 'Recommended';
+  const radarLegendExplore = language === 'ko' ? 'Explore' : 'Explore';
+  const radarEmptyLabel =
+    language === 'ko' ? 'No courses to show here.' : 'No courses to show here.';
   const viewSummaryLabel = language === 'ko' ? '요약 보기' : 'View summary';
 
   const getDescription = (course: CourseLabel) => {
@@ -493,11 +606,11 @@ export default function Stage2Page() {
         <button
           type="button"
           aria-label={infoLabel}
-          className="h-6 w-6 rounded-full border border-slate-200 text-xs font-bold text-slate-500 bg-white flex items-center justify-center hover:text-slate-700"
+          className="h-6 w-6 rounded-full border border-white/70 text-[10px] font-bold text-slate-500 bg-white/80 flex items-center justify-center hover:text-slate-700 transition"
         >
           i
         </button>
-        <div className="pointer-events-none absolute right-0 top-7 z-10 w-64 rounded-lg border border-slate-200 bg-white p-3 text-xs text-slate-600 shadow-lg opacity-0 transition-opacity group-hover:opacity-100">
+        <div className="pointer-events-none absolute right-0 top-7 z-10 w-64 rounded-lg border border-white/70 bg-white/90 p-3 text-xs text-slate-600 shadow-xl opacity-0 transition-opacity group-hover:opacity-100">
           {description}
         </div>
       </div>
@@ -549,132 +662,65 @@ export default function Stage2Page() {
   const clearSlotLabel = language === 'ko' ? '비우기' : 'Clear';
   const slotEmptyLabel = language === 'ko' ? '비어 있음' : 'Empty';
   const slotTitle = language === 'ko' ? '저장 슬롯' : 'Save slots';
+  const focusedCourseLabel = focusedCourse
+    ? language === 'ko'
+      ? focusedCourse.course.kr
+      : focusedCourse.course.en
+    : '';
+  const focusedSubjectLabel = focusedCourse
+    ? language === 'ko'
+      ? selectedSubject?.subject_kr ?? ''
+      : selectedSubject?.subject_en ?? ''
+    : '';
+  const focusedBucket =
+    focusedCourse && focusedCourse.score > 0
+      ? getRecommendedBucket(focusedCourse.category, focusedCourse.score)
+      : 'signal';
+  const focusedSelected = focusedCourse ? selectedKeys.has(focusedCourse.key) : false;
+
 
   return (
     <div
-      className="min-h-screen p-8"
+      className="relative min-h-screen px-6 py-10 text-slate-700"
       style={{
         background:
           'linear-gradient(135deg, #9BCBFF 0%, #C7B9FF 25%, #F4A9C8 50%, #FFD1A8 75%, #BEEDE3 100%)',
       }}
     >
-      <div className="max-w-6xl mx-auto">
+      <div className="pointer-events-none absolute inset-0 overflow-hidden">
+        <div className="absolute -left-32 top-10 h-72 w-72 rounded-full bg-[#9BCBFF]/35 blur-[120px]" />
+        <div className="absolute right-10 top-24 h-80 w-80 rounded-full bg-[#F4A9C8]/30 blur-[140px]" />
+        <div className="absolute bottom-10 left-1/2 h-96 w-96 -translate-x-1/2 rounded-full bg-[#BEEDE3]/40 blur-[160px]" />
+      </div>
+      <div className="relative z-10 mx-auto max-w-6xl">
         <div className="flex flex-wrap items-center justify-between gap-4 mb-8">
-          <h1 className="text-3xl font-bold text-center w-full md:w-auto">
-            {t('stage2Title')}
-          </h1>
+          <div>
+            <h1 className="text-3xl font-semibold tracking-tight text-slate-800">
+              {t('stage2Title')}
+            </h1>
+            <p className="mt-1 text-sm text-slate-600">{radarSubtitle}</p>
+          </div>
           <button
             type="button"
             onClick={() => router.push('/stage2/summary')}
             disabled={!progress.stage2Complete}
-            className="rounded-full border border-white/70 bg-white/80 px-4 py-2 text-xs font-semibold text-slate-700 shadow-sm transition-all duration-300 ease-out hover:bg-white disabled:opacity-50"
+            className="rounded-full border border-white/60 bg-white/70 px-4 py-2 text-xs font-semibold text-slate-700 shadow-[0_12px_30px_rgba(155,203,255,0.35)] transition hover:bg-white/90 disabled:opacity-50"
           >
             {viewSummaryLabel}
           </button>
         </div>
 
-        <div className="bg-white/80 rounded-2xl p-6 mb-6 shadow-sm backdrop-blur border border-white/60">
-          <div className="flex items-center justify-between gap-3">
-            <div>
-              <h2 className="text-lg font-semibold text-slate-800">{suggestionTitle}</h2>
-              <p className="text-xs text-slate-500 mt-1">{suggestionSubtitle}</p>
-            </div>
-            <button
-              type="button"
-              onClick={() => setShowSuggestions((prev) => !prev)}
-              className="text-xs font-semibold px-3 py-1 rounded-full border border-white/70 text-slate-600 hover:bg-white/70 transition-all duration-300 ease-out"
-            >
-              {showSuggestions ? suggestionToggleLabel : suggestionToggleOpenLabel}
-            </button>
-          </div>
-
-          {showSuggestions && (
-            <div className="mt-4">
-              {suggestions.length === 0 && (
-                <p className="text-sm text-slate-500">{suggestionEmpty}</p>
-              )}
-              {suggestions.length > 0 && (
-                <div className="grid gap-3 md:grid-cols-2">
-                  {suggestions.map((suggestion) => {
-                    const subjectLabel =
-                      language === 'ko'
-                        ? suggestion.subject.subject_kr
-                        : suggestion.subject.subject_en;
-                    const courseLabel =
-                      language === 'ko' ? suggestion.label.kr : suggestion.label.en;
-                    const recommendedBucket = getRecommendedBucket(
-                      suggestion.category,
-                      suggestion.score
-                    );
-                    return (
-                      <div
-                        key={suggestion.key}
-                        className="rounded-2xl border border-white/70 bg-white/70 p-4 shadow-sm transition-all duration-300 ease-out"
-                      >
-                        <div className="flex items-start justify-between gap-2">
-                          <div>
-                            <p className="text-sm font-semibold text-slate-800">{courseLabel}</p>
-                            <p className="text-xs text-slate-500">{subjectLabel}</p>
-                          </div>
-                          {renderInfoButton(getDescription(suggestion.label))}
-                        </div>
-                        {suggestion.reasons.size > 0 && (
-                          <div className="mt-2 flex flex-wrap gap-2">
-                            {Array.from(suggestion.reasons).map((reason) => (
-                              <span
-                                key={reason}
-                                className="text-[11px] px-2 py-1 rounded-full bg-white/80 text-slate-600 border border-white/70"
-                              >
-                                {reason}
-                              </span>
-                            ))}
-                          </div>
-                        )}
-                        <div className="mt-3 flex gap-2">
-                          <button
-                            type="button"
-                            onClick={() => addToAnchor(suggestion.key)}
-                            disabled={anchor.length >= maxBucketSize}
-                            className={`text-xs font-semibold px-2 py-1 rounded-full border transition-all duration-300 ease-out disabled:opacity-50 ${
-                              recommendedBucket === 'anchor'
-                                ? 'bg-sky-200/95 border-sky-200 text-sky-900 shadow-[0_0_16px_rgba(56,189,248,0.45)] ring-2 ring-sky-300/70'
-                                : 'bg-sky-100/60 border-white/70 text-sky-700'
-                            }`}
-                          >
-                            {addToAnchorLabel}
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => addToSignal(suggestion.key)}
-                            disabled={signal.length >= maxBucketSize}
-                            className={`text-xs font-semibold px-2 py-1 rounded-full border transition-all duration-300 ease-out disabled:opacity-50 ${
-                              recommendedBucket === 'signal'
-                                ? 'bg-rose-200/95 border-rose-200 text-rose-900 shadow-[0_0_16px_rgba(251,113,133,0.45)] ring-2 ring-rose-300/70'
-                                : 'bg-rose-100/60 border-white/70 text-rose-700'
-                            }`}
-                          >
-                            {addToSignalLabel}
-                          </button>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
-            </div>
-          )}
-        </div>
-
-        <div className="grid gap-6 md:grid-cols-[260px_1fr]">
-          {/* Subject list */}
-          <div className="bg-white/80 rounded-2xl p-6 shadow-sm backdrop-blur border border-white/60">
-            <h2 className="font-bold mb-4">{subjectTitle}</h2>
+        <div className="grid gap-6 lg:grid-cols-[260px_1fr]">
+          <aside className="rounded-[28px] border border-white/60 bg-white/70 p-5 shadow-[0_20px_50px_-40px_rgba(155,203,255,0.45)] backdrop-blur">
+            <h2 className="text-xs uppercase tracking-[0.3em] text-[#9BCBFF]">
+              {subjectTitle}
+            </h2>
             <input
               type="search"
               value={searchTerm}
               onChange={(event) => setSearchTerm(event.target.value)}
               placeholder={searchPlaceholder}
-              className="w-full rounded-xl border border-white/70 px-3 py-2 text-sm focus:border-sky-200 focus:outline-none bg-white/80 transition-all duration-300 ease-out"
+              className="mt-4 w-full rounded-2xl border border-white/60 bg-white/80 px-4 py-2 text-sm text-slate-700 placeholder:text-slate-500 focus:border-[#9BCBFF]/70 focus:outline-none"
             />
             <div className="mt-4 space-y-2 max-h-[520px] overflow-y-auto pr-1">
               {filteredSubjects.length === 0 && (
@@ -688,10 +734,10 @@ export default function Stage2Page() {
                     key={subject.id}
                     type="button"
                     onClick={() => setSelectedSubjectId(subject.id)}
-                    className={`w-full text-left px-3 py-2 rounded-xl text-sm font-semibold transition ${
+                    className={`w-full rounded-2xl px-3 py-2 text-left text-sm font-semibold transition ${
                       isActive
-                        ? 'bg-sky-100/80 text-sky-700'
-                        : 'bg-white/70 text-slate-700 hover:bg-white/90'
+                        ? 'border border-[#9BCBFF]/60 bg-[#9BCBFF]/25 text-slate-700'
+                        : 'border border-transparent bg-white/60 text-slate-600 hover:bg-white/90'
                     }`}
                   >
                     {label}
@@ -699,131 +745,323 @@ export default function Stage2Page() {
                 );
               })}
             </div>
-          </div>
+          </aside>
 
-          {/* Courses + buckets */}
           <div className="space-y-6">
-            <div className="bg-white/80 rounded-2xl p-6 shadow-sm backdrop-blur border border-white/60">
-              <div className="flex flex-wrap items-center justify-between gap-4 mb-4">
+            <section className="rounded-[32px] border border-white/60 bg-white/70 p-6 shadow-[0_30px_70px_-50px_rgba(155,203,255,0.45)] backdrop-blur">
+              <div className="flex flex-wrap items-start justify-between gap-4">
                 <div>
-                  <h2 className="text-xl font-semibold text-slate-800">
-                    {selectedSubject
-                      ? language === 'ko'
-                        ? selectedSubject.subject_kr
-                        : selectedSubject.subject_en
-                      : noCoursesLabel}
-                  </h2>
-                  <p className="text-sm text-slate-500">
-                    {language === 'ko' ? '카테고리를 선택해주세요.' : 'Choose a category.'}
-                  </p>
+                  <h2 className="text-2xl font-semibold text-slate-800">{radarTitle}</h2>
+                  <p className="mt-1 text-sm text-slate-600">{radarSubtitle}</p>
                 </div>
-                <div className="flex flex-wrap gap-2">
-                  {(['all', ...categories] as CategoryFilter[]).map((category) => {
-                    const label =
-                      category === 'all'
-                        ? allLabel
-                        : language === 'ko'
-                          ? categoryLabels[category].ko
-                          : categoryLabels[category].en;
-                    const isActive = selectedCategory === category;
-                    return (
-                      <button
-                        key={category}
-                        type="button"
-                        onClick={() => setSelectedCategory(category)}
-                        className={`text-xs font-semibold px-3 py-1 rounded-full border transition-all duration-300 ease-out ${
-                          isActive
-                            ? 'bg-slate-800 text-white border-slate-800'
-                            : 'bg-white/80 text-slate-600 border-white/70 hover:bg-white'
-                        }`}
-                      >
-                        {label}
-                      </button>
-                    );
-                  })}
+                <div className="flex flex-wrap items-center gap-3">
+                  <div className="flex flex-wrap items-center gap-2 text-xs text-slate-600">
+                    <span className="flex items-center gap-2 rounded-full border border-[#F4A9C8]/40 bg-[#F4A9C8]/20 px-3 py-1">
+                      <svg viewBox="0 0 100 100" className="h-4 w-4 text-[#FFD1A8]">
+                        <polygon
+                          points="50,5 61,38 96,38 67,58 78,91 50,70 22,91 33,58 4,38 39,38"
+                          fill="currentColor"
+                        />
+                      </svg>
+                      {radarLegendRecommended}
+                    </span>
+                    <span className="flex items-center gap-2 rounded-full border border-[#BEEDE3]/60 bg-[#BEEDE3]/40 px-3 py-1">
+                      <span className="relative h-3 w-3 rounded-full bg-gradient-to-br from-[#BEEDE3] via-[#C7B9FF] to-[#9BCBFF] shadow-[0_0_6px_rgba(155,203,255,0.5)]">
+                        <span className="absolute left-0.5 top-0.5 h-1.5 w-1.5 rounded-full bg-white/70" />
+                      </span>
+                      {radarLegendExplore}
+                    </span>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    {(['all', ...categories] as CategoryFilter[]).map((category) => {
+                      const label =
+                        category === 'all'
+                          ? allLabel
+                          : language === 'ko'
+                            ? categoryLabels[category].ko
+                            : categoryLabels[category].en;
+                      const isActive = selectedCategory === category;
+                      return (
+                        <button
+                          key={category}
+                          type="button"
+                          onClick={() => setSelectedCategory(category)}
+                          className={`text-xs font-semibold px-3 py-1 rounded-full border transition ${
+                            isActive
+                              ? 'border-white/30 bg-white/15 text-slate-800'
+                              : 'border-white/70 bg-white/75 text-slate-600 hover:bg-white/90'
+                          }`}
+                        >
+                          {label}
+                        </button>
+                      );
+                    })}
+                  </div>
                 </div>
               </div>
 
-              {!selectedSubject && <p className="text-sm text-slate-500">{noCoursesLabel}</p>}
-              {selectedSubject && (
-                <div className="space-y-6">
-                  {categories.map((category) => {
-                    if (selectedCategory !== 'all' && selectedCategory !== category) return null;
-                    const items = selectedSubject.electives[category];
-                    if (!items.length) return null;
+              <div className="mt-6 grid gap-6 lg:grid-cols-[1fr_260px] items-start">
+                <div className="relative">
+                  <div className="relative mx-auto w-full max-w-[520px] aspect-square">
+                    <div
+                      className="absolute inset-0 rounded-full"
+                      style={{
+                        backgroundImage:
+                          'radial-gradient(circle at center, rgba(155,203,255,0.7) 1px, transparent 1px)',
+                        backgroundSize: '22px 22px',
+                      }}
+                    />
+                    <div className="absolute inset-0 rounded-full border-2 border-white/60" />
+                    <div className="absolute inset-[12%] rounded-full border-2 border-white/55" />
+                    <div className="absolute inset-[24%] rounded-full border-2 border-white/50" />
+                    <div className="absolute inset-[36%] rounded-full border-2 border-white/45" />
+                    <div className="absolute left-1/2 top-1/2 h-[2px] w-full -translate-y-1/2 bg-white/45" />
+                    <div className="absolute left-1/2 top-1/2 h-full w-[2px] -translate-x-1/2 bg-white/45" />
+                    <div className="absolute left-1/2 top-1/2 h-3 w-3 -translate-x-1/2 -translate-y-1/2 rounded-full bg-white shadow-[0_0_12px_rgba(255,255,255,0.6)]" />
 
-                    const availableItems = items.filter((course) => {
-                      const key = createCourseKey(selectedSubject.subject_en, category, course.en);
-                      return !selectedKeys.has(key);
-                    });
-
-                    if (!availableItems.length) return null;
-
-                    const categoryLabel =
-                      language === 'ko'
-                        ? categoryLabels[category].ko
-                        : categoryLabels[category].en;
-
-                    return (
-                      <div key={category}>
-                        <p className="text-xs uppercase tracking-wide text-slate-500">
-                          {categoryLabel}
-                        </p>
-                        <div className="mt-2 space-y-2">
-                          {availableItems.map((course) => {
-                            const key = createCourseKey(
-                              selectedSubject.subject_en,
-                              category,
-                              course.en
-                            );
-                            const courseLabel = language === 'ko' ? course.kr : course.en;
-                            const description = getDescription(course);
-                            return (
-                              <div
-                                key={key}
-                                className="flex items-center justify-between gap-2 bg-white/70 p-3 rounded-xl border border-white/70 transition-all duration-300 ease-out"
-                              >
-                                <div>
-                                  <span className="text-sm font-medium text-slate-800">
-                                    {courseLabel}
-                                  </span>
-                                </div>
-                                <div className="flex items-center gap-2">
-                                  {renderInfoButton(description)}
-                                  <button
-                                    type="button"
-                                    onClick={() => addToAnchor(key)}
-                                    disabled={anchor.length >= maxBucketSize}
-                                    className="text-xs font-semibold px-2 py-1 rounded-full bg-sky-100/80 text-sky-700 disabled:opacity-50 transition-all duration-300 ease-out"
-                                  >
-                                    {addToAnchorLabel}
-                                  </button>
-                                  <button
-                                    type="button"
-                                    onClick={() => addToSignal(key)}
-                                    disabled={signal.length >= maxBucketSize}
-                                    className="text-xs font-semibold px-2 py-1 rounded-full bg-rose-100/80 text-rose-700 disabled:opacity-50 transition-all duration-300 ease-out"
-                                  >
-                                    {addToSignalLabel}
-                                  </button>
-                                </div>
-                              </div>
-                            );
-                          })}
-                        </div>
+                    {radarItems.length === 0 && (
+                      <div className="absolute inset-0 flex items-center justify-center text-sm text-slate-600">
+                        {radarEmptyLabel}
                       </div>
-                    );
-                  })}
+                    )}
+
+                    {radarItems.map((item) => {
+                      const courseLabel = language === 'ko' ? item.course.kr : item.course.en;
+                      const isSelected = selectedKeys.has(item.key);
+                      const orbStyle = {
+                        left: '50%',
+                        top: '50%',
+                        '--orb-x': `${item.x}%`,
+                        '--orb-y': `${item.y}%`,
+                        animationDelay: `${item.index * 80}ms`,
+                      } as CSSProperties;
+                      const orbGlow = item.isRecommended
+                        ? 'shadow-[0_0_16px_rgba(244,169,200,0.55)]'
+                        : 'shadow-[0_0_14px_rgba(190,237,227,0.7)]';
+
+                      return (
+                        <button
+                          key={item.key}
+                          type="button"
+                          onClick={() => setFocusedCourseKey(item.key)}
+                          style={orbStyle}
+                          className="orb-float group absolute z-10 flex flex-col items-center focus-visible:outline-none"
+                          aria-label={courseLabel}
+                        >
+                          <span
+                            className={`flex h-9 w-9 items-center justify-center rounded-full ${orbGlow} transition-transform duration-200 ease-out group-hover:scale-110 ${
+                              isSelected
+                                ? 'ring-2 ring-[#9BCBFF]/80 ring-offset-2 ring-offset-white/80'
+                                : ''
+                            }`}
+                          >
+                            {item.isRecommended ? (
+                              <span className="relative flex h-9 w-9 items-center justify-center">
+                                <span className="absolute inset-0 rounded-full bg-[#FFD1A8] blur-[2px]" />
+                                <svg
+                                  viewBox="0 0 100 100"
+                                  className="relative h-9 w-9 text-[#FFD1A8] drop-shadow-[0_0_12px_rgba(244,169,200,0.75)] star-twinkle"
+                                >
+                                  <polygon
+                                    points="50,5 61,38 96,38 67,58 78,91 50,70 22,91 33,58 4,38 39,38"
+                                    fill="currentColor"
+                                    stroke="#F4A9C8"
+                                    strokeWidth="4"
+                                  />
+                                </svg>
+                              </span>
+                            ) : (
+                              <span className="relative h-8 w-8 rounded-full bg-gradient-to-br from-[#BEEDE3] via-[#C7B9FF] to-[#9BCBFF] shadow-[inset_-6px_-6px_12px_rgba(155,203,255,0.45)]">
+                                <span className="absolute left-1 top-1 h-3 w-3 rounded-full bg-white/70" />
+                              </span>
+                            )}
+                          </span>
+                          <span className="orb-label mt-2 rounded-full bg-white/90 px-2 py-1 text-[10px] text-slate-700 shadow-lg">
+                            {courseLabel}
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                <div className="rounded-2xl border border-white/70 bg-white/80 p-4">
+                  {focusedCourse ? (
+                    <div>
+                      <div className="flex items-start justify-between gap-2">
+                        <div>
+                          <p className="text-[11px] uppercase tracking-[0.3em] text-[#9BCBFF]">
+                            {focusedCourse.isRecommended
+                              ? radarLegendRecommended
+                              : radarLegendExplore}
+                          </p>
+                          <h3 className="mt-2 text-lg font-semibold text-slate-800">
+                            {focusedCourseLabel}
+                          </h3>
+                          <p className="text-xs text-slate-600">{focusedSubjectLabel}</p>
+                        </div>
+                        {renderInfoButton(getDescription(focusedCourse.course))}
+                      </div>
+                      {focusedCourse.reasons.length > 0 && (
+                        <div className="mt-3 flex flex-wrap gap-2">
+                          {focusedCourse.reasons.map((reason) => (
+                            <span
+                              key={reason}
+                              className="rounded-full border border-[#BEEDE3]/60 bg-[#BEEDE3]/50 px-2 py-1 text-[11px] text-slate-700"
+                            >
+                              {reason}
+                            </span>
+                          ))}
+                        </div>
+                      )}
+                      <div className="mt-4 flex flex-wrap gap-2">
+                        {focusedSelected ? (
+                          <button
+                            type="button"
+                            onClick={() => removeSelection(focusedCourse.key)}
+                            className="rounded-full border border-[#F4A9C8]/60 bg-[#F4A9C8]/30 px-3 py-2 text-xs font-semibold text-slate-700 transition hover:bg-[#F4A9C8]/40"
+                          >
+                            {removeLabel}
+                          </button>
+                        ) : (
+                          <>
+                            <button
+                              type="button"
+                              onClick={() => addToAnchor(focusedCourse.key)}
+                              disabled={anchor.length >= maxBucketSize}
+                              className={`rounded-full border px-3 py-2 text-xs font-semibold transition disabled:opacity-50 ${
+                                focusedBucket === 'anchor'
+                                  ? 'border-[#9BCBFF]/60 bg-[#9BCBFF]/30 text-slate-700 shadow-[0_0_16px_rgba(155,203,255,0.6)]'
+                                  : 'border-white/60 bg-white/70 text-slate-600 hover:bg-white/90'
+                              }`}
+                            >
+                              {addToAnchorLabel}
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => addToSignal(focusedCourse.key)}
+                              disabled={signal.length >= maxBucketSize}
+                              className={`rounded-full border px-3 py-2 text-xs font-semibold transition disabled:opacity-50 ${
+                                focusedBucket === 'signal'
+                                  ? 'border-[#F4A9C8]/60 bg-[#F4A9C8]/30 text-slate-700 shadow-[0_0_16px_rgba(244,169,200,0.6)]'
+                                  : 'border-white/60 bg-white/70 text-slate-600 hover:bg-white/90'
+                              }`}
+                            >
+                              {addToSignalLabel}
+                            </button>
+                          </>
+                        )}
+                      </div>
+                    </div>
+                  ) : (
+                    <div>
+                      <p className="text-sm font-semibold text-slate-800">{radarFocusHint}</p>
+                      <p className="mt-2 text-xs text-slate-600">
+                        Closest to the center = strongest matches. Stars are recommended picks.
+                      </p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </section>
+
+            <section className="rounded-[28px] border border-white/60 bg-white/70 p-6 shadow-[0_24px_60px_-50px_rgba(155,203,255,0.45)] backdrop-blur">
+              <div className="flex items-center justify-between gap-3">
+                <div>
+                  <h2 className="text-lg font-semibold text-slate-800">{suggestionTitle}</h2>
+                  <p className="mt-1 text-xs text-slate-600">{suggestionSubtitle}</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setShowSuggestions((prev) => !prev)}
+                  className="rounded-full border border-white/60 bg-white/70 px-3 py-1 text-xs font-semibold text-slate-700 transition hover:bg-white/90"
+                >
+                  {showSuggestions ? suggestionToggleLabel : suggestionToggleOpenLabel}
+                </button>
+              </div>
+
+              {showSuggestions && (
+                <div className="mt-4">
+                  {suggestions.length === 0 && (
+                    <p className="text-sm text-slate-500">{suggestionEmpty}</p>
+                  )}
+                  {suggestions.length > 0 && (
+                    <div className="grid gap-3 md:grid-cols-2">
+                      {suggestions.map((suggestion) => {
+                        const subjectLabel =
+                          language === 'ko'
+                            ? suggestion.subject.subject_kr
+                            : suggestion.subject.subject_en;
+                        const courseLabel =
+                          language === 'ko' ? suggestion.label.kr : suggestion.label.en;
+                        const recommendedBucket = getRecommendedBucket(
+                          suggestion.category,
+                          suggestion.score
+                        );
+                        return (
+                          <div
+                            key={suggestion.key}
+                            className="rounded-2xl border border-white/60 bg-white/75 p-4 shadow-[0_16px_30px_rgba(155,203,255,0.35)]"
+                          >
+                            <div className="flex items-start justify-between gap-2">
+                              <div>
+                                <p className="text-sm font-semibold text-slate-800">{courseLabel}</p>
+                                <p className="text-xs text-slate-500">{subjectLabel}</p>
+                              </div>
+                              {renderInfoButton(getDescription(suggestion.label))}
+                            </div>
+                            {suggestion.reasons.size > 0 && (
+                              <div className="mt-2 flex flex-wrap gap-2">
+                                {Array.from(suggestion.reasons).map((reason) => (
+                                  <span
+                                    key={reason}
+                                    className="rounded-full border border-[#BEEDE3]/60 bg-[#BEEDE3]/50 px-2 py-1 text-[11px] text-slate-700"
+                                  >
+                                    {reason}
+                                  </span>
+                                ))}
+                              </div>
+                            )}
+                            <div className="mt-3 flex gap-2">
+                              <button
+                                type="button"
+                                onClick={() => addToAnchor(suggestion.key)}
+                                disabled={anchor.length >= maxBucketSize}
+                                className={`rounded-full border px-2 py-1 text-xs font-semibold transition disabled:opacity-50 ${
+                                  recommendedBucket === 'anchor'
+                                    ? 'border-[#9BCBFF]/60 bg-[#9BCBFF]/30 text-slate-700 shadow-[0_0_16px_rgba(155,203,255,0.6)]'
+                                    : 'border-white/60 bg-white/70 text-slate-600 hover:bg-white/90'
+                                }`}
+                              >
+                                {addToAnchorLabel}
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => addToSignal(suggestion.key)}
+                                disabled={signal.length >= maxBucketSize}
+                                className={`rounded-full border px-2 py-1 text-xs font-semibold transition disabled:opacity-50 ${
+                                  recommendedBucket === 'signal'
+                                    ? 'border-[#F4A9C8]/60 bg-[#F4A9C8]/30 text-slate-700 shadow-[0_0_16px_rgba(244,169,200,0.6)]'
+                                    : 'border-white/60 bg-white/70 text-slate-600 hover:bg-white/90'
+                                }`}
+                              >
+                                {addToSignalLabel}
+                              </button>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
                 </div>
               )}
-            </div>
+            </section>
 
-            <div className="grid gap-6 lg:grid-cols-2">
-              {/* Anchor bucket */}
-              <div className="bg-sky-50/80 border border-sky-200/70 rounded-2xl p-6 shadow-sm backdrop-blur">
+            <section className="grid gap-6 lg:grid-cols-2">
+              <div className="rounded-[28px] border border-[#9BCBFF]/60 bg-white/70 p-6 shadow-[0_24px_50px_-40px_rgba(155,203,255,0.55)] backdrop-blur">
                 <div className="mb-4">
-                  <h2 className="font-bold">{t('stage2Anchor')}</h2>
-                  <p className="text-xs text-slate-600 mt-1">{t('stage2AnchorHelper')}</p>
+                  <h2 className="font-semibold text-slate-800">{t('stage2Anchor')}</h2>
+                  <p className="mt-1 text-xs text-slate-600">{t('stage2AnchorHelper')}</p>
                 </div>
                 <div className="space-y-2 min-h-[200px]">
                   {anchor.map((key) => {
@@ -834,36 +1072,37 @@ export default function Stage2Page() {
                     return (
                       <div
                         key={key}
-                        className="bg-white/80 p-3 rounded-xl border border-sky-200/70 flex items-center justify-between gap-3 transition-all duration-300 ease-out"
+                        className="rounded-2xl border border-[#9BCBFF]/50 bg-white/75 p-3 transition"
                       >
-                        <div>
-                          <p className="text-sm font-semibold text-slate-800">{courseLabel}</p>
-                          <p className="text-xs text-slate-500">{subjectLabel}</p>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          {renderInfoButton(getDescription(course))}
-                          <button
-                            type="button"
-                            onClick={() => removeSelection(key)}
-                            className="text-xs font-semibold px-2 py-1 rounded-full bg-white/80 border border-sky-200/70 text-sky-700 transition-all duration-300 ease-out"
-                          >
-                            {removeLabel}
-                          </button>
+                        <div className="flex items-center justify-between gap-3">
+                          <div>
+                            <p className="text-sm font-semibold text-slate-800">{courseLabel}</p>
+                            <p className="text-xs text-slate-500">{subjectLabel}</p>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            {renderInfoButton(getDescription(course))}
+                            <button
+                              type="button"
+                              onClick={() => removeSelection(key)}
+                              className="rounded-full border border-[#9BCBFF]/60 bg-white/70 px-2 py-1 text-xs font-semibold text-slate-700 transition hover:bg-white/90"
+                            >
+                              {removeLabel}
+                            </button>
+                          </div>
                         </div>
                       </div>
                     );
                   })}
                 </div>
-                <p className="text-sm text-gray-600 mt-2">
+                <p className="mt-2 text-sm text-slate-600">
                   {t('stage2AnchorCount', { count: anchor.length.toString() })}
                 </p>
               </div>
 
-              {/* Signal bucket */}
-              <div className="bg-rose-50/80 border border-rose-200/70 rounded-2xl p-6 shadow-sm backdrop-blur">
+              <div className="rounded-[28px] border border-[#F4A9C8]/60 bg-white/70 p-6 shadow-[0_24px_50px_-40px_rgba(244,169,200,0.55)] backdrop-blur">
                 <div className="mb-4">
-                  <h2 className="font-bold">{t('stage2Signal')}</h2>
-                  <p className="text-xs text-slate-600 mt-1">{t('stage2SignalHelper')}</p>
+                  <h2 className="font-semibold text-slate-800">{t('stage2Signal')}</h2>
+                  <p className="mt-1 text-xs text-slate-600">{t('stage2SignalHelper')}</p>
                 </div>
                 <div className="space-y-2 min-h-[200px]">
                   {signal.map((key) => {
@@ -874,103 +1113,153 @@ export default function Stage2Page() {
                     return (
                       <div
                         key={key}
-                        className="bg-white/80 p-3 rounded-xl border border-rose-200/70 flex items-center justify-between gap-3 transition-all duration-300 ease-out"
+                        className="rounded-2xl border border-[#F4A9C8]/50 bg-white/75 p-3 transition"
                       >
-                        <div>
-                          <p className="text-sm font-semibold text-slate-800">{courseLabel}</p>
-                          <p className="text-xs text-slate-500">{subjectLabel}</p>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          {renderInfoButton(getDescription(course))}
-                          <button
-                            type="button"
-                            onClick={() => removeSelection(key)}
-                            className="text-xs font-semibold px-2 py-1 rounded-full bg-white/80 border border-rose-200/70 text-rose-700 transition-all duration-300 ease-out"
-                          >
-                            {removeLabel}
-                          </button>
+                        <div className="flex items-center justify-between gap-3">
+                          <div>
+                            <p className="text-sm font-semibold text-slate-800">{courseLabel}</p>
+                            <p className="text-xs text-slate-500">{subjectLabel}</p>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            {renderInfoButton(getDescription(course))}
+                            <button
+                              type="button"
+                              onClick={() => removeSelection(key)}
+                              className="rounded-full border border-[#F4A9C8]/60 bg-white/70 px-2 py-1 text-xs font-semibold text-slate-700 transition hover:bg-white/90"
+                            >
+                              {removeLabel}
+                            </button>
+                          </div>
                         </div>
                       </div>
                     );
                   })}
                 </div>
-                <p className="text-sm text-gray-600 mt-2">
+                <p className="mt-2 text-sm text-slate-600">
                   {t('stage2SignalCount', { count: signal.length.toString() })}
                 </p>
               </div>
+            </section>
+
+            <section className="rounded-[28px] border border-white/60 bg-white/70 p-6 shadow-[0_24px_60px_-50px_rgba(155,203,255,0.45)] backdrop-blur">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-lg font-semibold text-slate-800">{slotTitle}</h2>
+                <span className="text-xs text-slate-500">
+                  {anchor.length + signal.length} selected
+                </span>
+              </div>
+              <div className="grid gap-3 md:grid-cols-3">
+                {savedSlots.map((slot, index) => (
+                  <div
+                    key={`slot-${index}`}
+                    className="rounded-2xl border border-white/60 bg-white/75 p-4"
+                  >
+                    <div className="flex items-center justify-between mb-2">
+                      <p className="text-sm font-semibold text-slate-800">Slot {index + 1}</p>
+                      <p className="text-[11px] text-slate-500">
+                        {slot ? new Date(slot.savedAt).toLocaleDateString() : slotEmptyLabel}
+                      </p>
+                    </div>
+                    <p className="text-xs text-slate-500">
+                      {slot
+                        ? `${slot.anchor.length} required A? ${slot.signal.length} electives`
+                        : slotEmptyLabel}
+                    </p>
+                    <div className="mt-3 flex flex-wrap gap-2">
+                      <button
+                        type="button"
+                        onClick={() => saveSlot(index)}
+                        className="rounded-full bg-white/15 px-3 py-1 text-xs font-semibold text-slate-800 transition hover:bg-white/25"
+                      >
+                        {saveSlotLabel}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => loadSlot(index)}
+                        disabled={!slot}
+                        className="rounded-full border border-white/20 px-3 py-1 text-xs font-semibold text-slate-800 transition hover:bg-white/15 disabled:opacity-50"
+                      >
+                        {loadSlotLabel}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => clearSlot(index)}
+                        disabled={!slot}
+                        className="rounded-full border border-white/60 bg-white/60 px-3 py-1 text-xs font-semibold text-slate-600 transition hover:bg-white/90 disabled:opacity-50"
+                      >
+                        {clearSlotLabel}
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </section>
+
+            <div className="mt-2 flex flex-wrap items-center justify-center gap-3">
+              <button
+                onClick={handleSave}
+                className="rounded-full bg-[#BEEDE3] px-6 py-3 text-sm font-semibold text-slate-700 shadow-[0_18px_30px_-20px_rgba(155,203,255,0.6)] transition hover:bg-[#9BCBFF]/60"
+              >
+                {t('stage2Save')}
+              </button>
+              <button
+                type="button"
+                onClick={() => router.push('/stage2/summary')}
+                disabled={!progress.stage2Complete}
+                className="rounded-full border border-white/60 bg-white/70 px-8 py-3 text-sm font-semibold text-slate-700 shadow-[0_18px_30px_-20px_rgba(155,203,255,0.4)] transition hover:bg-white/90 disabled:opacity-50"
+              >
+                {viewSummaryLabel}
+              </button>
             </div>
           </div>
         </div>
-
-        <div className="bg-white/80 rounded-2xl p-6 shadow-sm backdrop-blur border border-white/60 mt-6">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-semibold text-slate-800">{slotTitle}</h2>
-            <span className="text-xs text-slate-500">{anchor.length + signal.length} selected</span>
-          </div>
-          <div className="grid gap-3 md:grid-cols-3">
-            {savedSlots.map((slot, index) => (
-              <div
-                key={`slot-${index}`}
-                className="rounded-2xl border border-white/70 bg-white/70 p-4 shadow-sm"
-              >
-                <div className="flex items-center justify-between mb-2">
-                  <p className="text-sm font-semibold text-slate-700">Slot {index + 1}</p>
-                  <p className="text-[11px] text-slate-500">
-                    {slot ? new Date(slot.savedAt).toLocaleDateString() : slotEmptyLabel}
-                  </p>
-                </div>
-                <p className="text-xs text-slate-500">
-                  {slot
-                    ? `${slot.anchor.length} required · ${slot.signal.length} electives`
-                    : slotEmptyLabel}
-                </p>
-                <div className="mt-3 flex flex-wrap gap-2">
-                  <button
-                    type="button"
-                    onClick={() => saveSlot(index)}
-                    className="text-xs font-semibold px-3 py-1 rounded-full bg-slate-900 text-white hover:bg-slate-800 transition-all duration-300 ease-out"
-                  >
-                    {saveSlotLabel}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => loadSlot(index)}
-                    disabled={!slot}
-                    className="text-xs font-semibold px-3 py-1 rounded-full border border-white/70 text-slate-700 disabled:opacity-50 transition-all duration-300 ease-out"
-                  >
-                    {loadSlotLabel}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => clearSlot(index)}
-                    disabled={!slot}
-                    className="text-xs font-semibold px-3 py-1 rounded-full border border-white/70 text-slate-500 disabled:opacity-50 transition-all duration-300 ease-out"
-                  >
-                    {clearSlotLabel}
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
-          <button
-            onClick={handleSave}
-            className="px-6 py-3 bg-slate-900 text-white rounded-full shadow-sm transition-all duration-300 ease-out hover:bg-slate-800"
-          >
-            {t('stage2Save')}
-          </button>
-          <button
-            type="button"
-            onClick={() => router.push('/stage2/summary')}
-            disabled={!progress.stage2Complete}
-            className="px-8 py-3 rounded-full bg-slate-300 text-slate-800 shadow-sm transition-all duration-300 ease-out hover:bg-slate-400 disabled:opacity-50"
-          >
-            {viewSummaryLabel}
-          </button>
-        </div>
       </div>
+
+      <style jsx>{`
+        .orb-float {
+          transform: translate(-50%, -50%) translate(var(--orb-x), var(--orb-y));
+          animation: orbFloat 6s ease-in-out infinite;
+        }
+
+        .orb-label {
+          opacity: 0;
+          transform: translateY(-4px);
+          transition: opacity 0.2s ease, transform 0.2s ease;
+        }
+
+        .orb-float:hover .orb-label,
+        .orb-float:focus-visible .orb-label {
+          opacity: 1;
+          transform: translateY(0);
+        }
+
+        .star-twinkle {
+          animation: starTwinkle 3.6s ease-in-out infinite;
+        }
+
+        @keyframes starTwinkle {
+          0%,
+          100% {
+            opacity: 0.9;
+            transform: scale(1);
+          }
+          50% {
+            opacity: 1;
+            transform: scale(1.08);
+          }
+        }
+
+        @keyframes orbFloat {
+          0%,
+          100% {
+            transform: translate(-50%, -50%) translate(var(--orb-x), var(--orb-y));
+          }
+          50% {
+            transform: translate(-50%, -50%)
+              translate(calc(var(--orb-x) + 1.5%), calc(var(--orb-y) - 1.5%));
+          }
+        }
+      `}</style>
     </div>
   );
 }
