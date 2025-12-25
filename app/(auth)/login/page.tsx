@@ -1,7 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import Image from 'next/image';
 import { signIn } from '@/lib/auth';
 import { useRouter } from 'next/navigation';
 import { useI18n } from '@/lib/i18n';
@@ -39,12 +38,14 @@ export default function LoginPage() {
     >
       <div className="bg-white/90 backdrop-blur-sm p-8 rounded-3xl shadow-2xl w-full max-w-md border border-white/60">
         <div className="flex justify-center mb-4">
-          <Image
+          <img
             src="/asset/Mirae_Icon1.png"
             alt="Mirae"
-            width={80}
-            height={80}
             className="h-20 w-auto object-contain"
+            onError={(e) => {
+              // Fallback if image doesn't load
+              console.error('Image failed to load:', e.currentTarget.src);
+            }}
           />
         </div>
         <p className="text-slate-600 text-center mb-8">
