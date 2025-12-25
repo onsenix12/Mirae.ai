@@ -42,7 +42,7 @@ export const HAPPY_PATH_YEAR1_PRE: ConversationTurn[] = [
   
   {
     turnNumber: 4,
-    phase: 'fear_check',
+    phase: 'fit-fear',
     trigger: ['문제', '창의', '분석'],
     miraeMessage: (ctx: UserContext) => `그런 역량을 키우고 싶다는 거네요!
 
