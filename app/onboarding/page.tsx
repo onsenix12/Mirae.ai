@@ -270,7 +270,6 @@ export default function OnboardingPage() {
                 onTranscriptUpdate={setTranscriptMessages}
                 onInputChange={setInputValue}
                 inputValue={inputValue}
-                onSend={() => window.dispatchEvent(new Event('onboardingSmartSend'))}
               />
             </div>
 
