@@ -226,7 +226,6 @@ export default function Stage1Page() {
   );
   const passLabel = language === 'ko' ? '패스' : 'Pass';
   const likeLabel = language === 'ko' ? '좋아요' : 'Like';
-  const stageLabel = language === 'ko' ? '1단계' : 'Stage 1';
   const sectionLabel = language === 'ko' ? '역할 룰렛' : 'Role Roulette';
   const flipLabel = language === 'ko' ? '카드 뒤집기' : 'Flip card';
   const flipBackLabel = language === 'ko' ? '앞면으로' : 'Back to front';
@@ -499,8 +498,6 @@ export default function Stage1Page() {
       <div className="relative mx-auto flex w-full max-w-5xl flex-col gap-10 lg:grid lg:grid-cols-[1fr_420px] lg:items-center">
         <div className="space-y-6 text-slate-800">
           <div className="inline-flex items-center gap-2 rounded-full bg-white/70 px-4 py-2 text-xs font-semibold uppercase tracking-wide text-slate-600 shadow-sm">
-            {stageLabel}
-            <span className="h-1 w-1 rounded-full bg-slate-400" />
             {sectionLabel}
           </div>
 

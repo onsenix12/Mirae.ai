@@ -115,10 +115,9 @@ function DashboardContent() {
   }, []);
 
   const getStageStatus = (stageId: number) => {
-    const allowEvolvePreview = stageId === 4;
     if (progress[`stage${stageId}Complete` as keyof typeof progress]) return 'complete';
     if (stageId === progress.currentStage) return 'current';
-    if (stageId < progress.currentStage || allowEvolvePreview) return 'available';
+    if (stageId < progress.currentStage) return 'available';
     return 'locked';
   };
 

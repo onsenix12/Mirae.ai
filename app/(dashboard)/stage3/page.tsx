@@ -4,6 +4,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useLanguageStore } from '@/lib/stores/languageStore';
+import { useUserStore } from '@/lib/stores/userStore';
 import { getUserProfile, updateUserProfile } from '@/lib/userProfile';
 import { loadActivityLogs, saveActivityLogs } from '@/lib/activityLogs';
 import Image from 'next/image';
@@ -113,6 +114,7 @@ export default function Stage3Page() {
   const initKeyRef = useRef<string | null>(null);
   const hasSavedRef = useRef(false);
   const { language } = useLanguageStore();
+  const { completeStage } = useUserStore();
   const [isHydrated, setIsHydrated] = useState(false);
   
   const [messages, setMessages] = useState<Message[]>([]);
@@ -484,53 +486,27 @@ export default function Stage3Page() {
       };
       saveActivityLogs([...existingLogs, reflectionLog]);
       
-      // 2. Auto-save to file system via API
-      const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-      const userId = getUserProfile().id || 'user';
-      const filename = `stage3-summary-${userId}-${timestamp}.json`;
-      
-      const saveResponse = await fetch('/api/save-conversation', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          conversationData: finalResult,
-          filename: filename
-        }),
-      });
-      
-      const saveResult = await saveResponse.json();
-      
-      if (saveResult.success) {
-        setSaveMessage(`${t.conversationSaved} (Auto-saved to: ${filename})`);
-        
-        // Also create a card in collection with file path
-        const existingCards = getUserProfile().collection?.cards || [];
+      const updatedCards = getUserProfile().collection?.cards || [];
       const reflectionCard = {
-          id: `stage3-reflection-${Date.now()}`,
-          stage: 'C',
-          type: 'Reflection',
-          title: language === 'ko' ? '학업 성찰' : 'Academic Reflection',
-          description: insights[0] ? `${summary} • ${insights[0]}` : summary,
-          rarity: 'Common',
-          unlocked: true,
-          tags: [`year${year}`, ...keywords.slice(0, 3)],
-          createdFrom: 'Stage 3: Reflection',
-          filePath: saveResult.path,
-          downloadLink: `/api/download-file?filename=${filename}`,
-          content: finalResult
-        };
-        
-        updateUserProfile({
-          collection: {
-            ...getUserProfile().collection,
-            cards: [...existingCards, reflectionCard]
-          }
-        });
-      } else {
-        setSaveMessage(`${t.conversationSaved} (Failed to save file)`);
-      }
+        id: `stage3-reflection-${Date.now()}`,
+        stage: 'C',
+        type: 'Reflection',
+        title: language === 'ko' ? '학업 성찰' : 'Academic Reflection',
+        description: insights[0] ? `${summary} • ${insights[0]}` : summary,
+        rarity: 'Common',
+        unlocked: true,
+        tags: [`year${year}`, ...keywords.slice(0, 3)],
+        createdFrom: 'Stage 3: Reflection',
+        content: finalResult,
+      };
+
+      updateUserProfile({
+        collection: {
+          ...getUserProfile().collection,
+          cards: [...updatedCards, reflectionCard],
+        },
+      });
+      setSaveMessage(t.conversationSaved);
       
     } catch (error) {
       console.error('Error saving conversation:', error);
@@ -614,9 +590,10 @@ export default function Stage3Page() {
   };
 
   // Handle finish
-  const handleFinish = () => {
+  const handleFinish = async () => {
     if (messages.length > 0) {
-      saveConversationData();
+      await saveConversationData();
+      completeStage(3);
     }
     router.push(withBasePath('/dashboard'));
   };
@@ -658,7 +635,6 @@ export default function Stage3Page() {
             {/* Header */}
             <div className="relative flex-shrink-0 mb-4">
               <div>
-                <p className="text-sm font-semibold text-slate-600">{t.tag}</p>
                 <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 flex items-center gap-2">
                   {t.title} <Sprout className="w-6 h-6 text-green-500" />
                 </h1>
