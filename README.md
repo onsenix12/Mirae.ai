@@ -32,41 +32,92 @@ This repository contains documentation for the SCOPE+ project. The project struc
 
 ### Application Structure
 
-The application has been set up with the following structure:
+The application has been implemented with the following structure:
 
 ```
 app/
-+-- (auth)/
-|   +-- login/           OK Login page
-|   +-- signup/          OK Signup page
-+-- (dashboard)/
-|   +-- dashboard/       OK Main dashboard hub
-|   +-- stage0/          OK Initial Questionnaire
-|   +-- stage1/          OK Role Roulette
-|   +-- stage2/          OK Course Roadmap Builder
-|   +-- stage3/          OK Skill Translation
-|   +-- stage4/          OK Tournament Bracket
-|   +-- stage5/          OK Storyboard
-+-- api/
-|   +-- chat/            OK Chatbot API
-|   +-- analyze-roles/   OK Role analysis API
-+-- layout.tsx           OK Root layout
-+-- page.tsx             OK Home page (redirects to dashboard)
+├── (auth)/
+│   ├── login/              # Login page with Supabase authentication
+│   └── signup/              # Signup page with user metadata
+├── (dashboard)/
+│   ├── dashboard/          # Main dashboard hub with progress tracking
+│   ├── stage0/             # Initial Questionnaire with chatbot follow-up
+│   ├── stage1/             # Role Roulette (swipe interface)
+│   ├── stage2/             # Course Roadmap Builder (drag-drop)
+│   ├── stage3/             # Skill Translation with voice/text chat
+│   ├── stage4/             # Tournament Bracket (specialization narrowing)
+│   ├── stage5/             # Storyboard (future visualization)
+│   ├── avatar-lab/         # Avatar customization lab
+│   └── collection/         # User collection view
+├── onboarding/             # Onboarding flow with document upload
+├── api/
+│   ├── chat/               # General chatbot API
+│   │   ├── route.ts        # Main chat endpoint
+│   │   └── general/        # General chat route
+│   ├── analyze-roles/      # Role swipe analysis API
+│   ├── generate-recommendations/  # AI-powered recommendations
+│   ├── generate-feedback/  # Feedback generation
+│   ├── journey-report/     # Journey report generation
+│   ├── onboarding/         # Onboarding chat API
+│   ├── recommend-roles/    # Role recommendation API
+│   ├── save-conversation/  # Conversation persistence
+│   └── skill-translation/  # Skill translation chat API
+├── layout.tsx              # Root layout with metadata
+└── page.tsx                # Home page (redirects to dashboard)
 
 lib/
-+-- auth.ts              OK Hardcoded authentication (2 test users)
-+-- openai.ts            OK OpenAI service functions
-+-- stores/
-    +-- userStore.ts     OK Zustand user state store
+├── auth.ts                 # Authentication utilities
+├── openai.ts               # OpenAI service functions
+├── supabase.ts            # Supabase client setup
+├── ai-recommendations.ts   # AI recommendation generation
+├── aiCareerGenerator.ts    # Career generation utilities
+├── aiCareerRecommender.ts  # Career recommendation logic
+├── userProfile.ts         # User profile management
+├── activityLogs.ts        # Activity tracking
+├── stores/
+│   ├── userStore.ts       # Zustand user state store
+│   └── languageStore.ts   # Language preference store
+├── hooks/
+│   └── useOnboarding.ts   # Onboarding state management
+├── data/
+│   ├── questionnaire.json # Stage 0 question data
+│   ├── roles.json         # Stage 1 role data
+│   ├── courses.json       # Course catalog
+│   └── courses-descriptions.json
+└── types/
+    ├── candidate.ts       # Candidate type definitions
+    ├── onboarding.types.ts # Onboarding type definitions
+    └── skillTranslation.ts # Skill translation types
 
-components/              # To be expanded with UI components
+components/
+├── onboarding/            # Complete onboarding flow
+│   ├── OnboardingContainer.tsx
+│   ├── WelcomePhase.tsx
+│   ├── ContextCollectionPhase.tsx
+│   ├── DocumentUploadPhase.tsx
+│   ├── KeywordReviewPhase.tsx
+│   ├── JourneyStartPhase.tsx
+│   ├── OnboardingChat.tsx
+│   ├── SmartOnboardingChat.tsx
+│   └── shared/            # Shared onboarding components
+├── chat/                  # Chat interface components
+│   ├── FloatingChat.tsx
+│   ├── FloatingChatBubble.tsx
+│   └── FloatingChatPanel.tsx
+├── avatar/                # Avatar customization system
+│   ├── AvatarComposer.tsx
+│   ├── AvatarCustomizerPanel.tsx
+│   ├── avatarRegistry.ts
+│   └── avatarTypes.ts
+├── AvatarWithAccessories.tsx
+├── AccessoryPanel.tsx
+├── ActivityCalendar.tsx
+├── JourneyReportView.tsx
+├── MiraeCharacterEvolution.tsx
+└── TopBar.tsx
 ```
 
-**Status**: Core application structure is in place.
-
-**Test Accounts**:
-- Email: student1@test.com, Password: password123 (김민수)
-- Email: student2@test.com, Password: password123 (이지은)
+**Status**: Core application structure is implemented with onboarding, authentication, dashboard, and stage pages. Avatar customization and chat interfaces are functional.
 
 ---
 
@@ -101,23 +152,32 @@ Synthesizes all stages into actionable course recommendations and next steps.
 **Frontend:**
 - Next.js 14 (App Router)
 - TypeScript
-- Tailwind CSS + Shadcn/ui
-- Framer Motion
-- Zustand
+- Tailwind CSS
+- Framer Motion (animations)
+- Zustand (state management)
+- React Hook Form + Zod (form validation)
+- Recharts (data visualization)
+- Lucide React (icons)
 
 **Backend:**
-- Hardcoded Authentication (2 test users)
-- LocalStorage for data persistence
+- Supabase (PostgreSQL database)
+- Supabase Auth (authentication)
 - Next.js API Routes
+- Supabase Storage (for file uploads)
 
 **AI Services:**
-- OpenAI GPT-4 Turbo
-- DALL-E 3 / Stable Diffusion
-- OpenAI Whisper API
-- Text-to-Speech API
+- OpenAI GPT-4 Turbo (chatbot, analysis, recommendations)
+- OpenAI API (text generation, analysis)
+- Speech-to-text capabilities (for voice input)
+- AI-powered keyword extraction from documents
+
+**Additional Libraries:**
+- @hello-pangea/dnd (drag-and-drop)
+- html-to-image (export functionality)
+- Sonner (toast notifications)
 
 **Deployment:**
-- Vercel
+- Vercel (recommended)
 
 ---
 
@@ -147,41 +207,148 @@ See `REVISED_APP_BLUEPRINT.md` for the complete product architecture, including:
 
 ## Documentation
 
+### Core Documentation
 - **PRD.md**: Product requirements and goals
 - **PROBLEM.md**: Problem statement, constraints, and user needs
 - **SOLUTION.md**: Proposed solution details and rationale
+- **REVISED_APP_BLUEPRINT.md**: Complete product architecture and stage specifications
+- **REVISED_24HR_PLAN.md**: 24-hour MVP development plan with hour-by-hour breakdown
+
+### Implementation Guides
 - **ONBOARDING.md**: Onboarding flow implementation guide with technical specifications
+- **QUICK_START.md**: Quick setup and installation guide
+- **COMPLETE_GUIDE.md**: Comprehensive development guide
+- **AGENTS.md**: Repository guidelines and coding standards
+
+### Additional Resources
+- **SKILL_TRANSLATION_QUICK_START.md**: Skill translation feature guide
+- **MVP_DATA_STORAGE_STRATEGY.md**: Data storage approach
 
 ---
 
-## MVP Success Criteria
+## Implementation Status
 
-- OK One complete user journey start-to-finish
-- OK Data persistence across stages
-- OK AI chatbot functional in at least 2 stages
-- OK Demo-ready presentation flow
-- OK All 6 stages accessible and functional
+### ✅ Completed Features
+- **Authentication**: Supabase-based user authentication (signup/login)
+- **Onboarding Flow**: Multi-phase onboarding with document upload and keyword extraction
+- **Dashboard**: Progress tracking, stage navigation, insights overview
+- **Stage 0**: Initial questionnaire with chatbot follow-up
+- **Stage 1**: Role Roulette with swipe interface
+- **Stage 2**: Course Roadmap Builder with drag-drop
+- **Stage 3**: Skill Translation with conversational AI
+- **Stage 4**: Tournament Bracket for specialization narrowing
+- **Stage 5**: Storyboard for future visualization
+- **Avatar System**: Character customization and evolution
+- **AI Recommendations**: Major and university recommendation engine
+- **Chat Interface**: Floating chat with context-aware responses
+- **API Routes**: Complete API structure for all features
+
+### 🚧 In Progress / Future Enhancements
+- Enhanced voice input capabilities
+- Advanced AI image generation for storyboards
+- More detailed analytics and insights
+- Social features (if needed)
+- Mobile app optimization
 
 ---
 
 ## Key Features
 
+### Core Features
 - **Dashboard-centric**: Progress tracking, stage navigation, insights overview
 - **Progressive unlock**: Complete one stage to unlock next
 - **Multi-modal input**: Swipes, chat, voice, drag-drop, tournament selection
 - **AI synthesis**: Each stage produces insights that feed into next stage
 - **Actionable outcomes**: Direct translation to course recommendations
 
+### Onboarding System
+- **Conversational onboarding**: Multi-phase onboarding flow with document upload
+- **Document analysis**: AI-powered keyword extraction from career test results
+- **Privacy-first**: No file storage after analysis, optional uploads
+- **Context collection**: Year level, course status, and feelings capture
+
+### Avatar & Personalization
+- **Avatar customization**: Character evolution and accessory system
+- **Visual identity**: Avatar representation throughout the journey
+- **Collection system**: Track progress and achievements
+
+### AI-Powered Features
+- **Intelligent recommendations**: AI-generated major and university recommendations
+- **Role analysis**: Pattern recognition from role exploration
+- **Conversational AI**: Context-aware chatbot across multiple stages
+- **Skill translation**: Growth Character Report generation
+
 ---
 
 ## Getting Started
 
-1. Install dependencies: `npm install`
-2. Run development server: `npm run dev`
-3. Open http://localhost:3000
-4. Login with test accounts:
-   - student1@test.com / password123
-   - student2@test.com / password123
+### Prerequisites
+- Node.js 18+ installed
+- Supabase account (free tier works)
+- OpenAI API key
+
+### Setup Instructions
+
+1. **Install dependencies:**
+   ```bash
+   npm install
+   ```
+
+2. **Set up environment variables:**
+   
+   Create a `.env.local` file in the root directory:
+   ```env
+   # Supabase Configuration
+   NEXT_PUBLIC_SUPABASE_URL=https://your-project-id.supabase.co
+   NEXT_PUBLIC_SUPABASE_ANON_KEY=your_anon_key_here
+   SUPABASE_SERVICE_ROLE_KEY=your_service_role_key_here
+
+   # OpenAI Configuration
+   OPENAI_API_KEY=sk-your-openai-key-here
+   ```
+
+   See `QUICK_START.md` for detailed instructions on obtaining these keys.
+
+3. **Set up Supabase database:**
+   - Create a new Supabase project
+   - Run the database schema (see `REVISED_APP_BLUEPRINT.md` for schema)
+   - Enable authentication providers
+
+4. **Run development server:**
+   ```bash
+   npm run dev
+   ```
+
+5. **Open the application:**
+   - Navigate to http://localhost:3000
+   - Sign up for a new account or log in
+
+### Quick Setup Guide
+For detailed setup instructions, see `QUICK_START.md` and `COMPLETE_GUIDE.md`.
+
+---
+
+## API Endpoints
+
+The application includes the following API routes:
+
+### Chat & Conversation
+- `POST /api/chat` - Main chatbot endpoint for general conversations
+- `POST /api/chat/general` - General chat route
+- `POST /api/onboarding/chat` - Onboarding-specific chat
+- `POST /api/skill-translation/chat` - Skill translation conversation
+- `POST /api/save-conversation` - Persist conversation history
+
+### Analysis & Recommendations
+- `POST /api/analyze-roles` - Analyze role swipe patterns
+- `POST /api/generate-recommendations` - Generate AI-powered major/university recommendations
+- `POST /api/recommend-roles` - Get role recommendations based on profile
+- `POST /api/generate-feedback` - Generate personalized feedback
+
+### Reports & Data
+- `POST /api/journey-report` - Generate comprehensive journey report
+
+All API routes use Next.js API Routes and integrate with Supabase for data persistence and OpenAI for AI capabilities.
 
 ---
 
