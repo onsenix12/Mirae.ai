@@ -176,17 +176,17 @@ export function detectFitVsFear(
   const hasFearSignal = fearKeywords.some(keyword => input.includes(keyword));
   
   if (hasFitSignal && hasFearSignal) {
-    return FIT_FEAR.both(context);
+    return FIT_FEAR.both();
   }
-  
+
   if (hasFitSignal) {
     return FIT_FEAR.fit(context);
   }
-  
+
   if (hasFearSignal) {
-    return FIT_FEAR.fear(context);
+    return FIT_FEAR.fear();
   }
-  
+
   return FIT_FEAR.fit(context);
 }
 
