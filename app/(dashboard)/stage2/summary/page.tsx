@@ -47,6 +47,7 @@ type SavedSelection = {
   anchor: string[];
   signal: string[];
   savedAt: string;
+  targetSemester?: string;
 } | null;
 
 const categories: CourseCategory[] = ['general', 'career', 'interdisciplinary'];
