@@ -35,8 +35,6 @@ type MatchSnapshot = {
 
 const BASE_PATH = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
 
-const TOTAL_ROUNDS = 3;
-
 const getMatchReasons = (
   candidate: Candidate,
   mode: "major" | "university",
