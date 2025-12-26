@@ -29,7 +29,7 @@ export const AvatarCustomizerPanel: React.FC<AvatarCustomizerPanelProps> = ({
     const profileSelection = profile.avatar?.customizerSelectedAccessories ?? null;
     if (profileSelection && profileSelection.length > 0) {
       const unlocked = getUnlockedAccessories(progress);
-      const validSelection = profileSelection.filter((id) => unlocked.has(id));
+      const validSelection = (profileSelection as AccessoryId[]).filter((id) => unlocked.has(id));
       setSelectedAccessories(validSelection);
     }
   }, [progress]);
