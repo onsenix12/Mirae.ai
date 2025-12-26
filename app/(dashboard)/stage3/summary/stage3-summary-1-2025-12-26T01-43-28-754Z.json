@@ -1,0 +1,29 @@
+{
+  "user": {
+    "id": "1",
+    "name": "Eunseo",
+    "year": "year1",
+    "conversationDate": "2025-12-26T01:43:28.752Z",
+    "language": "en"
+  },
+  "responses": {},
+  "feedback": [],
+  "insights": [],
+  "summary": "Year 1 student. Reflected on course uncertainty and motivation this semester.",
+  "keywords": [],
+  "transcript": "Mirae: Hi! I'm glad you want to talk. I see you're in Year 1.\nHow are you doing this semester?",
+  "conversation": [
+    {
+      "role": "ai",
+      "message": "Hi! I'm glad you want to talk. I see you're in Year 1.\nHow are you doing this semester?",
+      "timestamp": "2025-12-26T01:43:18.794Z"
+    }
+  ],
+  "metadata": {
+    "version": "1.0",
+    "stage": "stage3",
+    "exportedAt": "2025-12-26T01:43:28.752Z",
+    "conversationState": "in_progress",
+    "totalMessages": 1
+  }
+}

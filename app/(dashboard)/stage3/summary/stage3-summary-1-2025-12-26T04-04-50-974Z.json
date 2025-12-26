@@ -1,0 +1,70 @@
+{
+  "user": {
+    "id": "1",
+    "name": "User",
+    "year": "year1",
+    "conversationDate": "2025-12-26T04:04:47.415Z",
+    "language": "en"
+  },
+  "responses": {},
+  "feedback": [],
+  "insights": [
+    "You're taking a great step by considering a study group for Calculus; collaboration often brings new insights and understanding. Keep an open mind as you learn from your peers!",
+    "Exploring online resources and video tutorials can offer you a variety of explanations and methods that might resonate with you more than traditional classroom approaches. Khan Academy and PatrickJMT are great places to start.",
+    "Identifying the specific topics in Calculus that challenge you is a smart move. Once you know these, you can focus your study and practice on these areas, making your learning more efficient.",
+    "Remember, it's completely normal to find certain subjects more challenging. Celebrate your progress in English and use that confidence to tackle the difficulties in Calculus. You're capable of mastering both!"
+  ],
+  "summary": "Year 1 student. Reflected on course uncertainty and motivation this semester, Semester 1.",
+  "keywords": [
+    "enjoying",
+    "but",
+    "most",
+    "courses",
+    "actually",
+    "really",
+    "english",
+    "course",
+    "having",
+    "hard",
+    "time",
+    "keeping",
+    "math",
+    "hmm",
+    "try"
+  ],
+  "transcript": "Mirae: Hi! I'm glad you want to talk. I see you're in Year 1, Semester 1.\nHow are you doing this semester?\nStudent: I'm enjoying most of my courses. I’m actually really enjoying my English course but I’m having a hard time keeping up with my Math. \nMirae: It’s great to hear that you're enjoying English! Math can be challenging for many students, so you're not alone. Have you thought about reaching out for extra help, like asking your teacher or joining a study group? It could really make a difference! What specific areas in Math are you finding tough?\nStudent: Hmm I'll try to make a study group. Algebra is fine, but I'm struggling with Calculus.\nMirae: Starting a study group sounds like a fantastic idea! Calculus can be tricky, but working with peers can really help clarify things. You might also consider finding online resources or video tutorials that explain concepts in a different way. What topics in Calculus do you find the most challenging right now?",
+  "conversation": [
+    {
+      "role": "ai",
+      "message": "Hi! I'm glad you want to talk. I see you're in Year 1, Semester 1.\nHow are you doing this semester?",
+      "timestamp": "2025-12-26T04:02:30.454Z"
+    },
+    {
+      "role": "user",
+      "message": "I'm enjoying most of my courses. I’m actually really enjoying my English course but I’m having a hard time keeping up with my Math. ",
+      "timestamp": "2025-12-26T04:02:43.340Z"
+    },
+    {
+      "role": "ai",
+      "message": "It’s great to hear that you're enjoying English! Math can be challenging for many students, so you're not alone. Have you thought about reaching out for extra help, like asking your teacher or joining a study group? It could really make a difference! What specific areas in Math are you finding tough?",
+      "timestamp": "2025-12-26T04:02:45.520Z"
+    },
+    {
+      "role": "user",
+      "message": "Hmm I'll try to make a study group. Algebra is fine, but I'm struggling with Calculus.",
+      "timestamp": "2025-12-26T04:04:20.176Z"
+    },
+    {
+      "role": "ai",
+      "message": "Starting a study group sounds like a fantastic idea! Calculus can be tricky, but working with peers can really help clarify things. You might also consider finding online resources or video tutorials that explain concepts in a different way. What topics in Calculus do you find the most challenging right now?",
+      "timestamp": "2025-12-26T04:04:21.673Z"
+    }
+  ],
+  "metadata": {
+    "version": "1.0",
+    "stage": "stage3",
+    "exportedAt": "2025-12-26T04:04:47.415Z",
+    "conversationState": "in_progress",
+    "totalMessages": 5
+  }
+}
