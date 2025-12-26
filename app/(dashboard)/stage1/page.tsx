@@ -153,7 +153,6 @@ export default function Stage1Page() {
   useEffect(() => {
     const fetchAIRecommendations = async () => {
       setIsLoadingRecommendations(true);
-      setLoadingError(false);
 
       try {
         const currentProfile = getUserProfile();
