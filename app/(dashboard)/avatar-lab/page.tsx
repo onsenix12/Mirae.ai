@@ -50,7 +50,7 @@ export default function AvatarLabPage() {
     updateUserProfile({
       avatar: {
         ...getUserProfile().avatar,
-        equippedAccessories: config.equippedAccessories ?? getUserProfile().avatar?.equippedAccessories,
+        customizerSelectedAccessories: config.selectedAccessories,
       },
     });
   };
