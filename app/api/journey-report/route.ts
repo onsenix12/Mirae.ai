@@ -32,15 +32,19 @@ export async function POST(request: Request) {
     'Use only the provided data from the profile, cards, logs, and progress.',
     'Write in the requested language.',
     'Write in first-person voice (use "I", not "you").',
-    'Return JSON with keys: executiveText, growthText, directionText, storySummary.',
+    'Return JSON with keys: executiveText, growthText, directionText, storySummary, goalInsight.',
     'Section guidance (use all available data: profile fields, collection cards, activity logs, progress, and stage selections):',
+    '- If reflectionSessions exist in the profile, treat them as the primary source.',
+    '- For reflection reports, compare the reflection transcript(s) against any existing growthText/storySummary in the profile to describe how I have grown; keep growthText and storySummary grounded only in reflection transcripts and insights (and the prior growthText/storySummary for comparison).',
+    '- goalInsight: a concise 1-2 sentence insight about my goal in first-person voice, using reflection transcripts + insights + collection cards + existing journey report. Note if it has shifted over time. No advice.',
+    '- Avoid introducing details from cards/logs/statementSections when reflectionSessions are present.',
     '- Treat statementSections (drawnTo/done/changed from Statement View) as high-signal evidence and weave their exact phrasing into the report when relevant.',
     '- executiveText: "Who I am" snapshot. Mention 2-3 identity signals from Stage 0 profile, cards, keywords, and user preferences.',
-    '- growthText: "How I have grown." Tie it to the user reflections and activity logs, mentioning changes over time or repeated themes.',
+    '- growthText: "How I have grown." Summarize reflection conversations and AI insights first, then tie to activity logs and repeated themes.',
     '- directionText: "Why I choose this direction." Ground it in Stage 2 course choices and any major choices (Stage 4), with supporting values signals and liked roles if available.',
     '- storySummary: A 2-3 sentence summary of the full report (identity, growth, direction) in first-person.',
     'Each value should be 2-4 sentences, concise, specific, and grounded in the evidence.',
-    'Do not invent facts or add external advice.',
+    'Do not invent facts or add external advice or suggestions.',
   ].join(' ');
 
   const user = {
@@ -76,6 +80,7 @@ export async function POST(request: Request) {
     growthText?: string;
     directionText?: string;
     storySummary?: string;
+    goalInsight?: string;
   } = {};
 
   try {
@@ -89,5 +94,6 @@ export async function POST(request: Request) {
     growthText: parsed.growthText ?? '',
     directionText: parsed.directionText ?? '',
     storySummary: parsed.storySummary ?? '',
+    goalInsight: parsed.goalInsight ?? '',
   });
 }

@@ -573,6 +573,7 @@ export default function MiraePlusStatement() {
       transcript: string;
     }>
   >([]);
+  const [isReportRefreshing, setIsReportRefreshing] = useState(false);
   const [studentName, setStudentName] = useState('Student');
   const collectionScrollRef = useRef<HTMLDivElement | null>(null);
   const reportGenerationRef = useRef(false);
@@ -677,27 +678,9 @@ export default function MiraePlusStatement() {
     }
   };
 
-  const handleAccessoryChange = (newAccessories: EquippedAccessories) => {
-    setEquippedAccessories(newAccessories);
-    updateUserProfile({
-      avatar: { ...getUserProfile().avatar, equippedAccessories: newAccessories },
-    });
-    
-    // Dispatch custom event to notify other components
-    if (typeof window !== 'undefined') {
-      window.dispatchEvent(new Event('miraeAccessoriesUpdated'));
-    }
-  };
-
-  useEffect(() => {
-    if (activityLogs.length > 0) {
-      saveActivityLogs(activityLogs);
-    }
-  }, [activityLogs]);
-
-  useEffect(() => {
+  const requestJourneyReport = async (force = false) => {
     if (!adventureOpen || adventureView !== 'report') return;
-    if (reportGenerationRef.current) return;
+    if (reportGenerationRef.current && !force) return;
     const profile = getUserProfile();
     const lastGeneratedAt = profile.reportSources?.generatedAt;
     const profileCards = (profile.collection?.cards ?? []) as IdentityCard[];
@@ -743,46 +726,70 @@ export default function MiraePlusStatement() {
     const recentlyGenerated =
       lastGeneratedAt &&
       Date.now() - new Date(lastGeneratedAt).getTime() < 1000 * 60 * 2;
-    if (recentlyGenerated && profile.reportSources?.inputHash === inputHash) return;
+    if (!force && recentlyGenerated && profile.reportSources?.inputHash === inputHash) return;
 
     reportGenerationRef.current = true;
-    fetch('/api/journey-report', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: reportInput,
-    })
-      .then(async (res) => {
-        if (!res.ok) {
-          throw new Error('Failed to generate report');
-        }
-        return res.json();
-      })
-      .then((data) => {
-        const nextReport = {
-          ...profile.report,
-          executiveText: data.executiveText,
-          growthText: data.growthText,
-          directionText: data.directionText,
-          storySummary: data.storySummary,
-        };
-        updateUserProfile({
-          report: nextReport,
-          reportSources: {
-            ...profile.reportSources,
-            executiveText: 'ai',
-            growthText: 'ai',
-            directionText: 'ai',
-            generatedAt: new Date().toISOString(),
-            inputHash,
-          },
-        });
-      })
-      .catch(() => {
-        // Silently ignore to avoid blocking UI.
-      })
-      .finally(() => {
-        reportGenerationRef.current = false;
+    setIsReportRefreshing(true);
+    try {
+      const res = await fetch('/api/journey-report', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: reportInput,
       });
+      if (!res.ok) {
+        throw new Error('Failed to generate report');
+      }
+      const data = await res.json();
+      const nextReport = {
+        ...profile.report,
+        executiveText: data.executiveText,
+        growthText: data.growthText,
+        directionText: data.directionText,
+        storySummary: data.storySummary,
+      };
+      updateUserProfile({
+        report: nextReport,
+        reportSources: {
+          ...profile.reportSources,
+          executiveText: 'ai',
+          growthText: 'ai',
+          directionText: 'ai',
+          generatedAt: new Date().toISOString(),
+          inputHash,
+        },
+        journeyNarrative: {
+          ...profile.journeyNarrative,
+          nextStep: data.goalInsight || profile.journeyNarrative?.nextStep,
+        },
+      });
+    } catch {
+      // Silently ignore to avoid blocking UI.
+    } finally {
+      reportGenerationRef.current = false;
+      setIsReportRefreshing(false);
+    }
+  };
+
+  const handleAccessoryChange = (newAccessories: EquippedAccessories) => {
+    setEquippedAccessories(newAccessories);
+    updateUserProfile({
+      avatar: { ...getUserProfile().avatar, equippedAccessories: newAccessories },
+    });
+    
+    // Dispatch custom event to notify other components
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new Event('miraeAccessoriesUpdated'));
+    }
+  };
+
+  useEffect(() => {
+    if (activityLogs.length > 0) {
+      saveActivityLogs(activityLogs);
+    }
+  }, [activityLogs]);
+
+  useEffect(() => {
+    requestJourneyReport();
   }, [adventureOpen, adventureView, language, progress]);
 
   const handleUpdateCard = (cardId: string, updates: { title?: string; description?: string }) => {
@@ -1243,6 +1250,8 @@ export default function MiraePlusStatement() {
                       unlocked: card.unlocked,
                     }))}
                     studentName={studentName}
+                    onRefresh={() => requestJourneyReport(true)}
+                    isRefreshing={isReportRefreshing}
                   />
                 )}
                 {adventureView === 'reflections' && (

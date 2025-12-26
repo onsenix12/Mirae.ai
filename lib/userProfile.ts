@@ -76,6 +76,7 @@ export type UserProfile = {
     insights: string[];
     keywords: string[];
     transcript: string;
+    goal?: string;
   }>;
   customCardTags?: Record<string, string[]>;
   reportSources?: {
@@ -158,6 +159,8 @@ export type UserProfile = {
     resources: { en: string[]; ko: string[] };
   }>;
   onboardingCompleted?: boolean;
+  onboardingTranscript?: string;
+  onboardingTranscriptHash?: string;
   activityLogs?: ActivityLogEntry[];
   analytics: {
     activityLogCount: number;

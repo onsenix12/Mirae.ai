@@ -1,0 +1,70 @@
+{
+  "user": {
+    "id": "1",
+    "name": "User",
+    "year": "year2",
+    "conversationDate": "2025-12-25T23:32:55.593Z",
+    "language": "en"
+  },
+  "responses": {},
+  "feedback": [],
+  "insights": [
+    "It's great to see your enthusiasm for English and teaching! Diving into volunteer tutoring can offer valuable hands-on experience and help you connect with what age group you prefer teaching.",
+    "Consider joining online forums or local groups for English teachers. Sharing insights and resources with peers can deepen your understanding and fuel your passion.",
+    "Explore different teaching methodologies and educational technologies. Being well-versed in these can make your lessons more engaging and effective for your future students.",
+    "Keep nurturing your love for English by reading widely and critically. This will not only enhance your knowledge but also provide fresh ideas to inspire your students."
+  ],
+  "summary": "Year 2 student. Reflected on course uncertainty and motivation this semester, Semester 1.",
+  "keywords": [
+    "teacher",
+    "scoring",
+    "very",
+    "well",
+    "english"
+  ],
+  "transcript": "Mirae: Hi! I'm glad you want to talk. I see you're in Year 2, Semester 1.\nHow are you doing this semester?\nStudent: I'm scoring very well in english. I really love it. \nMirae: That’s wonderful to hear! Your passion for English can open up so many exciting opportunities, whether it’s in literature, teaching, or even international relations. Have you thought about any specific paths you might want to explore with your English skills?\nStudent: I think i can be a teacher in stead\nMirae: Becoming an English teacher sounds like a fulfilling choice, especially since you love the language! It would allow you to inspire others while deepening your own understanding. Have you considered what subjects or age groups you would enjoy teaching the most?\nStudent: let's change my goal to becoming a teacher instead\nMirae: That’s completely okay! Shifting your goal to become a teacher can bring a lot of joy, especially if you’re passionate about sharing your love for English. To prepare, maybe you could start volunteering or tutoring younger students to get a feel for teaching. What excites you the most about becoming a teacher?",
+  "conversation": [
+    {
+      "role": "ai",
+      "message": "Hi! I'm glad you want to talk. I see you're in Year 2, Semester 1.\nHow are you doing this semester?",
+      "timestamp": "2025-12-25T23:31:20.260Z"
+    },
+    {
+      "role": "user",
+      "message": "I'm scoring very well in english. I really love it. ",
+      "timestamp": "2025-12-25T23:32:01.728Z"
+    },
+    {
+      "role": "ai",
+      "message": "That’s wonderful to hear! Your passion for English can open up so many exciting opportunities, whether it’s in literature, teaching, or even international relations. Have you thought about any specific paths you might want to explore with your English skills?",
+      "timestamp": "2025-12-25T23:32:04.044Z"
+    },
+    {
+      "role": "user",
+      "message": "I think i can be a teacher in stead",
+      "timestamp": "2025-12-25T23:32:24.621Z"
+    },
+    {
+      "role": "ai",
+      "message": "Becoming an English teacher sounds like a fulfilling choice, especially since you love the language! It would allow you to inspire others while deepening your own understanding. Have you considered what subjects or age groups you would enjoy teaching the most?",
+      "timestamp": "2025-12-25T23:32:26.242Z"
+    },
+    {
+      "role": "user",
+      "message": "let's change my goal to becoming a teacher instead",
+      "timestamp": "2025-12-25T23:32:40.358Z"
+    },
+    {
+      "role": "ai",
+      "message": "That’s completely okay! Shifting your goal to become a teacher can bring a lot of joy, especially if you’re passionate about sharing your love for English. To prepare, maybe you could start volunteering or tutoring younger students to get a feel for teaching. What excites you the most about becoming a teacher?",
+      "timestamp": "2025-12-25T23:32:42.379Z"
+    }
+  ],
+  "metadata": {
+    "version": "1.0",
+    "stage": "stage3",
+    "exportedAt": "2025-12-25T23:32:55.593Z",
+    "conversationState": "in_progress",
+    "totalMessages": 7
+  }
+}

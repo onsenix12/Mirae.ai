@@ -18,6 +18,7 @@ interface SmartOnboardingChatProps {
     currentFeeling: string;
   }>) => void;
   onKeywordsExtracted?: (keywords: string[]) => void;
+  onTranscriptUpdate?: (messages: Message[]) => void;
   onInputChange: (value: string) => void;
   inputValue: string;
 }
@@ -26,6 +27,7 @@ export const SmartOnboardingChat: React.FC<SmartOnboardingChatProps> = ({
   onComplete,
   onContextUpdate,
   onKeywordsExtracted,
+  onTranscriptUpdate,
   onInputChange,
   inputValue,
 }) => {
@@ -52,6 +54,7 @@ export const SmartOnboardingChat: React.FC<SmartOnboardingChatProps> = ({
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    onTranscriptUpdate?.(messages);
   }, [messages]);
 
   useEffect(() => {

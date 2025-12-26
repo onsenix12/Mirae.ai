@@ -83,7 +83,7 @@ export default function TopBar() {
     resetUserProfile();
     reset();
     handleCloseSettings();
-    router.replace(withBasePath('/onboarding'));
+    router.replace(withBasePath('/login'));
   };
 
   const handleCloseSettings = () => {

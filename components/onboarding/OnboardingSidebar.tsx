@@ -1,8 +1,9 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useMemo } from 'react';
 import { useI18n } from '@/lib/i18n';
 import { useOnboarding } from '@/lib/hooks/useOnboarding';
+import { KeywordTag } from './shared/KeywordTag';
 
 interface OnboardingSidebarProps {
   onFinish: () => void;
@@ -10,13 +11,11 @@ interface OnboardingSidebarProps {
 
 export const OnboardingSidebar: React.FC<OnboardingSidebarProps> = ({ onFinish }) => {
   const { t } = useI18n();
-  const { state } = useOnboarding();
-  const [displayKeywords, setDisplayKeywords] = useState<string[]>([]);
-
-  useEffect(() => {
-    // Update displayed keywords from onboarding state
-    setDisplayKeywords(state.extractedKeywords.filter(k => !k.isRemoved).map(k => k.text));
-  }, [state.extractedKeywords]);
+  const { state, removeKeyword } = useOnboarding();
+  const visibleKeywords = useMemo(
+    () => state.extractedKeywords.filter((k) => !k.isRemoved),
+    [state.extractedKeywords]
+  );
 
   const showFinishButton = state.currentPhase === 'start';
 
@@ -25,15 +24,15 @@ export const OnboardingSidebar: React.FC<OnboardingSidebarProps> = ({ onFinish }
       {/* Keywords Panel */}
       <div className="glass-card rounded-3xl p-5 shadow-lg border border-white/60">
         <p className="text-sm font-semibold text-slate-700 mb-2">{t('onboardingKeywords')}</p>
-        {displayKeywords.length > 0 ? (
+        {visibleKeywords.length > 0 ? (
           <div className="flex flex-wrap gap-2">
-            {displayKeywords.map((word) => (
-              <span
-                key={word}
-                className="px-3 py-2 rounded-full text-sm bg-white/90 border border-white/70 text-slate-800 shadow-sm"
-              >
-                {word}
-              </span>
+            {visibleKeywords.map((keyword) => (
+              <KeywordTag
+                key={keyword.id}
+                text={keyword.text}
+                isRemoved={keyword.isRemoved}
+                onRemove={() => removeKeyword(keyword.id)}
+              />
             ))}
           </div>
         ) : (

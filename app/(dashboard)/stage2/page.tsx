@@ -59,6 +59,7 @@ type SelectionSlot = {
 
 const categories: CourseCategory[] = ['general', 'career', 'interdisciplinary'];
 const maxBucketSize = 6;
+const displaySuggestionCount = 6;
 const courses = coursesData as CourseSubject[];
 
 const createCourseKey = (
@@ -153,99 +154,79 @@ const stage0TagToStrength: Record<string, string> = {
   anxiety: 'organization',
 };
 
-const roleSignals: Record<
-  string,
-  { keywords: string[]; reasonEn: string; reasonKo: string; subjectPriority?: Record<string, number> }
-> = {
-  'ux-designer': {
-    keywords: ['design', 'media', 'art', 'writing', 'communication'],
-    reasonEn: 'Related to roles you liked (UX)',
-    reasonKo: '좋아한 역할과 연관됨 (UX)',
-  },
-  'data-scientist': {
-    keywords: ['data', 'statistics', 'math', 'informatics', 'science', 'ai'],
-    reasonEn: 'Related to roles you liked (data/AI)',
-    reasonKo: '좋아한 역할과 연관됨 (데이터/AI)',
-    subjectPriority: {
-      'Informatics': 2.5,
-      'Mathematics': 1.0,
-      'Science': 1.2,
-    },
-  },
-  'product-manager': {
-    keywords: ['product', 'strategy', 'roadmap', 'business', 'user', 'market', 'growth'],
-    reasonEn: 'Related to roles you liked (product)',
-    reasonKo: '좋아한 역할과 연관됨 (제품)',
-  },
-  'software-engineer': {
-    keywords: ['software', 'computer', 'programming', 'coding', 'engineering', 'systems'],
-    reasonEn: 'Related to roles you liked (engineering)',
-    reasonKo: '좋아한 역할과 연관됨 (공학)',
-    subjectPriority: {
-      'Informatics': 2.5,
-      'Mathematics': 1.3,
-      'Technology & Home Economics': 1.5,
-    },
-  },
-  'robotics-engineer': {
-    keywords: ['robot', 'robotics', 'automation', 'hardware', 'mechatronics', 'control'],
-    reasonEn: 'Related to roles you liked (robotics)',
-    reasonKo: '좋아한 역할과 연관됨 (로보틱스)',
-  },
-  'environmental-scientist': {
-    keywords: ['environment', 'ecology', 'climate', 'sustainability', 'earth', 'biology'],
-    reasonEn: 'Related to roles you liked (environment)',
-    reasonKo: '좋아한 역할과 연관됨 (환경)',
-  },
-  'biomedical-researcher': {
-    keywords: ['biomedical', 'biology', 'medicine', 'health', 'genetics', 'laboratory'],
-    reasonEn: 'Related to roles you liked (biomedical)',
-    reasonKo: '좋아한 역할과 연관됨 (바이오메디컬)',
-    subjectPriority: {
-      'Science': 2.0,
-      'Mathematics': 1.2,
-    },
-  },
-  'clinical-psychologist': {
-    keywords: ['psychology', 'mental', 'therapy', 'counseling', 'behavior', 'wellbeing'],
-    reasonEn: 'Related to roles you liked (psychology)',
-    reasonKo: '좋아한 역할과 연관됨 (심리)',
-  },
-  'social-entrepreneur': {
-    keywords: ['social', 'community', 'impact', 'entrepreneur', 'nonprofit', 'sustainability'],
-    reasonEn: 'Related to roles you liked (social impact)',
-    reasonKo: '좋아한 역할과 연관됨 (사회적 임팩트)',
-  },
-  'teacher-educator': {
-    keywords: ['education', 'teaching', 'learning', 'pedagogy', 'curriculum', 'school'],
-    reasonEn: 'Related to roles you liked (education)',
-    reasonKo: '좋아한 역할과 연관됨 (교육)',
-  },
-  journalist: {
-    keywords: ['journalism', 'media', 'reporting', 'writing', 'news', 'communication'],
-    reasonEn: 'Related to roles you liked (journalism)',
-    reasonKo: '좋아한 역할과 연관됨 (저널리즘)',
-  },
-  'policy-analyst': {
-    keywords: ['policy', 'government', 'public', 'economics', 'regulation', 'civic'],
-    reasonEn: 'Related to roles you liked (policy)',
-    reasonKo: '좋아한 역할과 연관됨 (정책)',
-  },
-  'brand-strategist': {
-    keywords: ['brand', 'marketing', 'strategy', 'advertising', 'storytelling', 'identity'],
-    reasonEn: 'Related to roles you liked (brand)',
-    reasonKo: '좋아한 역할과 연관됨 (브랜드)',
-  },
-  'financial-analyst': {
-    keywords: ['finance', 'investment', 'accounting', 'economics', 'markets', 'business'],
-    reasonEn: 'Related to roles you liked (finance)',
-    reasonKo: '좋아한 역할과 연관됨 (금융)',
-  },
-  'urban-planner': {
-    keywords: ['urban', 'city', 'planning', 'architecture', 'infrastructure', 'transportation'],
-    reasonEn: 'Related to roles you liked (urban planning)',
-    reasonKo: '좋아한 역할과 연관됨 (도시 계획)',
-  },
+// Dynamic keyword extraction from user profile's AI-generated roles
+const getRoleKeywordsFromProfile = (roleId: string): string[] => {
+  const profile = getUserProfile();
+  const role = profile.aiGeneratedRoles?.find((r) => r.id === roleId);
+  if (!role) return [];
+
+  const stopWords = new Set(['the', 'and', 'for', 'with', 'that', 'this', 'from', 'into', 'about']);
+  const extractWords = (text: string) =>
+    text
+      .toLowerCase()
+      .replace(/[^\w\s]/g, ' ')
+      .split(/\s+/)
+      .filter(word => word.length > 2 && !stopWords.has(word));
+
+  const keywords = new Set<string>();
+
+  // Extract from English title, tagline, and details
+  if (role.title?.en) extractWords(role.title.en).forEach(w => keywords.add(w));
+  if (role.tagline?.en) extractWords(role.tagline.en).forEach(w => keywords.add(w));
+  if (role.details?.en) extractWords(role.details.en).forEach(w => keywords.add(w));
+  if (role.domain?.en) extractWords(role.domain.en).forEach(w => keywords.add(w));
+
+  return Array.from(keywords);
+};
+
+const getRoleSignalFromProfile = (roleId: string) => {
+  const profile = getUserProfile();
+  const role = profile.aiGeneratedRoles?.find((r) => r.id === roleId);
+  const keywords = getRoleKeywordsFromProfile(roleId);
+
+  // Dynamically infer subject priorities based on role keywords
+  const subjectPriority: Record<string, number> = {};
+
+  // Health/Medical careers → boost Science (Chemistry, Biology)
+  const healthKeywords = ['health', 'medical', 'medicine', 'doctor', 'nurse', 'pharmacist', 'pharmacy', 'patient', 'care', 'clinical', 'therapy', 'physical'];
+  if (keywords.some(k => healthKeywords.includes(k))) {
+    subjectPriority['Science'] = 2.0;
+    subjectPriority['Physical Education'] = 1.5;
+  }
+
+  // Engineering/Tech careers → boost Science, Mathematics, Informatics
+  const techKeywords = ['engineer', 'software', 'data', 'computer', 'programming', 'code', 'system', 'technical', 'technology'];
+  if (keywords.some(k => techKeywords.includes(k))) {
+    subjectPriority['Mathematics'] = 2.0;
+    subjectPriority['Science'] = 1.8;
+    subjectPriority['Informatics'] = 2.0;
+  }
+
+  // Social/Humanities careers → boost Social Studies
+  const socialKeywords = ['social', 'society', 'politics', 'law', 'policy', 'community', 'cultural', 'psychology', 'economics'];
+  if (keywords.some(k => socialKeywords.includes(k))) {
+    subjectPriority['Social Studies'] = 2.0;
+  }
+
+  // Creative/Arts careers → boost Arts
+  const creativeKeywords = ['design', 'art', 'creative', 'media', 'music', 'theater', 'film', 'visual'];
+  if (keywords.some(k => creativeKeywords.includes(k))) {
+    subjectPriority['Arts'] = 2.0;
+  }
+
+  // Business careers → boost Social Studies, Mathematics
+  const businessKeywords = ['business', 'management', 'finance', 'economics', 'entrepreneur', 'marketing'];
+  if (keywords.some(k => businessKeywords.includes(k))) {
+    subjectPriority['Social Studies'] = 1.8;
+    subjectPriority['Mathematics'] = 1.5;
+  }
+
+  return {
+    keywords,
+    reasonEn: `Related to: ${role?.title?.en || roleId}`,
+    reasonKo: `관련 역할: ${role?.title?.ko || roleId}`,
+    subjectPriority,
+  };
 };
 
 const subjectCategoryLabels: Record<SubjectCategory, { en: string; ko: string }> = {
@@ -266,7 +247,6 @@ export default function Stage2Page() {
   const [selectedSubjectId, setSelectedSubjectId] = useState<number>(courses[0]?.id ?? 0);
   const [strengths, setStrengths] = useState<string[]>([]);
   const [likedRoles, setLikedRoles] = useState<string[]>([]);
-  const [stage0Roles, setStage0Roles] = useState<string[]>([]);
   const [docKeywords, setDocKeywords] = useState<string[]>([]);
   const [savedSlots, setSavedSlots] = useState<SelectionSlot[]>([null, null, null]);
   const [focusedCourseKey, setFocusedCourseKey] = useState<string | null>(null);
@@ -436,9 +416,6 @@ export default function Stage2Page() {
       updateUserProfile({ likedRoles: uniqueLiked });
     }
 
-    const recommended = Array.from(new Set(profile.stage0Summary?.recommendedRoles ?? []));
-    setStage0Roles(recommended);
-
     const allowedSemesters = new Set(semesterOptions.map((option) => option.value));
     const preferred =
       profile.stage2Selection?.targetSemester ||
@@ -487,23 +464,28 @@ export default function Stage2Page() {
     filteredSubjects[0] ??
     null;
 
-  const suggestions = useMemo(() => {
-    const suggestionMap = new Map<
-      string,
-      {
-        score: number;
-        primaryScore: number;
-        reasons: Set<string>;
-        label: CourseLabel;
-        subject: CourseSubject;
-        category: CourseCategory;
-      }
-    >();
+  // Simplified recommendation logic:
+  // 1. Score all courses that aren't selected
+  // 2. Sort by relevance
+  // 3. Display top 6 (or all if fewer)
+  const displaySuggestions = useMemo(() => {
+    const allSuggestions: Array<{
+      key: string;
+      score: number;
+      primaryScore: number;
+      reasons: Set<string>;
+      label: CourseLabel;
+      subject: CourseSubject;
+      category: CourseCategory;
+    }> = [];
 
+    // Score every course
     courses.forEach((subject) => {
       categories.forEach((category) => {
         subject.electives[category].forEach((course) => {
           const key = createCourseKey(subject.subject_en, category, course.en);
+
+          // Skip if already selected
           if (selectedKeys.has(key)) return;
 
           let score = 0;
@@ -512,75 +494,57 @@ export default function Stage2Page() {
           const courseLabelLower = course.en.toLowerCase();
           const courseLabelLowerKr = course.kr.toLowerCase();
 
+          // Score based on user strengths
           strengths.forEach((strength) => {
             const signal = strengthSignals[strength];
             if (!signal) return;
             if (signal.keywords.some((keyword) => courseLabelLower.includes(keyword))) {
               const subjectMultiplier = signal.subjectPriority?.[subject.subject_en] ?? 1.0;
-              const baseScore = 2;
-              const adjustedScore = Math.round(baseScore * subjectMultiplier);
+              const adjustedScore = Math.round(2 * subjectMultiplier);
               score += adjustedScore;
               reasons.add(language === 'ko' ? signal.reasonKo : signal.reasonEn);
             }
           });
 
+          // Score based on document keywords
           if (docKeywords.length > 0) {
             const matches = docKeywords.filter(
-              (keyword) =>
-                courseLabelLower.includes(keyword) || courseLabelLowerKr.includes(keyword)
+              (keyword) => courseLabelLower.includes(keyword) || courseLabelLowerKr.includes(keyword)
             );
             if (matches.length > 0) {
               const boost = Math.min(2, matches.length);
               score += boost;
               primaryScore += boost;
-              reasons.add(
-                language === 'ko'
-                  ? '온보딩/업로드 키워드 기반'
-                  : 'Based on onboarding & uploads'
-              );
+              reasons.add(language === 'ko' ? '온보딩/업로드 키워드 기반' : 'Based on onboarding & uploads');
             }
           }
 
-          const likedSet = new Set(likedRoles);
-          const stage0Set = new Set(stage0Roles.filter((roleId) => !likedSet.has(roleId)));
+          // Score based on liked roles from Stage 1
           likedRoles.forEach((roleId) => {
-            const signal = roleSignals[roleId];
-            if (!signal) return;
-            if (signal.keywords.some((keyword) => courseLabelLower.includes(keyword))) {
-              const subjectMultiplier = signal.subjectPriority?.[subject.subject_en] ?? 1.0;
-              const baseScore = 3;
-              const adjustedScore = Math.round(baseScore * subjectMultiplier);
+            const signal = getRoleSignalFromProfile(roleId);
+            const matchingKeywords = signal.keywords.filter((keyword: string) => courseLabelLower.includes(keyword));
+            const subjectMultiplier = signal.subjectPriority?.[subject.subject_en] ?? 1.0;
+
+            // If keywords match the course name
+            if (matchingKeywords.length > 0) {
+              const adjustedScore = Math.round(3 * subjectMultiplier);
               score += adjustedScore;
               primaryScore += adjustedScore;
-              reasons.add(language === 'ko' ? signal.reasonKo : signal.reasonEn);
+              reasons.add(signal.reasonEn);
             }
-          });
-          stage0Set.forEach((roleId) => {
-            const signal = roleSignals[roleId];
-            if (!signal) return;
-            if (signal.keywords.some((keyword) => courseLabelLower.includes(keyword))) {
-              const subjectMultiplier = signal.subjectPriority?.[subject.subject_en] ?? 1.0;
-              const baseScore = 2;
-              const adjustedScore = Math.round(baseScore * subjectMultiplier);
-              score += adjustedScore;
-              primaryScore += adjustedScore;
-              reasons.add(
-                language === 'ko'
-                  ? 'Stage 0 역할 신호 기반'
-                  : 'Based on Stage 0 role signals'
-              );
+            // Even without keyword match, give baseline boost for high-priority subjects
+            else if (subjectMultiplier > 1.0) {
+              const baselineScore = Math.round(2 * subjectMultiplier);
+              score += baselineScore;
+              primaryScore += baselineScore;
+              reasons.add(signal.reasonEn);
             }
           });
 
-          if (primaryScore === 0) return;
-
-          const existing = suggestionMap.get(key);
-          if (existing) {
-            existing.score += score;
-            existing.primaryScore += primaryScore;
-            reasons.forEach((reason) => existing.reasons.add(reason));
-          } else {
-            suggestionMap.set(key, {
+          // Only include courses with any score and at least one reason
+          if (score > 0 && reasons.size > 0) {
+            allSuggestions.push({
+              key,
               score,
               primaryScore,
               reasons,
@@ -593,23 +557,14 @@ export default function Stage2Page() {
       });
     });
 
-    return Array.from(suggestionMap.entries())
+    // Sort by relevance and return top 6
+    return allSuggestions
       .sort((a, b) => {
-        const primaryDiff = b[1].primaryScore - a[1].primaryScore;
-        if (primaryDiff !== 0) return primaryDiff;
-        return b[1].score - a[1].score;
+        if (b.primaryScore !== a.primaryScore) return b.primaryScore - a.primaryScore;
+        return b.score - a.score;
       })
-      .slice(0, 6)
-      .map(([key, value]) => ({
-        key,
-        ...value,
-      }));
-  }, [likedRoles, strengths, selectedKeys, language, docKeywords, stage0Roles]);
-
-  const displaySuggestions = useMemo(
-    () => suggestions.filter((item) => item.primaryScore > 0 && item.reasons.size > 0),
-    [suggestions]
-  );
+      .slice(0, displaySuggestionCount);
+  }, [likedRoles, strengths, selectedKeys, language, docKeywords]);
 
   const radarItems = useMemo(() => {
     if (!selectedSubject) return [];
@@ -653,34 +608,25 @@ export default function Stage2Page() {
           }
         }
 
-        const likedSet = new Set(likedRoles);
-        const stage0Set = new Set(stage0Roles.filter((roleId) => !likedSet.has(roleId)));
+        // Score based on liked roles from Stage 1
         likedRoles.forEach((roleId) => {
-          const signal = roleSignals[roleId];
-          if (!signal) return;
-          if (signal.keywords.some((keyword) => courseLabelLower.includes(keyword))) {
-            const subjectMultiplier = signal.subjectPriority?.[selectedSubject.subject_en] ?? 1.0;
-            const baseScore = 3;
-            const adjustedScore = Math.round(baseScore * subjectMultiplier);
+          const signal = getRoleSignalFromProfile(roleId);
+          const matchingKeywords = signal.keywords.filter((keyword: string) => courseLabelLower.includes(keyword));
+          const subjectMultiplier = signal.subjectPriority?.[selectedSubject.subject_en] ?? 1.0;
+
+          // If keywords match the course name
+          if (matchingKeywords.length > 0) {
+            const adjustedScore = Math.round(3 * subjectMultiplier);
             score += adjustedScore;
             primaryScore += adjustedScore;
-            reasons.add(language === 'ko' ? signal.reasonKo : signal.reasonEn);
+            reasons.add(signal.reasonEn);
           }
-        });
-        stage0Set.forEach((roleId) => {
-          const signal = roleSignals[roleId];
-          if (!signal) return;
-          if (signal.keywords.some((keyword) => courseLabelLower.includes(keyword))) {
-            const subjectMultiplier = signal.subjectPriority?.[selectedSubject.subject_en] ?? 1.0;
-            const baseScore = 2;
-            const adjustedScore = Math.round(baseScore * subjectMultiplier);
-            score += adjustedScore;
-            primaryScore += adjustedScore;
-            reasons.add(
-              language === 'ko'
-                ? 'Stage 0 역할 신호 기반'
-                : 'Based on Stage 0 role signals'
-            );
+          // Even without keyword match, give baseline boost for high-priority subjects
+          else if (subjectMultiplier > 1.0) {
+            const baselineScore = Math.round(2 * subjectMultiplier);
+            score += baselineScore;
+            primaryScore += baselineScore;
+            reasons.add(signal.reasonEn);
           }
         });
 
@@ -717,7 +663,7 @@ export default function Stage2Page() {
         isRecommended: item.primaryScore > 0,
       };
     });
-  }, [selectedSubject, selectedCategory, strengths, docKeywords, likedRoles, language, stage0Roles]);
+  }, [selectedSubject, selectedCategory, strengths, docKeywords, likedRoles, language]);
 
   const focusedCourse = useMemo(
     () => radarItems.find((item) => item.key === focusedCourseKey) ?? null,
@@ -756,7 +702,7 @@ export default function Stage2Page() {
     setSignal((prev) => prev.filter((item) => item !== key));
   };
 
-  const handleSelectSuggestion = (suggestion: (typeof suggestions)[number]) => {
+  const handleSelectSuggestion = (suggestion: (typeof displaySuggestions)[number]) => {
     setFocusedCourseKey(suggestion.key);
     setSelectedSubjectId(suggestion.subject.id);
     setSelectedCategory(suggestion.category);
@@ -773,12 +719,12 @@ export default function Stage2Page() {
   const noCoursesLabel = language === 'ko' ? '표시할 과목이 없어요.' : 'No courses to show.';
   const suggestionTitle = language === 'ko' ? '추천' : 'Recommended';
   const suggestionEmpty = language === 'ko'
-    ? '추천 신호가 없어요. Stage 0/1 또는 온보딩 키워드를 먼저 채워주세요.'
-    : 'No recommendation signals yet. Complete Stage 0/1 or add onboarding keywords.';
+    ? '추천 신호가 없어요. Stage 1에서 역할을 선택하거나 온보딩 키워드를 추가해주세요.'
+    : 'No recommendation signals yet. Like roles in Stage 1 or add onboarding keywords.';
   const infoLabel = language === 'ko' ? '설명 보기' : 'View description';
   const suggestionSubtitle = language === 'ko'
-    ? '추천은 Stage 0/1, 온보딩 키워드, 업로드, 현재 선택을 기반으로 해요.'
-    : 'Suggestions are based on Stages 0/1, onboarding keywords, uploads, and your current selections.';
+    ? '추천은 Stage 1에서 좋아한 역할, 온보딩 키워드, 업로드를 기반으로 해요.'
+    : 'Suggestions are based on Stage 1 liked roles, onboarding keywords, and uploads.';
   const radarTitle = language === 'ko' ? 'Course radar' : 'Course radar';
   const radarSubtitle =
     language === 'ko'

@@ -14,8 +14,8 @@ export const KeywordTag: React.FC<KeywordTagProps> = ({
   if (isRemoved) return null;
 
   return (
-    <div className="inline-flex items-center gap-2 px-4 py-2 bg-white rounded-full border border-purple-200 shadow-sm hover:shadow-md transition-shadow">
-      <span className="text-sm font-medium text-gray-700">{text}</span>
+    <div className="inline-flex items-center gap-2 px-4 py-2 bg-white rounded-full border border-purple-200 shadow-sm hover:shadow-md transition-shadow max-w-full">
+      <span className="text-sm font-medium text-gray-700 whitespace-normal break-words">{text}</span>
       <button
         onClick={onRemove}
         className="text-gray-400 hover:text-red-500 transition-colors"
@@ -26,4 +26,3 @@ export const KeywordTag: React.FC<KeywordTagProps> = ({
     </div>
   );
 };
-

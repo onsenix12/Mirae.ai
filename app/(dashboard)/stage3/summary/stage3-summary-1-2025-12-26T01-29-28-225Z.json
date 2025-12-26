@@ -1,0 +1,57 @@
+{
+  "user": {
+    "id": "1",
+    "name": "User",
+    "year": "year1",
+    "conversationDate": "2025-12-26T01:29:23.368Z",
+    "language": "en"
+  },
+  "responses": {},
+  "feedback": [],
+  "insights": [
+    "Congratulations on your achievement in the debating competition! Your success speaks volumes about your dedication and talent in communication. Such skills are highly sought after, so continue to participate in similar activities to further hone them.",
+    "Reflect on the elements of communication that excite you the most. Whether it's persuasive speaking, active listening, or non-verbal cues, diving deeper into these areas through courses or workshops can enhance your expertise and enjoyment.",
+    "Consider joining a club or organization focused on communication, like a debate club or a public speaking group. This will not only improve your skills but also expand your network with individuals who share your interests.",
+    "Explore internships or volunteer opportunities in fields that value strong communication skills, such as marketing, journalism, or nonprofit organizations. Real-world experience can provide a clearer direction for your career path and make your resume stand out."
+  ],
+  "summary": "Year 1 student. Reflected on course uncertainty and motivation this semester, Semester 2.",
+  "keywords": [
+    "love",
+    "learning",
+    "communication",
+    "people",
+    "got",
+    "prize",
+    "recent",
+    "debating",
+    "competition",
+    "add",
+    "value",
+    "career"
+  ],
+  "transcript": "Mirae: Hi! I'm glad you want to talk. I see you're in Year 1, Semester 2.\nHow are you doing this semester?\nStudent: I love learning about communication with people. I got a prize from the recent debating competition. will this add value to my career?\nMirae: That’s fantastic! Winning a debating competition shows great communication skills, which are invaluable in many careers, like law, public relations, or even teaching. Keep nurturing those skills—they’ll definitely open doors for you. What aspects of communication do you enjoy the most?",
+  "conversation": [
+    {
+      "role": "ai",
+      "message": "Hi! I'm glad you want to talk. I see you're in Year 1, Semester 2.\nHow are you doing this semester?",
+      "timestamp": "2025-12-26T01:28:44.464Z"
+    },
+    {
+      "role": "user",
+      "message": "I love learning about communication with people. I got a prize from the recent debating competition. will this add value to my career?",
+      "timestamp": "2025-12-26T01:29:11.980Z"
+    },
+    {
+      "role": "ai",
+      "message": "That’s fantastic! Winning a debating competition shows great communication skills, which are invaluable in many careers, like law, public relations, or even teaching. Keep nurturing those skills—they’ll definitely open doors for you. What aspects of communication do you enjoy the most?",
+      "timestamp": "2025-12-26T01:29:13.778Z"
+    }
+  ],
+  "metadata": {
+    "version": "1.0",
+    "stage": "stage3",
+    "exportedAt": "2025-12-26T01:29:23.368Z",
+    "conversationState": "in_progress",
+    "totalMessages": 3
+  }
+}

@@ -1,0 +1,70 @@
+{
+  "user": {
+    "id": "1",
+    "name": "User",
+    "year": "year1",
+    "conversationDate": "2025-12-26T01:15:03.942Z",
+    "language": "en"
+  },
+  "responses": {},
+  "feedback": [],
+  "insights": [
+    "Your enthusiasm for biology and chemistry is inspiring! Keep diving deep into these subjects, and maybe explore related online courses or workshops to further enhance your knowledge and application skills.",
+    "Joining the public speaking club is a great move! To build on your leadership skills, consider volunteering for leadership roles within the club or organizing a small event related to health and pharmacy to blend your interests.",
+    "Your interest in group work and leadership is commendable. Try to seek out group projects in your classes or initiate study groups with peers to strengthen your teamwork and communication skills in a learning environment.",
+    "Remember, being nervous about leading events is perfectly normal. Practice is key—perhaps start with smaller, more informal gatherings to build your confidence. Sharing your passion for pharmacy in these settings can also be very rewarding and informative for others."
+  ],
+  "summary": "Year 1 student. Reflected on course uncertainty and motivation this semester, Semester 2.",
+  "keywords": [
+    "work",
+    "love",
+    "subjects",
+    "take",
+    "enjoy",
+    "learning",
+    "biology",
+    "physiolgy",
+    "chemistry",
+    "score",
+    "above",
+    "all",
+    "subject",
+    "help",
+    "wiht"
+  ],
+  "transcript": "Mirae: Hi! I'm glad you want to talk. I see you're in Year 1, Semester 2.\nHow are you doing this semester?\nStudent: I love the subjects that I take. I enjoy learning about biology physiolgy and chemistry. I score 90 and above for all subject. Will this help wiht my journey to become a pharmaicst \nMirae: That’s wonderful to hear! Your strong scores in biology and chemistry are definitely a solid foundation for a career in pharmacy. Keep nurturing your passion for these subjects, and consider joining any related clubs or activities to gain more experience. What aspect of pharmacy interests you the most?\nStudent: I think I need to learn to work on more group work to gain leardership skill as well. so i join the public speaking club and lead events'\nMirae: That sounds like a fantastic step! Joining the public speaking club will definitely help you build confidence and leadership skills, which are important in any career, including pharmacy. Plus, working in teams will give you valuable experience in collaboration. What kind of events do you plan to lead, and how do you feel about it?",
+  "conversation": [
+    {
+      "role": "ai",
+      "message": "Hi! I'm glad you want to talk. I see you're in Year 1, Semester 2.\nHow are you doing this semester?",
+      "timestamp": "2025-12-26T01:13:33.791Z"
+    },
+    {
+      "role": "user",
+      "message": "I love the subjects that I take. I enjoy learning about biology physiolgy and chemistry. I score 90 and above for all subject. Will this help wiht my journey to become a pharmaicst ",
+      "timestamp": "2025-12-26T01:14:09.668Z"
+    },
+    {
+      "role": "ai",
+      "message": "That’s wonderful to hear! Your strong scores in biology and chemistry are definitely a solid foundation for a career in pharmacy. Keep nurturing your passion for these subjects, and consider joining any related clubs or activities to gain more experience. What aspect of pharmacy interests you the most?",
+      "timestamp": "2025-12-26T01:14:11.732Z"
+    },
+    {
+      "role": "user",
+      "message": "I think I need to learn to work on more group work to gain leardership skill as well. so i join the public speaking club and lead events'",
+      "timestamp": "2025-12-26T01:14:52.538Z"
+    },
+    {
+      "role": "ai",
+      "message": "That sounds like a fantastic step! Joining the public speaking club will definitely help you build confidence and leadership skills, which are important in any career, including pharmacy. Plus, working in teams will give you valuable experience in collaboration. What kind of events do you plan to lead, and how do you feel about it?",
+      "timestamp": "2025-12-26T01:14:54.468Z"
+    }
+  ],
+  "metadata": {
+    "version": "1.0",
+    "stage": "stage3",
+    "exportedAt": "2025-12-26T01:15:03.942Z",
+    "conversationState": "in_progress",
+    "totalMessages": 5
+  }
+}

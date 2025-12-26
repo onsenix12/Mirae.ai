@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import type { CardType } from '@/components/MiraeCharacterEvolution';
 import { useRouter } from 'next/navigation';
 import { useI18n } from '@/lib/i18n';
 import { useUserStore } from '@/lib/stores/userStore';
@@ -451,7 +452,7 @@ export default function Stage0ResultPage() {
 
   const didPersistRef = useRef(false);
 
-  const persistResults = useCallback(() => {
+  const persistResults = useCallback(async () => {
     if (didPersistRef.current) return;
     didPersistRef.current = true;
     const existingSignals = profile.stage0Profile?.topSignals ?? [];
@@ -538,10 +539,121 @@ export default function Stage0ResultPage() {
           createdFrom: 'Stage 0: Values & Fit',
         }
       : null;
+    const decisionCard = decisionInsights.length
+      ? {
+          id: 'stage0-decisions',
+          stage: 'S',
+          type: 'ThenVsNow',
+          title: language === 'ko' ? '결정 스타일' : 'Decision Style',
+          description: decisionInsights.join(' · '),
+          rarity: 'Common',
+          unlocked: true,
+          tags: getInsightTags(['Q2', 'Q3', 'Q11']),
+          createdFrom: 'Stage 0: Decision Patterns',
+        }
+      : null;
+    const resilienceCard = resilienceInsights.length
+      ? {
+          id: 'stage0-resilience',
+          stage: 'S',
+          type: 'StrengthPattern',
+          title: language === 'ko' ? '회복 방식' : 'Resilience Style',
+          description: resilienceInsights.join(' · '),
+          rarity: 'Common',
+          unlocked: true,
+          tags: getInsightTags(['Q6', 'Q12']),
+          createdFrom: 'Stage 0: Resilience',
+        }
+      : null;
+    const currentStateCard = currentStateInsights.length
+      ? {
+          id: 'stage0-current',
+          stage: 'S',
+          type: 'ValueSignal',
+          title: language === 'ko' ? '현재 상태' : 'Current State',
+          description: currentStateInsights.join(' · '),
+          rarity: 'Common',
+          unlocked: true,
+          tags: getInsightTags(['Q14']),
+          createdFrom: 'Stage 0: Current State',
+        }
+      : null;
 
-    const incomingCards = [newCard, curiosityCard, learningCard, valuesCard].filter(
-      Boolean
-    ) as Record<string, unknown>[];
+    const signalLabels = topSignals.map(
+      (tag) => tagLabels[tag]?.[language as Language] ?? tag
+    );
+    const fallbackStrengthCards = [
+      {
+        id: 'stage0-signal-1',
+        stage: 'S',
+        type: 'StrengthPattern',
+        title: language === 'ko' ? '핵심 신호' : 'Core Signals',
+        description:
+          signalLabels.length > 0
+            ? signalLabels.slice(0, 3).join(' · ')
+            : language === 'ko'
+              ? '응답에서 핵심 신호가 보였어요.'
+              : 'Key signals showed up in your responses.',
+        rarity: 'Common',
+        unlocked: true,
+        tags: topSignals.slice(0, 3),
+        createdFrom: 'Stage 0: Signals',
+      },
+      {
+        id: 'stage0-signal-2',
+        stage: 'S',
+        type: 'ThenVsNow',
+        title: language === 'ko' ? '성장 단서' : 'Growth Hints',
+        description:
+          signalLabels.length > 0
+            ? signalLabels.slice(0, 3).join(' · ')
+            : language === 'ko'
+              ? '성장과 관련된 단서가 보였어요.'
+              : 'Growth-related hints stood out.',
+        rarity: 'Common',
+        unlocked: true,
+        tags: topSignals.slice(0, 3),
+        createdFrom: 'Stage 0: Growth Hints',
+      },
+      {
+        id: 'stage0-signal-3',
+        stage: 'S',
+        type: 'StrengthPattern',
+        title: language === 'ko' ? '강점 조합' : 'Strength Blend',
+        description:
+          signalLabels.length > 0
+            ? signalLabels.slice(0, 3).join(' · ')
+            : language === 'ko'
+              ? '강점 조합이 또렷하게 보였어요.'
+              : 'A clear strength blend emerged.',
+        rarity: 'Common',
+        unlocked: true,
+        tags: topSignals.slice(0, 3),
+        createdFrom: 'Stage 0: Strength Blend',
+      },
+    ];
+    const incomingCards = [
+      newCard,
+      curiosityCard,
+      learningCard,
+      valuesCard,
+      decisionCard,
+      resilienceCard,
+      currentStateCard,
+    ].filter(Boolean) as Record<string, unknown>[];
+    const selfStrengthsCount = incomingCards.filter(
+      (card) =>
+        (card as { type?: string }).type === 'StrengthPattern' ||
+        (card as { type?: string }).type === 'ThenVsNow'
+    ).length;
+    let neededStrengths = Math.max(0, 3 - selfStrengthsCount);
+    while (neededStrengths > 0 && fallbackStrengthCards.length > 0) {
+      incomingCards.push(fallbackStrengthCards.shift() as Record<string, unknown>);
+      neededStrengths -= 1;
+    }
+    while (incomingCards.length < 3 && fallbackStrengthCards.length > 0) {
+      incomingCards.push(fallbackStrengthCards.shift() as Record<string, unknown>);
+    }
     const removeIds = new Set(
       incomingCards.map((card) => (card as { id?: string }).id)
     );
@@ -640,6 +752,101 @@ export default function Stage0ResultPage() {
       },
     });
     updateProfileAnalytics(nextLogs);
+
+    try {
+      const response = await fetch('/api/chat/general', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          messages: [
+            {
+              role: 'system',
+              content:
+                'Return JSON only with keys: cards (array) and statement (object). Each card must include: type (one of StrengthPattern, CuriosityThread, Experience, ProofMoment, ThenVsNow, ValueSignal), title (max 5 words), description (1 sentence), tags (1-3 short words). Statement should include summary (1-2 sentences) and highlights (2-3 short bullets). Use only the Stage 0 result data.',
+            },
+            {
+              role: 'user',
+              content: JSON.stringify(
+                {
+                  stage0Summary: {
+                    tagCounts,
+                  },
+                  stage0Profile: {
+                    primaryTag,
+                    secondaryTag,
+                    topSignals,
+                    persona: { label: personaTitle, description: personaSummary },
+                    insightGroups: {
+                      curiosity: curiosityInsights,
+                      values: valuesInsights,
+                      learning: learningInsights,
+                      decisions: decisionInsights,
+                      resilience: resilienceInsights,
+                      currentState: currentStateInsights,
+                    },
+                  },
+                  existingCards: nextCards.map((card) => ({
+                    type: (card as { type?: string }).type,
+                    title: (card as { title?: string }).title,
+                  })),
+                },
+                null,
+                2
+              ),
+            },
+          ],
+          context: { language: 'en' },
+        }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        const raw = String(data?.message || '').replace(/```json\n?|```\n?/g, '').trim();
+        const parsed = JSON.parse(raw);
+        const aiCards = Array.isArray(parsed.cards) ? parsed.cards : [];
+        const statement = parsed.statement ?? {};
+        const normalizedExisting = new Set(
+          nextCards
+            .map((card) => `${String((card as { type?: string }).type || '').toLowerCase()}::${String((card as { title?: string }).title || '').toLowerCase()}`)
+            .filter((key) => key !== '::')
+        );
+        const additionalCards = aiCards
+          .filter((card: { type?: CardType; title?: string; description?: string }) =>
+            card?.type && card?.title && card?.description
+          )
+          .filter((card: { type: CardType; title: string }) =>
+            !normalizedExisting.has(`${card.type.toLowerCase()}::${card.title.toLowerCase()}`)
+          )
+          .map((card: { type: CardType; title: string; description: string; tags?: string[] }) => ({
+            id: `stage0-ai-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+            stage: 'S',
+            type: card.type,
+            title: card.title,
+            description: card.description,
+            rarity: 'Common',
+            unlocked: true,
+            tags: card.tags ?? [],
+            createdFrom: 'Stage 0: AI Insights',
+          }));
+
+        if (additionalCards.length > 0 || statement?.summary || statement?.highlights) {
+          const latestProfile = getUserProfile();
+          updateUserProfile({
+            collection: {
+              ...latestProfile.collection,
+              cards: [...nextCards, ...additionalCards],
+            },
+            journeyNarrative: {
+              ...latestProfile.journeyNarrative,
+              summary: statement.summary ?? latestProfile.journeyNarrative?.summary,
+              highlights: statement.highlights ?? latestProfile.journeyNarrative?.highlights,
+            },
+          });
+        }
+      }
+    } catch (error) {
+      console.error('Stage 0 AI card generation failed:', error);
+    }
 
     completeStage(0);
   }, [

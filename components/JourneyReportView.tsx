@@ -1,6 +1,7 @@
 'use client';
 
 import { useMemo, useState, useEffect } from 'react';
+import { RefreshCw } from 'lucide-react';
 import type { ActivityLog, ScopeStage } from '@/lib/activityLogs';
 import { MiraeCharacter, type CardType, getEvolutionMessage, type EquippedAccessories } from '@/components/MiraeCharacterEvolution';
 import { getUserProfile, updateUserProfile } from '@/lib/userProfile';
@@ -18,6 +19,8 @@ type JourneyReportViewProps = {
   logs: ActivityLog[];
   cards: IdentityCardSummary[];
   studentName: string;
+  onRefresh?: () => void;
+  isRefreshing?: boolean;
 };
 
 const formatRange = (logs: ActivityLog[]) => {
@@ -251,7 +254,7 @@ const EditableBlock = ({
   );
 };
 
-export default function JourneyReportView({ logs, cards, studentName }: JourneyReportViewProps) {
+export default function JourneyReportView({ logs, cards, studentName, onRefresh, isRefreshing }: JourneyReportViewProps) {
   const unlockedCards = useMemo(() => cards.filter((card) => card.unlocked), [cards]);
   const timeline = useMemo(() => buildTimeline(logs), [logs]);
   const stageTimeline = useMemo(() => buildStageTimeline(logs), [logs]);
@@ -318,6 +321,11 @@ export default function JourneyReportView({ logs, cards, studentName }: JourneyR
   const [storySummaryText, setStorySummaryText] = useState(
     profile.report?.storySummary ?? ''
   );
+  const reflectionGoal =
+    profile.journeyNarrative?.nextStep ||
+    profile.reflectionSessions?.[profile.reflectionSessions.length - 1]?.goal ||
+    profile.reflectionSessions?.[profile.reflectionSessions.length - 1]?.insights?.[0] ||
+    '';
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -390,13 +398,33 @@ export default function JourneyReportView({ logs, cards, studentName }: JourneyR
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <p className="text-xs uppercase tracking-wide text-slate-500">View My Story</p>
-              <h2 className="text-2xl font-semibold text-slate-800">My Story Snapshot</h2>
+              <div className="flex items-center gap-3">
+                <h2 className="text-2xl font-semibold text-slate-800">My Story Snapshot</h2>
+                {onRefresh && (
+                  <button
+                    type="button"
+                    onClick={onRefresh}
+                    className="h-9 w-9 rounded-full border border-white/60 bg-white/80 text-slate-600 hover:text-slate-800 hover:bg-white transition flex items-center justify-center disabled:opacity-60 disabled:cursor-not-allowed"
+                    aria-label="Refresh journey report"
+                    title="Refresh journey report"
+                    disabled={isRefreshing}
+                  >
+                    <RefreshCw className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+                  </button>
+                )}
+              </div>
               <p className="text-sm text-slate-500">{studentName || 'Student'} · {formatRange(logs)}</p>
               <p className="text-sm text-slate-600 mt-2">
                 A visual story of who I am, how I have grown, and why I choose my direction.
               </p>
               {storySummaryText && (
                 <p className="text-sm text-slate-600 mt-3">{storySummaryText}</p>
+              )}
+              {reflectionGoal && (
+                <div className="mt-4 border-t border-slate-200/70 pt-3">
+                  <p className="text-xs uppercase tracking-wide text-slate-500">My goal</p>
+                  <p className="text-sm text-slate-600 mt-2">{reflectionGoal}</p>
+                </div>
               )}
             </div>
             <div className="rounded-2xl border border-white/50 bg-white/80 p-3">

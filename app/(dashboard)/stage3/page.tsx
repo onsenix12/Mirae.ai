@@ -9,6 +9,7 @@ import { loadActivityLogs, saveActivityLogs } from '@/lib/activityLogs';
 import Image from 'next/image';
 import { Sprout, Save } from 'lucide-react';
 import { withBasePath } from '@/lib/basePath';
+import type { CardType } from '@/components/MiraeCharacterEvolution';
 
 // Translations
 const translations = {
@@ -90,6 +91,13 @@ const translations = {
 
 type ConversationState = 'in_progress' | 'complete';
 
+type ReflectionCardDraft = {
+  type: CardType;
+  title: string;
+  description: string;
+  tags?: string[];
+};
+
 type Message = {
   role: 'ai' | 'user';
   message: string;
@@ -114,6 +122,7 @@ export default function Stage3Page() {
   const [isSaving, setIsSaving] = useState(false);
   const [saveMessage, setSaveMessage] = useState<string>('');
   const [aiFeedback] = useState<string[]>([]);
+  const [keywords, setKeywords] = useState<string[]>([]);
   
   const t = translations[language];
   const flowT = translations.en;
@@ -121,6 +130,15 @@ export default function Stage3Page() {
   // Scroll to bottom when messages update
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages]);
+
+  // Update keywords whenever messages change
+  useEffect(() => {
+    const userText = messages.filter((msg) => msg.role === 'user').map((msg) => msg.message).join(' ');
+    if (userText) {
+      const extractedKeywords = extractKeywords(userText);
+      setKeywords(extractedKeywords);
+    }
   }, [messages]);
 
   // Hydrate language store
@@ -185,6 +203,59 @@ export default function Stage3Page() {
 
   const getYearLevelFromProfile = () => getUserProfile().yearLevel || 1;
   const getYearIdFromProfile = () => `year${getYearLevelFromProfile()}`;
+
+  const safeParseJson = (raw: string) => {
+    const cleaned = raw.replace(/```json\n?|```\n?/g, '').trim();
+    return JSON.parse(cleaned);
+  };
+
+  const generateReflectionCards = async (
+    transcript: string,
+    insights: string[],
+    keywords: string[]
+  ): Promise<ReflectionCardDraft[]> => {
+    try {
+      const response = await fetch('/api/chat/general', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          messages: [
+            {
+              role: 'system',
+              content:
+                'Return JSON only. Create reflection cards only when clearly supported by the transcript and insights; otherwise return an empty array. Use types: StrengthPattern, CuriosityThread, Experience, ProofMoment, ThenVsNow, ValueSignal. Each card must include: type, title (max 5 words), description (1 sentence), tags (1-3 short words). Skip unsupported categories.',
+            },
+            {
+              role: 'user',
+              content: `Transcript:\n${transcript}\n\nInsights:\n${insights.join('\n')}\n\nKeywords:\n${keywords.join(', ')}`,
+            },
+          ],
+          context: {
+            language: 'en',
+            yearLevel: getYearIdFromProfile(),
+          },
+        }),
+      });
+
+      if (!response.ok) {
+        return [];
+      }
+
+      const data = await response.json();
+      const parsed = safeParseJson(data?.message || '[]');
+      const cards = Array.isArray(parsed) ? parsed : parsed.cards;
+      if (!Array.isArray(cards)) return [];
+
+      return cards
+        .filter((card) => card?.type && card?.title && card?.description)
+        .slice(0, 6);
+    } catch (error) {
+      console.error('Error generating reflection cards:', error);
+      return [];
+    }
+  };
 
   const generateSupportMessage = async (userMessage: string) => {
     const controller = new AbortController();
@@ -279,7 +350,7 @@ export default function Stage3Page() {
     
     return Object.entries(wordCounts)
       .sort(([, a], [, b]) => b - a)
-      .slice(0, 5)
+      .slice(0, 15)
       .map(([word]) => word);
   };
 
@@ -288,15 +359,9 @@ export default function Stage3Page() {
     if (hasSavedRef.current) return;
     hasSavedRef.current = true;
     setIsSaving(true);
-    
+
     try {
-      // Extract all text from user responses
-      const allText = messages
-        .filter((msg) => msg.role === 'user')
-        .map((msg) => msg.message)
-        .join(' ');
-      
-      const keywords = extractKeywords(allText);
+      // Use the current keywords from state (user may have removed some)
       const transcript = messages
         .map((msg) => `${msg.role === 'ai' ? 'Mirae' : 'Student'}: ${msg.message}`)
         .join('\n');
@@ -370,11 +435,41 @@ export default function Stage3Page() {
       };
       const existingSessions = getUserProfile().reflectionSessions ?? [];
 
+      const profile = getUserProfile();
+      const existingCards = (profile.collection?.cards ?? []) as Record<string, unknown>[];
+      const newCards = await generateReflectionCards(transcript, insights, keywords);
+      const normalizedExisting = new Set(
+        existingCards
+          .map((card) => `${String(card.type || '').toLowerCase()}::${String(card.title || '').toLowerCase()}`)
+          .filter((key) => key !== '::')
+      );
+      const reflectionInsightCards = newCards
+        .filter(
+          (card) =>
+            !normalizedExisting.has(`${card.type.toLowerCase()}::${card.title.toLowerCase()}`)
+        )
+        .map((card) => ({
+          id: `stage3-reflection-insight-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+          stage: 'C',
+          type: card.type,
+          title: card.title,
+          description: card.description,
+          rarity: 'Common',
+          unlocked: true,
+          tags: card.tags?.length ? card.tags : keywords.slice(0, 3),
+          createdFrom: 'Stage 3: Reflection Insights',
+          content: { transcript, insights, summary },
+        }));
+
       // 1. Save to user profile
       updateUserProfile({
         stage3Responses: finalResult,
         stage3Completed: true,
-        reflectionSessions: [...existingSessions, reflectionSession]
+        reflectionSessions: [...existingSessions, reflectionSession],
+        collection: {
+          ...profile.collection,
+          cards: [...existingCards, ...reflectionInsightCards],
+        },
       });
 
       const existingLogs = loadActivityLogs();
@@ -453,22 +548,20 @@ export default function Stage3Page() {
       const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
       const userId = getUserProfile().id || 'user';
       const filename = `stage3-summary-${userId}-${timestamp}.json`;
-      
-      // Create final result object (same as in saveConversationData)
-      const allText = messages
-        .filter((msg) => msg.role === 'user')
-        .map((msg) => msg.message)
-        .join(' ');
-      
-      const keywords = extractKeywords(allText);
-      
+
+      // Create final result object (use keywords from state)
+      const profile = getUserProfile();
+      const savedData = (profile as any).stage3Responses;
+
       const year = getYearLevelFromProfile();
-      let summary = '';
-      
       const semesterLabel = getSemesterLabel(getUserProfile().currentSemester);
       const semesterText = semesterLabel ? `, ${semesterLabel}` : '';
-      summary = `Year ${year} student. Reflected on course uncertainty and motivation this semester${semesterText}.`;
-      
+      const summary = `Year ${year} student. Reflected on course uncertainty and motivation this semester${semesterText}.`;
+
+      const transcript = messages
+        .map((msg) => `${msg.role === 'ai' ? 'Mirae' : 'Student'}: ${msg.message}`)
+        .join('\n');
+
       const finalResult = {
         user: {
           id: getUserProfile().id || 'anonymous',
@@ -478,9 +571,9 @@ export default function Stage3Page() {
           language: 'en'
         },
         responses: {},
-        feedback: aiFeedback,
-        insights,
-        summary,
+        feedback: savedData?.feedback || aiFeedback,
+        insights: savedData?.insights || [],
+        summary: savedData?.summary || summary,
         keywords,
         transcript,
         conversation: messages.map(msg => ({
@@ -525,7 +618,7 @@ export default function Stage3Page() {
     if (messages.length > 0) {
       saveConversationData();
     }
-    router.push(withBasePath('/stage4'));
+    router.push(withBasePath('/dashboard'));
   };
 
   // Handle back to dashboard
@@ -533,9 +626,12 @@ export default function Stage3Page() {
     router.push(withBasePath('/dashboard'));
   };
 
+  // Handle keyword removal
+  const handleRemoveKeyword = (keywordToRemove: string) => {
+    setKeywords(prev => prev.filter(keyword => keyword !== keywordToRemove));
+  };
+
   const canType = conversationState === 'in_progress';
-  const userText = messages.filter((msg) => msg.role === 'user').map((msg) => msg.message).join(' ');
-  const liveKeywords = userText ? extractKeywords(userText) : [];
 
   if (!isHydrated) {
     return (
@@ -665,14 +761,22 @@ export default function Stage3Page() {
             {/* Keywords Panel */}
             <div className="glass-card rounded-3xl p-5 shadow-lg border border-white/60">
               <p className="text-sm font-semibold text-slate-700 mb-2">{t.keywordsTitle}</p>
-              {liveKeywords.length > 0 ? (
+              {keywords.length > 0 ? (
                 <div className="flex flex-wrap gap-2">
-                  {liveKeywords.map((word) => (
+                  {keywords.map((word) => (
                     <span
                       key={word}
-                      className="px-3 py-2 rounded-full text-sm bg-white/90 border border-white/70 text-slate-800 shadow-sm"
+                      className="group px-3 py-2 rounded-full text-sm bg-white/90 border border-white/70 text-slate-800 shadow-sm flex items-center gap-1.5 hover:bg-red-50 hover:border-red-200 transition-colors"
                     >
                       {word}
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveKeyword(word)}
+                        className="opacity-0 group-hover:opacity-100 transition-opacity w-4 h-4 flex items-center justify-center rounded-full hover:bg-red-500 hover:text-white text-slate-500"
+                        aria-label={`Remove ${word}`}
+                      >
+                        ×
+                      </button>
                     </span>
                   ))}
                 </div>

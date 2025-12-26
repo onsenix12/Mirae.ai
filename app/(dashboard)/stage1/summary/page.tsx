@@ -155,11 +155,8 @@ export default function Stage1SummaryPage() {
 
   return (
     <div
-      className="min-h-screen px-6 py-12"
-      style={{
-        background:
-          'linear-gradient(135deg, #9BCBFF 0%, #C7B9FF 25%, #F4A9C8 50%, #FFD1A8 75%, #BEEDE3 100%)',
-      }}
+      className="min-h-screen px-6 py-12 bg-cover bg-center bg-no-repeat"
+      style={{ backgroundImage: "url('/asset/Background.png')" }}
     >
       <div className="mx-auto w-full max-w-5xl space-y-8">
         <div className="text-slate-800">

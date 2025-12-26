@@ -57,6 +57,21 @@ export function useOnboarding() {
     setState(prev => ({ ...prev, extractedKeywords: keywordObjects }));
   }, []);
 
+  const removeKeyword = useCallback((id: string) => {
+    setState(prev => {
+      const updatedKeywords = prev.extractedKeywords.map((kw) =>
+        kw.id === id ? { ...kw, isRemoved: true } : kw
+      );
+      updateUserProfile({
+        keywords: updatedKeywords.filter((kw) => !kw.isRemoved).map((kw) => kw.text),
+      });
+      return {
+        ...prev,
+        extractedKeywords: updatedKeywords,
+      };
+    });
+  }, []);
+
   const completeOnboarding = useCallback(() => {
     updateUserProfile({
       onboardingCompleted: true,
@@ -77,6 +92,7 @@ export function useOnboarding() {
     setUploadedFiles,
     skipUpload,
     setKeywords,
+    removeKeyword,
     completeOnboarding
   };
 }

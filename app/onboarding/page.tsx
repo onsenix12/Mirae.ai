@@ -8,17 +8,20 @@ import { useI18n } from '@/lib/i18n';
 import Image from 'next/image';
 import { Sprout } from 'lucide-react';
 import { SmartOnboardingChat } from '@/components/onboarding/SmartOnboardingChat';
+import { KeywordTag } from '@/components/onboarding/shared/KeywordTag';
 import { useOnboarding } from '@/lib/hooks/useOnboarding';
 import { withBasePath } from '@/lib/basePath';
 import { getUserProfile, resetUserProfile, updateProfileFromOnboarding, updateUserProfile } from '@/lib/userProfile';
+import type { CardType } from '@/components/MiraeCharacterEvolution';
 
 export default function OnboardingPage() {
   const router = useRouter();
   const { reset, setUserId } = useUserStore();
   const { t } = useI18n();
-  const { state, advancePhase, setStudentContextData, setKeywords } = useOnboarding();
+  const { state, advancePhase, setStudentContextData, setKeywords, removeKeyword } = useOnboarding();
   const [userName, setUserName] = useState('');
   const [inputValue, setInputValue] = useState('');
+  const [transcriptMessages, setTranscriptMessages] = useState<{ role: 'assistant' | 'user'; content: string }[]>([]);
 
   useEffect(() => {
     const user = getUser();
@@ -49,13 +52,63 @@ export default function OnboardingPage() {
     }
   }, [router, setUserId]);
 
-  const handleFinish = () => {
+  const hashString = (value: string) => {
+    let hash = 0;
+    for (let i = 0; i < value.length; i += 1) {
+      hash = (hash * 31 + value.charCodeAt(i)) % 1000000007;
+    }
+    return String(hash);
+  };
+
+  const generateOnboardingCardsAndStatement = async (
+    transcript: string,
+    keywords: string[],
+    existingCards: Array<{ type?: string; title?: string }>
+  ) => {
+    try {
+      const response = await fetch('/api/chat/general', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          messages: [
+            {
+              role: 'system',
+              content:
+                'Return JSON only with keys: cards (array) and statement (object). Each card must include: type (one of StrengthPattern, CuriosityThread, Experience, ProofMoment, ThenVsNow, ValueSignal), title (max 5 words), description (1 sentence), tags (1-3 short words). Statement should include summary (1-2 sentences) and highlights (2-3 short bullets). Use only transcript + keywords.',
+            },
+            {
+              role: 'user',
+              content: `Transcript:\n${transcript}\n\nKeywords:\n${keywords.join(', ')}\n\nExisting cards:\n${existingCards
+                .map((card) => `${card.type || ''}::${card.title || ''}`)
+                .join(', ')}`,
+            },
+          ],
+          context: {
+            language: 'en',
+          },
+        }),
+      });
+
+      if (!response.ok) return null;
+      const data = await response.json();
+      const cleaned = String(data?.message || '').replace(/```json\n?|```\n?/g, '').trim();
+      return JSON.parse(cleaned);
+    } catch (error) {
+      console.error('Onboarding analysis error:', error);
+      return null;
+    }
+  };
+
+  const visibleKeywords = state.extractedKeywords.filter((k) => !k.isRemoved);
+  const displayKeywords = visibleKeywords.map((k) => k.text);
+
+  const handleFinish = async () => {
     const user = getUser();
     if (!user) {
       router.push(withBasePath('/login'));
       return;
     }
-    const profile = getUserProfile();
+    let profile = getUserProfile();
     const context = profile.onboarding ?? {};
     const hasContextCard = (
       profile.collection?.cards as Record<string, unknown>[] | undefined
@@ -110,12 +163,70 @@ export default function OnboardingPage() {
           cards: nextCards,
         },
       });
+      profile = getUserProfile();
     }
-    updateUserProfile({ onboardingCompleted: true });
+    const transcript = transcriptMessages
+      .map((msg) => `${msg.role === 'assistant' ? 'Mirae' : 'Student'}: ${msg.content}`)
+      .join('\n');
+    const transcriptHash = hashString(`${transcript}::${displayKeywords.join(',')}`);
+    const existingCards = (profile.collection?.cards ?? []) as Array<{ type?: string; title?: string }>;
+    if (transcript && profile.onboardingTranscriptHash !== transcriptHash) {
+      const analysis = await generateOnboardingCardsAndStatement(
+        transcript,
+        displayKeywords,
+        existingCards
+      );
+      if (analysis?.cards && Array.isArray(analysis.cards)) {
+        const normalizedExisting = new Set(
+          existingCards
+            .map((card) => `${String(card.type || '').toLowerCase()}::${String(card.title || '').toLowerCase()}`)
+            .filter((key) => key !== '::')
+        );
+        const newCards = analysis.cards
+          .filter((card: { type?: string; title?: string; description?: string }) =>
+            card?.type && card?.title && card?.description
+          )
+          .filter((card: { type: string; title: string }) =>
+            !normalizedExisting.has(`${card.type.toLowerCase()}::${card.title.toLowerCase()}`)
+          )
+          .map((card: { type: CardType; title: string; description: string; tags?: string[] }) => ({
+            id: `onboarding-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+            stage: 'S',
+            type: card.type,
+            title: card.title,
+            description: card.description,
+            rarity: 'Common',
+            unlocked: true,
+            tags: card.tags ?? [],
+            createdFrom: 'Onboarding Transcript',
+          }));
+        if (newCards.length > 0) {
+          updateUserProfile({
+            collection: {
+              ...profile.collection,
+              cards: [...existingCards, ...newCards],
+            },
+          });
+        }
+      }
+      if (analysis?.statement?.summary || analysis?.statement?.highlights) {
+        updateUserProfile({
+          journeyNarrative: {
+            ...profile.journeyNarrative,
+            summary: analysis.statement.summary || profile.journeyNarrative?.summary,
+            highlights: analysis.statement.highlights || profile.journeyNarrative?.highlights,
+          },
+        });
+      }
+    }
+
+    updateUserProfile({
+      onboardingCompleted: true,
+      onboardingTranscript: transcript,
+      onboardingTranscriptHash: transcriptHash,
+    });
     router.push(withBasePath('/dashboard'));
   };
-
-  const displayKeywords = state.extractedKeywords.filter(k => !k.isRemoved).map(k => k.text);
 
   return (
     <div className="fixed inset-0 onboarding-bg overflow-hidden">
@@ -156,6 +267,7 @@ export default function OnboardingPage() {
                     onboarding: { keywords: merged },
                   });
                 }}
+                onTranscriptUpdate={setTranscriptMessages}
                 onInputChange={setInputValue}
                 inputValue={inputValue}
                 onSend={() => window.dispatchEvent(new Event('onboardingSmartSend'))}
@@ -227,15 +339,15 @@ export default function OnboardingPage() {
             {/* Keywords Panel */}
             <div className="glass-card rounded-3xl p-5 shadow-lg border border-white/60">
               <p className="text-sm font-semibold text-slate-700 mb-2">{t('onboardingKeywords', { name: userName })}</p>
-              {displayKeywords.length > 0 ? (
+              {visibleKeywords.length > 0 ? (
                 <div className="flex flex-wrap gap-2">
-                  {displayKeywords.map((word) => (
-                    <span
-                      key={word}
-                      className="px-3 py-2 rounded-full text-sm bg-white/90 border border-white/70 text-slate-800 shadow-sm"
-                    >
-                      {word}
-                    </span>
+                  {visibleKeywords.map((keyword) => (
+                    <KeywordTag
+                      key={keyword.id}
+                      text={keyword.text}
+                      isRemoved={keyword.isRemoved}
+                      onRemove={() => removeKeyword(keyword.id)}
+                    />
                   ))}
                 </div>
               ) : (
