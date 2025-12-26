@@ -1,4 +1,5 @@
 import { storage } from '@/lib/utils/storage';
+import type { EquippedAccessories } from '@/components/MiraeCharacterEvolution';
 type ActivityLogEntry = {
   id: string;
   date: string;
@@ -88,7 +89,7 @@ export type UserProfile = {
   };
   avatar?: {
     collectedCards?: string[];
-    equippedAccessories?: Record<string, string>;
+    equippedAccessories?: EquippedAccessories;
     customizerSelectedAccessories?: string[];
   };
   collection?: {
