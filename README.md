@@ -1,11 +1,11 @@
-﻿# SCOPE+
+﻿# Mirae.ai
 **Dashboard-Based, Multi-Stage, AI-Powered Career Exploration Platform**
 
 ---
 
 ## Overview
 
-SCOPE+ is a dashboard-based career exploration platform that guides Korean high school students through 6 progressive stages - from initial self-understanding to final course selections. Each stage combines interactive activities (swipe mechanics, drag-drop, tournaments) with chatbot-guided reflection to build toward concrete course recommendations.
+Mirae.ai is a dashboard-based career exploration platform that guides Korean high school students through 6 progressive stages - from initial self-understanding to final course selections. Each stage combines interactive activities (swipe mechanics, drag-drop, tournaments) with chatbot-guided reflection to build toward concrete course recommendations.
 
 **Core Innovation:** Gamified exploration + AI synthesis -> Data-driven course roadmap
 
@@ -13,7 +13,7 @@ SCOPE+ is a dashboard-based career exploration platform that guides Korean high 
 
 ## Project Structure
 
-This repository contains documentation for the SCOPE+ project. The project structure follows the specifications in `REVISED_24HR_PLAN.md` and `REVISED_APP_BLUEPRINT.md`.
+This repository contains documentation for the Mirae.ai project. The project structure follows the specifications in `REVISED_24HR_PLAN.md` and `REVISED_APP_BLUEPRINT.md`.
 
 ### Documentation Files
 
@@ -177,7 +177,7 @@ Synthesizes all stages into actionable course recommendations and next steps.
 - Sonner (toast notifications)
 
 **Deployment:**
-- Vercel (recommended)
+- Vercel (automatic deployments from GitHub)
 
 ---
 
@@ -325,6 +325,53 @@ See `REVISED_APP_BLUEPRINT.md` for the complete product architecture, including:
 
 ### Quick Setup Guide
 For detailed setup instructions, see `QUICK_START.md` and `COMPLETE_GUIDE.md`.
+
+---
+
+## Deployment
+
+This project is deployed using **Vercel** with automatic deployments from GitHub.
+
+### Vercel Deployment Setup
+
+1. **Connect Repository to Vercel:**
+   - Go to [vercel.com](https://vercel.com) and sign in
+   - Click "Add New Project"
+   - Import your GitHub repository (`onsenix12/Mirae.ai`)
+   - Vercel will automatically detect Next.js
+
+2. **Configure Environment Variables:**
+   
+   In your Vercel project settings, add the following environment variables:
+   
+   ```
+   NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
+   NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+   SUPABASE_SERVICE_ROLE_KEY=your_supabase_service_role_key
+   OPENAI_API_KEY=your_openai_api_key
+   ```
+   
+   - Go to **Settings** → **Environment Variables**
+   - Add each variable for **Production**, **Preview**, and **Development** environments
+   - Click **Save**
+
+3. **Deploy:**
+   - Vercel will automatically deploy on every push to the `master` branch
+   - Preview deployments are created for pull requests
+   - You can also trigger manual deployments from the Vercel dashboard
+
+4. **Build Configuration:**
+   - Framework Preset: Next.js (auto-detected)
+   - Build Command: `npm run build` (default)
+   - Output Directory: `.next` (default)
+   - Install Command: `npm install` (default)
+
+### Important Notes
+
+- **Environment Variables**: Make sure all required environment variables are set in Vercel before deploying
+- **OpenAI API Key**: The build will succeed even without `OPENAI_API_KEY` (lazy initialization), but AI features won't work at runtime
+- **Automatic Deployments**: Every push to `master` triggers a new production deployment
+- **Preview Deployments**: Pull requests automatically get preview deployments for testing
 
 ---
 
