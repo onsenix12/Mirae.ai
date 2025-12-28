@@ -1,0 +1,72 @@
+{
+  "user": {
+    "id": "1",
+    "name": "User",
+    "year": "year1",
+    "conversationDate": "2025-12-26T03:59:05.264Z",
+    "language": "en"
+  },
+  "responses": {},
+  "feedback": [],
+  "insights": [
+    "It's wonderful to see your enthusiasm for learning and recognizing where you can improve. Dedicating a small, consistent amount of time each week to engage with Logic puzzles will not only enhance your skills but also make learning more enjoyable.",
+    "Exploring English through articles or books on topics that intrigue you is a fantastic way to improve your language skills. It combines learning with personal interest, making it more likely you'll stick with it and see progress.",
+    "Celebrate your success in Probability & Statistics! It's a testament to your hard work and ability to grasp complex concepts. This same dedication and approach can be applied to your Logic and English studies.",
+    "Remember, it's perfectly normal to face challenges in your academic journey. Seeking help, like tutoring or study groups, especially in subjects you find difficult, can provide new perspectives and strategies to overcome these obstacles."
+  ],
+  "summary": "Year 1 student. Reflected on course uncertainty and motivation this semester, Semester 1.",
+  "keywords": [
+    "second",
+    "year",
+    "following",
+    "saved",
+    "roadmap",
+    "module",
+    "last"
+  ],
+  "transcript": "Mirae: Hi! I'm glad you want to talk. I see you're in Year 1, Semester 1.\nHow are you doing this semester?\nStudent: Actually I just finished my first semester of my second year, following the courses I saved in the course roadmap module.\nMirae: That's great to hear you’ve completed your first semester of Year 2! It sounds like you're making thoughtful progress with your course selections. How did you find the subjects you took this semester?\nStudent: Last semester was really fun! I enjoyed most of my courses. I did quite well in my Probability & Statistics course. I had some trouble in my Logic and English courses though.\nMirae: I’m so glad to hear you enjoyed your courses, especially Probability & Statistics! It’s completely normal to find some subjects more challenging than others. Have you thought about what you could do to strengthen your skills in Logic and English, or are there specific areas you’d like help with?\nStudent: I think I need some practice.\nMirae: That sounds like a solid plan! Practicing can really boost your confidence in those subjects. Perhaps you could set aside a little time each week to work on Logic puzzles or read English articles or books that interest you. What topics in Logic or types of reading would you enjoy exploring?",
+  "conversation": [
+    {
+      "role": "ai",
+      "message": "Hi! I'm glad you want to talk. I see you're in Year 1, Semester 1.\nHow are you doing this semester?",
+      "timestamp": "2025-12-26T03:51:13.441Z"
+    },
+    {
+      "role": "user",
+      "message": "Actually I just finished my first semester of my second year, following the courses I saved in the course roadmap module.",
+      "timestamp": "2025-12-26T03:56:46.489Z"
+    },
+    {
+      "role": "ai",
+      "message": "That's great to hear you’ve completed your first semester of Year 2! It sounds like you're making thoughtful progress with your course selections. How did you find the subjects you took this semester?",
+      "timestamp": "2025-12-26T03:56:53.133Z"
+    },
+    {
+      "role": "user",
+      "message": "Last semester was really fun! I enjoyed most of my courses. I did quite well in my Probability & Statistics course. I had some trouble in my Logic and English courses though.",
+      "timestamp": "2025-12-26T03:57:05.033Z"
+    },
+    {
+      "role": "ai",
+      "message": "I’m so glad to hear you enjoyed your courses, especially Probability & Statistics! It’s completely normal to find some subjects more challenging than others. Have you thought about what you could do to strengthen your skills in Logic and English, or are there specific areas you’d like help with?",
+      "timestamp": "2025-12-26T03:57:06.792Z"
+    },
+    {
+      "role": "user",
+      "message": "I think I need some practice.",
+      "timestamp": "2025-12-26T03:57:47.738Z"
+    },
+    {
+      "role": "ai",
+      "message": "That sounds like a solid plan! Practicing can really boost your confidence in those subjects. Perhaps you could set aside a little time each week to work on Logic puzzles or read English articles or books that interest you. What topics in Logic or types of reading would you enjoy exploring?",
+      "timestamp": "2025-12-26T03:57:49.241Z"
+    }
+  ],
+  "metadata": {
+    "version": "1.0",
+    "stage": "stage3",
+    "exportedAt": "2025-12-26T03:59:05.264Z",
+    "conversationState": "in_progress",
+    "totalMessages": 7
+  }
+}

@@ -1,0 +1,34 @@
+{
+  "user": {
+    "id": "1",
+    "name": "User",
+    "year": "year1",
+    "conversationDate": "2025-12-26T03:59:23.103Z",
+    "language": "en"
+  },
+  "responses": {},
+  "feedback": [],
+  "insights": [
+    "It's great that you're reaching out for support early in your academic journey; this proactive step shows your commitment to success. Keep this up!",
+    "Remember, it's completely normal to feel overwhelmed or unsure at this stage. Consider setting small, achievable goals each week to stay focused and motivated.",
+    "Building a study schedule that includes breaks and time for self-care can significantly improve your productivity and well-being.",
+    "Don't hesitate to connect with your professors or academic advisors for guidance; they're there to help you navigate your first year successfully."
+  ],
+  "summary": "Year 1 student. Reflected on course uncertainty and motivation this semester, Semester 1.",
+  "keywords": [],
+  "transcript": "Mirae: Hi! I'm glad you want to talk. I see you're in Year 1, Semester 1.\nHow are you doing this semester?",
+  "conversation": [
+    {
+      "role": "ai",
+      "message": "Hi! I'm glad you want to talk. I see you're in Year 1, Semester 1.\nHow are you doing this semester?",
+      "timestamp": "2025-12-26T03:59:14.582Z"
+    }
+  ],
+  "metadata": {
+    "version": "1.0",
+    "stage": "stage3",
+    "exportedAt": "2025-12-26T03:59:23.103Z",
+    "conversationState": "in_progress",
+    "totalMessages": 1
+  }
+}

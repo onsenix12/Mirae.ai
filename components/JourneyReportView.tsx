@@ -440,7 +440,7 @@ export default function JourneyReportView({ logs, cards, studentName, onRefresh,
                   </button>
                 )}
               </div>
-              <p className="text-sm text-slate-500">{studentName || 'Student'} · {formatRange(logs)}</p>
+              <p className="text-sm text-slate-500">{studentName || 'Student'} -+ {formatRange(logs)}</p>
               <p className="text-sm text-slate-600 mt-2">
                 A visual story of who I am, how I have grown, and why I choose my direction.
               </p>
@@ -856,14 +856,14 @@ export default function JourneyReportView({ logs, cards, studentName, onRefresh,
         <section className="storybook-page">
           <p className="storybook-kicker">My Storybook</p>
           <h2>{studentName || 'Student'}</h2>
-          <p className="storybook-subtitle">{formatRange(logs)} · Growth story snapshot</p>
+          <p className="storybook-subtitle">{formatRange(logs)} -+ Growth story snapshot</p>
           <div className="storybook-strip">
             <div>
               <h3>Snapshot strip</h3>
               <p>
                 {(Object.keys(stageCounts) as ScopeStage[])
                   .map((stage) => `${stageLabels[stage]} ${stageCounts[stage]}`)
-                  .join(' · ')}
+                  .join(' -+ ')}
               </p>
             </div>
           </div>
@@ -885,7 +885,7 @@ export default function JourneyReportView({ logs, cards, studentName, onRefresh,
                 {topActivities.length > 0 ? (
                   topActivities.map(([type, count]) => (
                     <li key={type}>
-                      {activityTypeLabels[type as ActivityLog['activityType']]} · {count}
+                      {activityTypeLabels[type as ActivityLog['activityType']]} -+ {count}
                     </li>
                   ))
                 ) : (
@@ -919,7 +919,7 @@ export default function JourneyReportView({ logs, cards, studentName, onRefresh,
               <ul>
                 {(Object.keys(stageCounts) as ScopeStage[]).map((stage) => (
                   <li key={stage}>
-                    {stageLabels[stage]} · {stageCounts[stage]}
+                    {stageLabels[stage]} -+ {stageCounts[stage]}
                   </li>
                 ))}
               </ul>
@@ -937,7 +937,7 @@ export default function JourneyReportView({ logs, cards, studentName, onRefresh,
                 {experiences.length > 0 ? (
                   experiences.map((exp) => (
                     <li key={`${exp.date}-${exp.title}`}>
-                      <strong>{exp.title}</strong> · {exp.insight}
+                      <strong>{exp.title}</strong> -+ {exp.insight}
                     </li>
                   ))
                 ) : (
