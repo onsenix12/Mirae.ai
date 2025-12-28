@@ -2,9 +2,37 @@
 import { NextRequest, NextResponse } from 'next/server';
 import OpenAI from 'openai';
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
+// Lazy initialization to avoid build-time errors
+let openai: OpenAI | null = null;
+
+function getOpenAIClient(): OpenAI | null {
+  // Skip initialization during build time
+  if (process.env.NEXT_PHASE === 'phase-production-build') {
+    return null;
+  }
+
+  if (openai === null) {
+    const apiKey = process.env.OPENAI_API_KEY;
+    
+    if (!apiKey) {
+      if (process.env.NEXT_PHASE !== 'phase-production-build') {
+        console.warn('⚠️ OPENAI_API_KEY environment variable is missing. OpenAI features will not work.');
+      }
+      return null;
+    }
+
+    try {
+      openai = new OpenAI({
+        apiKey,
+      });
+    } catch (error) {
+      console.warn('⚠️ Failed to initialize OpenAI client:', error);
+      return null;
+    }
+  }
+
+  return openai;
+}
 
 export async function POST(request: NextRequest) {
   try {
@@ -21,8 +49,21 @@ export async function POST(request: NextRequest) {
     // Create prompt for OpenAI
     const prompt = createPrompt(conversation, context, language);
     
+    // Get OpenAI client
+    const client = getOpenAIClient();
+    if (!client) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'OpenAI API key is not configured',
+          feedback: getFallbackFeedback(language)
+        },
+        { status: 503 }
+      );
+    }
+    
     // Call OpenAI
-    const completion = await openai.chat.completions.create({
+    const completion = await client.chat.completions.create({
       model: 'gpt-4-turbo-preview',
       messages: [
         {

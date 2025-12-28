@@ -1,9 +1,37 @@
 import { NextRequest } from 'next/server';
 import OpenAI from 'openai';
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
+// Lazy initialization to avoid build-time errors
+let openai: OpenAI | null = null;
+
+function getOpenAIClient(): OpenAI | null {
+  // Skip initialization during build time
+  if (process.env.NEXT_PHASE === 'phase-production-build') {
+    return null;
+  }
+
+  if (openai === null) {
+    const apiKey = process.env.OPENAI_API_KEY;
+    
+    if (!apiKey) {
+      if (process.env.NEXT_PHASE !== 'phase-production-build') {
+        console.warn('⚠️ OPENAI_API_KEY environment variable is missing. OpenAI features will not work.');
+      }
+      return null;
+    }
+
+    try {
+      openai = new OpenAI({
+        apiKey,
+      });
+    } catch (error) {
+      console.warn('⚠️ Failed to initialize OpenAI client:', error);
+      return null;
+    }
+  }
+
+  return openai;
+}
 
 const SYSTEM_PROMPT = `You are Mirae, a warm and supportive AI assistant helping Korean high school students explore their academic paths and future careers.
 
@@ -83,7 +111,18 @@ export async function POST(req: NextRequest) {
         : null,
     ].filter(Boolean);
 
-    const completion = await openai.chat.completions.create({
+    const client = getOpenAIClient();
+    if (!client) {
+      return new Response(
+        JSON.stringify({
+          error: 'OpenAI API key is not configured',
+          details: 'Please configure OPENAI_API_KEY environment variable',
+        }),
+        { status: 503, headers: { 'Content-Type': 'application/json' } }
+      );
+    }
+
+    const completion = await client.chat.completions.create({
       model: 'gpt-4-turbo',
       messages: [
         { role: 'system', content: SYSTEM_PROMPT },
@@ -153,7 +192,7 @@ export async function POST(req: NextRequest) {
           : null,
       ].filter(Boolean);
 
-      const followUpCompletion = await openai.chat.completions.create({
+      const followUpCompletion = await client.chat.completions.create({
         model: 'gpt-4-turbo',
         messages: [
           { role: 'system', content: SYSTEM_PROMPT },
